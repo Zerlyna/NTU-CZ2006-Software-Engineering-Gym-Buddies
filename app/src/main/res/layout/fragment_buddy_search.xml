@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_label_region"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Living region" />
+
+    <Spinner
+        android:id="@+id/spinner_live_region"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/listPreferredItemHeight"
+        android:entries="@array/live_region"/>
+
+    <TextView
+        android:id="@+id/tv_label_gender"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Buddy gender" />
+
+    <RadioGroup
+        android:id="@+id/rg_bd_gender"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" >
+
+        <RadioButton
+            style="@style/cb_highlight"
+            android:id="@+id/fb_male"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.33"
+            android:checked="true"
+            android:text="male" />
+        <RadioButton
+            style="@style/cb_highlight"
+            android:id="@+id/rb_female"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.33"
+            android:text="female" />
+        <RadioButton
+            style="@style/cb_highlight"
+            android:id="@+id/rb_both"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.33"
+            android:text="both" />
+    </RadioGroup>
+    <TextView
+        android:id="@+id/tv_label_pref_days"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Preferred workout days"
+        app:layout_constraintTop_toBottomOf="@+id/rg_bd_gender" />
+
+
+    <include layout="@layout/row_pref_days"/>
+
+
+</LinearLayout>

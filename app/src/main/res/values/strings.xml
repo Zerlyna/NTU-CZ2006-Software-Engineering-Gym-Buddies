@@ -1,3 +1,50 @@
 <resources>
     <string name="app_name">Gym Buddies!</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Home</string>
+<!--    <string name="menu_gallery">Gallery</string>-->
+<!--    <string name="menu_slideshow">Slideshow</string>-->
+<!--    <string name="menu_tools">Tools</string>-->
+<!--    <string name="menu_share">Share</string>-->
+<!--    <string name="menu_send">Send</string>-->
+
+    <string name="menu_gym_list">Favourite GYM</string>
+    <string name="menu_bd_list">Buddy List</string>
+    <string name="menu_bd_search">Buddy Search</string>
+    <string name="menu_chat_list">Chat</string>
+    <string name="menu_forum">Forum</string>
+    <string name="menu_feedback">Feedback</string>
+
+
+
+    <string-array name="live_region">
+        <item>Central</item>
+        <item>North</item>
+        <item>West</item>
+        <item>East</item>
+        <item>South</item>
+    </string-array>
+
+    <string name="txt_day1_short">Mon</string>
+    <string name="txt_day2_short">Tue</string>
+    <string name="txt_day3_short">Wed</string>
+    <string name="txt_day4_short">Thu</string>
+    <string name="txt_day5_short">Fri</string>
+    <string name="txt_day6_short">Sat</string>
+    <string name="txt_day7_short">Sun</string>
+
+
+    <string name="txt_both">Both</string>
+    <string name="txt_male">Male</string>
+    <string name="txt_female">Female</string>
+    <string name="txt_live_region">Live region</string>
+    <string name="txt_buddy_gender">Buddy gender</string>
+    <string name="txt_pref_dym_days">Preferred workout days</string>
 </resources>
