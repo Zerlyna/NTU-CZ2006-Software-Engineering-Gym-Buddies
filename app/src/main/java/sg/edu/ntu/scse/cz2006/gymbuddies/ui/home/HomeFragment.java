@@ -23,6 +23,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
@@ -33,6 +34,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private HomeViewModel homeViewModel;
     private MapView mapView;
     private GoogleMap mMap;
+
+    private BottomSheetBehavior bottomSheetBehavior;
+    private View bottomSheet;
 
     private static final int RC_LOC = 1001, RC_LOC_BTN = 1002;
 
@@ -61,6 +65,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             activity.fab.hide();
             activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
         }
+
+        bottomSheet = root.findViewById(R.id.bottom_sheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setPeekHeight(100);
+        bottomSheetBehavior.setHideable(false);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
 
         return root;
     }
