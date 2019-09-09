@@ -15,12 +15,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_login_chooser.*
 import java.util.*
+import kotlin.math.log
 
 
 class LoginChooserActivity : AppCompatActivity() {
 
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
-    private var firebaseUser: FirebaseUser? = null
     private val mAuthStateListener = FirebaseAuth.AuthStateListener { auth ->
         Log.i("FirebaseAuth", "Auth State changed")
         auth.currentUser?.providerData?.forEach {
@@ -36,8 +36,8 @@ class LoginChooserActivity : AppCompatActivity() {
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
         FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener)
-        firebaseUser = FirebaseAuth.getInstance().currentUser
-        updateUI()
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        updateUI(firebaseUser)
 
         btnSigning.setOnClickListener{
             FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
@@ -47,9 +47,20 @@ class LoginChooserActivity : AppCompatActivity() {
                 logout()
             }
         }
+        autoLogin(firebaseUser)
     }
 
-    private fun updateUI() {
+    private fun autoLogin(fbUser: FirebaseUser?) {
+        if (fbUser == null) {
+            login()
+        } else {
+            // Launch main activity and finish this activity
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun updateUI(firebaseUser: FirebaseUser?) {
         if (firebaseUser == null) {
             // Not signed in
             txtStatus.text = "Not logged in"
@@ -57,7 +68,7 @@ class LoginChooserActivity : AppCompatActivity() {
         } else {
             // Signed in
             var provider = "Unknown"
-            firebaseUser!!.providerData.forEach {
+            firebaseUser.providerData.forEach {
                 if (it.providerId.contains("firebase")) return@forEach
                 provider = it.providerId
             }
@@ -93,8 +104,8 @@ class LoginChooserActivity : AppCompatActivity() {
         if (!silent) Toast.makeText(this, "Signing Out", Toast.LENGTH_LONG).show()
         AuthUI.getInstance().signOut(this).addOnCompleteListener{
             if (it.isComplete && it.isSuccessful && !silent) Toast.makeText(this, "Logged Out!", Toast.LENGTH_LONG).show()
-            firebaseUser = FirebaseAuth.getInstance().currentUser
-            updateUI()
+            val firebaseUser = FirebaseAuth.getInstance().currentUser
+            updateUI(firebaseUser)
             FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener)
         }
     }
@@ -105,24 +116,26 @@ class LoginChooserActivity : AppCompatActivity() {
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
                 Log.i("FirebaseAuth", "Authenticated")
-                firebaseUser = FirebaseAuth.getInstance().currentUser
-                updateUI()
+                val firebaseUser = FirebaseAuth.getInstance().currentUser
+                updateUI(firebaseUser)
                 FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener)
+                autoLogin(firebaseUser)
             } else {
                 // Sign in failed
                 if (response == null) {
                     // User pressed back button
                     Toast.makeText(this, "Sign in cancelled", Toast.LENGTH_LONG).show()
+                    finish()
                     return
                 }
 
                 if (response.error?.errorCode == ErrorCodes.NO_NETWORK) {
                     Toast.makeText(this, "No Internet Connection", Toast.LENGTH_LONG).show()
-                    return
+                } else {
+                    Toast.makeText(this, "An unknown error has occurred", Toast.LENGTH_LONG).show()
+                    Log.e("Auth", "Sign-in error: ", response.error)
                 }
-
-                Toast.makeText(this, "An unknown error has occurred", Toast.LENGTH_LONG).show()
-                Log.e("Auth", "Sign-in error: ", response.error)
+                autoLogin(null) // Try logging in again
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
