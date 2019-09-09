@@ -58,6 +58,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         if (getActivity() != null) {
             MainActivity activity = (MainActivity)getActivity();
+            activity.fab.hide();
             activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
         }
 

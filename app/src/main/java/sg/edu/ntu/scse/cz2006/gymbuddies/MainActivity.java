@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
             logout();
             return true;
         });
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> fab.show());
     }
 
     private void logout() {
