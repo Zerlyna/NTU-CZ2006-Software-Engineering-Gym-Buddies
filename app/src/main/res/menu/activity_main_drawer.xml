@@ -30,7 +30,10 @@
             android:icon="@android:drawable/sym_action_chat"
             android:title="@string/menu_forum" />
 
-
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_logout"
+            android:title="@string/logout" />
     </group>
 
 <!--    <item android:title="Communicate">-->

@@ -20,7 +20,6 @@ import kotlin.math.log
 
 class LoginChooserActivity : AppCompatActivity() {
 
-    private lateinit var mFirebaseAnalytics: FirebaseAnalytics
     private val mAuthStateListener = FirebaseAuth.AuthStateListener { auth ->
         Log.i("FirebaseAuth", "Auth State changed")
         auth.currentUser?.providerData?.forEach {
@@ -34,7 +33,6 @@ class LoginChooserActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_chooser)
 
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
         FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener)
         val firebaseUser = FirebaseAuth.getInstance().currentUser
         updateUI(firebaseUser)
@@ -47,7 +45,8 @@ class LoginChooserActivity : AppCompatActivity() {
                 logout()
             }
         }
-        autoLogin(firebaseUser)
+        val isLogout = intent.extras?.getBoolean("logout", false) ?: false
+        if (isLogout) logout(true) else autoLogin(firebaseUser)
     }
 
     private fun autoLogin(fbUser: FirebaseUser?) {
@@ -107,6 +106,7 @@ class LoginChooserActivity : AppCompatActivity() {
             val firebaseUser = FirebaseAuth.getInstance().currentUser
             updateUI(firebaseUser)
             FirebaseAuth.getInstance().addAuthStateListener(mAuthStateListener)
+            autoLogin(firebaseUser)
         }
     }
 
