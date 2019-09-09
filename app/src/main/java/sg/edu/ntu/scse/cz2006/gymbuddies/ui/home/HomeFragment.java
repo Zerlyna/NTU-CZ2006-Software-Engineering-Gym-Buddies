@@ -23,7 +23,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.material.snackbar.Snackbar;
 
+import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
@@ -52,6 +54,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             } else {
                 requestPermissions(permissions, RC_LOC);
             }
+        }
+
+        if (getActivity() != null) {
+            MainActivity activity = (MainActivity)getActivity();
+            activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
         }
 
         return root;
