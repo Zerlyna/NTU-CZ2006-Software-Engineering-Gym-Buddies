@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -47,6 +49,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         homeViewModel.getText().observe(this, s -> textView.setText(s));
 
         mapView = root.findViewById(R.id.map_view);
+        setHasOptionsMenu(true);
 
         // Request permission eh
         if (!hasGpsPermission() && getActivity() != null) {
@@ -137,9 +140,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 hasGps(true);
             }
 
-            if (requestCode == RC_LOC_BTN) {
+            /*if (requestCode == RC_LOC_BTN) {
                 // TODO: When FAB clicked do something
-            }
+            }*/
             return;
         }
 
@@ -155,6 +158,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         startActivity(permIntent);
                     }).show();
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.fragment_main, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     private static final String TAG = "HomeFrag";
