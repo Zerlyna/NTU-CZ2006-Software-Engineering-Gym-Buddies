@@ -5,36 +5,10 @@
     android:layout_height="match_parent"
     tools:context=".LoginChooserActivity">
 
-    <Button
-        android:id="@+id/btnSigning"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="160dp"
-        android:layout_marginTop="291dp"
-        android:visibility="gone"
-        android:text="Button" />
-
     <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="226dp" />
-
-    <TextView
-        android:id="@+id/txtStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="100dp"
-        android:layout_marginBottom="-214dp"
-        android:text="@string/fui_progress_dialog_loading"
-        android:textAlignment="center"
-        android:visibility="gone"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
 </RelativeLayout>

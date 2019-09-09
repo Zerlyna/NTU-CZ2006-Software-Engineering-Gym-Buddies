@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         final Activity mActivity = this;
         navigationView.getMenu().findItem(R.id.nav_logout).setOnMenuItemClickListener(menuItem -> {
             Intent logout = new Intent(mActivity, LoginChooserActivity.class);
+            logout.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             logout.putExtra("logout", true);
             startActivity(logout);
             finish();
