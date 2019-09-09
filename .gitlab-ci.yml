@@ -2,25 +2,11 @@
 .build_before_alpine: &buildbeforealpine
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
-    - apk --no-cache add ca-certificates wget unzip
-    - cd ci
-    - mv sgerrand.rsa.pub /etc/apk/keys
-    - apk add glibc.apk glibc-bin.apk # https://github.com/sgerrand/alpine-pkg-glibc
-    - cd ..
-    - mkdir "$ANDROID_HOME" .android && cd "$ANDROID_HOME"
-    - wget -q -O sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip
-    - unzip -q sdk.zip
     - cd $CI_PROJECT_DIR
     - chmod +x ./gradlew
-    - set +o pipefail
-    - yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-    - set -o pipefail
-    - echo y | $ANDROID_HOME/tools/bin/sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" >/dev/null
-    - echo y | $ANDROID_HOME/tools/bin/sdkmanager "platform-tools" >/dev/null
-    - echo y | $ANDROID_HOME/tools/bin/sdkmanager "build-tools;${ANDROID_BUILD_TOOLS}" >/dev/nulls
 
 # Actual CI Script
-image: openjdk:8-jdk-alpine
+image: alpine
 
 include:
   - template: Code-Quality.gitlab-ci.yml
@@ -34,9 +20,11 @@ variables:
   ANDROID_HOME: "/usr/local/android-sdk"
 
 stages:
-  - test
+  - Build Or Test
+  - Deployment
 
 code_quality:
+  stage: Build Or Test
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
@@ -44,13 +32,15 @@ code_quality:
     expire_in: 1 week
 
 sast:
+  stage: Build Or Test
   before_script:
     - chmod +x ./gradlew
   variables:
     FAIL_NEVER: 1
 
 Assemble Android App:
-  stage: test
+  image: itachi1706/android-alpine-sdk
+  stage: Build Or Test
   <<: *buildbeforealpine
   script:
     - cat $GOOGLE_SERVICES > ./app/google-services.json
@@ -66,3 +56,26 @@ Assemble Android App:
     paths:
       - .gradle/caches
       - .gradle/wrapper
+
+Generate Debug APK:
+  image: itachi1706/android-alpine-sdk
+  stage: Build Or Test
+  <<: *buildbeforealpine
+  script:
+    - echo $DEBUG_KEYSTORE | base64 -d > debug.keystore
+    - cat $GOOGLE_SERVICES > ./app/google-services.json
+    - ./gradlew assembleRelease -Pandroid.injected.signing.store.file=$(pwd)/debug.keystore -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD -Pandroid.injected.signing.key.alias=$KEY_ALIAS -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+  artifacts:
+    paths:
+      - app/build/outputs/apk/release
+
+Send To Telegram:
+  stage: Deployment
+  dependencies: [Generate Debug APK]
+  when: manual
+  before_script:
+    - apk add --no-cache curl
+    - mv app/build/outputs/apk/release/app-release.apk GymBuddy.apk
+  script: 
+    - curl -s -X POST https://api.telegram.org/bot$TGBOT_TOKEN/sendMessage -d chat_id=$CHAT_ID -d text="***CI BUILD $CI_PIPELINE_IID ($CI_COMMIT_SHA)***%0A%0A***$CI_COMMIT_TITLE***%0A$CI_COMMIT_DESCRIPTION" -d parse_mode=markdown
+    - curl -F chat_id="$CHAT_ID" -F document=@"GymBuddy.apk" https://api.telegram.org/bot$TGBOT_TOKEN/sendDocument
