@@ -10,7 +10,7 @@
             android:title="@string/menu_home" />
         <item
             android:id="@+id/nav_gym_list"
-            android:icon="@drawable/ic_star"
+            android:icon="@drawable/ic_heart"
             android:title="@string/menu_gym_list" />
         <item
             android:id="@+id/nav_bd_search"
