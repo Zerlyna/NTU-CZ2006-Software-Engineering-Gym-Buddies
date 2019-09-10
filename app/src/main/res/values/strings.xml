@@ -47,4 +47,5 @@
     <string name="txt_live_region">Live region</string>
     <string name="txt_buddy_gender">Buddy gender</string>
     <string name="txt_pref_dym_days">Preferred workout days</string>
+    <string name="logout">Log Out</string>
 </resources>

@@ -1,25 +1,30 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies;
 
+import android.content.Intent;
 import android.os.Bundle;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-
+import android.view.Menu;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
 
-import androidx.drawerlayout.widget.DrawerLayout;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
-import android.view.Menu;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromGoogle;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,6 +55,47 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+
+        // Check if user is supposed to be here
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser == null) {
+            logout(); // No user found
+            return;
+        }
+        // Check email validated for email
+        firebaseUser.getProviderData();
+        for (UserInfo provider : firebaseUser.getProviderData()) {
+            if (!provider.getProviderId().equalsIgnoreCase("password")) continue;
+            if (!firebaseUser.isEmailVerified()) {
+                logout(); // Email Authentication and user not verified
+                return;
+            }
+        }
+
+        // Set user name and email
+        View header = navigationView.getHeaderView(0);
+        ((TextView) header.findViewById(R.id.email)).setText(firebaseUser.getEmail());
+        ((TextView) header.findViewById(R.id.name)).setText(firebaseUser.getDisplayName());
+        if (firebaseUser.getPhotoUrl() != null)
+            new GetProfilePicFromGoogle(this, bitmap -> { if (bitmap != null) {
+                RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+                roundBitmap.setCircular(true);
+                ((ImageView) header.findViewById(R.id.profile_pic)).setImageDrawable(roundBitmap);
+            } })
+                    .execute(firebaseUser.getPhotoUrl()); // Download and set as profile pic
+
+        navigationView.getMenu().findItem(R.id.nav_logout).setOnMenuItemClickListener(menuItem -> {
+            logout();
+            return true;
+        });
+    }
+
+    private void logout() {
+        Intent logout = new Intent(this, LoginChooserActivity.class);
+        logout.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        logout.putExtra("logout", true);
+        startActivity(logout);
+        finish();
     }
 
     @Override
