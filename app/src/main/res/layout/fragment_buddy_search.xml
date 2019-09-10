@@ -40,13 +40,15 @@
             android:layout_height="match_parent"
             android:layout_weight="0.33"
             android:checked="true"
-            android:text="male" />
+            android:drawableTop="@drawable/ic_human_male"
+            android:text="Male" />
         <RadioButton
             style="@style/cb_highlight"
             android:id="@+id/rb_female"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.33"
+            android:drawableTop="@drawable/ic_human_female"
             android:text="female" />
         <RadioButton
             style="@style/cb_highlight"
@@ -54,6 +56,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.33"
+            android:drawableTop="@drawable/ic_human_male_female"
             android:text="both" />
     </RadioGroup>
     <TextView
