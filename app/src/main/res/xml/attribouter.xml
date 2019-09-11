@@ -15,6 +15,17 @@
         title="Team Members">
 
         <!-- Team Lead: Rainyillusionist -->
+        <me.jfenn.attribouter.wedges.ContributorWedge
+            login="rainyillusionist"
+            name="Francis Lim"
+            email="fran0029@e.ntu.edu.sg"
+            position="1"
+            task="Team Lead">
+            <me.jfenn.attribouter.wedges.link.LinkWedge
+                name="GitLab"
+                icon="@drawable/ic_gitlab"
+                url="https://gitlab.com/rainyillusionist" />
+        </me.jfenn.attribouter.wedges.ContributorWedge>
 
         <!-- Lead developer: itachi1706 -->
         <me.jfenn.attribouter.wedges.ContributorWedge
@@ -23,8 +34,8 @@
             avatar="https://avatars.githubusercontent.com/u/5357412"
             bio="Cause I'm a potato"
             blog="https://itachi1706.com"
-            email="kenneth@itachi1706.com"
-            position="1"
+            email="sohy0037@e.ntu.edu.sg"
+            position="2"
             task="Developer">
             <me.jfenn.attribouter.wedges.link.LinkWedge
                 name="GitLab"
@@ -33,9 +44,59 @@
         </me.jfenn.attribouter.wedges.ContributorWedge>
 
         <!-- Developer: ChiaYu -->
+        <!-- TODO: Get the GitHub user account if there is any -->
+        <me.jfenn.attribouter.wedges.ContributorWedge
+            name="Hsiao Chia Yu"
+            avatar="https://secure.gravatar.com/avatar/2f024b769eb1c221da286c6523c23534?s=80&amp;d=identicon"
+            email="chsiao001@e.ntu.edu.sg"
+            bio="TODO"
+            position="3"
+            task="Developer">
+            <me.jfenn.attribouter.wedges.link.LinkWedge
+                name="GitLab"
+                icon="@drawable/ic_gitlab"
+                url="https://gitlab.com/chiayu.dev" />
+        </me.jfenn.attribouter.wedges.ContributorWedge>
+
         <!-- UI Design: Tan Wei Cong -->
+        <!-- TODO: Get the GitHub user account if there is any -->
+        <me.jfenn.attribouter.wedges.ContributorWedge
+            name="Tan Wei Cong"
+            avatar="https://secure.gravatar.com/avatar/891e1b2a3f74f666c7a7692b767cf08f?s=80&amp;d=identicon"
+            email="tang0413@e.ntu.edu.sg"
+            bio="TODO"
+            task="UI/UX Design">
+            <me.jfenn.attribouter.wedges.link.LinkWedge
+                name="GitLab"
+                icon="@drawable/ic_gitlab"
+                url="https://gitlab.com/tangweicong94" />
+        </me.jfenn.attribouter.wedges.ContributorWedge>
+
         <!-- Documentation: Sam (Zerlyna) -->
+        <me.jfenn.attribouter.wedges.ContributorWedge
+            login="Zerlyna"
+            name="Sam"
+            email="jsam002@e.ntu.edu.sg"
+            bio="TODO"
+            task="Documentation">
+            <me.jfenn.attribouter.wedges.link.LinkWedge
+                name="GitLab"
+                icon="@drawable/ic_gitlab"
+                url="https://gitlab.com/Zerlyna" />
+        </me.jfenn.attribouter.wedges.ContributorWedge>
+
         <!-- Documentation: Alson (AlsonKong) -->
+        <me.jfenn.attribouter.wedges.ContributorWedge
+            login="Alsonkong"
+            name="Alson Kong"
+            email="kong0126@e.ntu.edu.sg"
+            bio="TODO"
+            task="Documentation">
+            <me.jfenn.attribouter.wedges.link.LinkWedge
+                name="GitLab"
+                icon="@drawable/ic_gitlab"
+                url="https://gitlab.com/Alsonkong" />
+        </me.jfenn.attribouter.wedges.ContributorWedge>
     </me.jfenn.attribouter.wedges.ContributorsWedge>
 
     <me.jfenn.attribouter.wedges.LicensesWedge
