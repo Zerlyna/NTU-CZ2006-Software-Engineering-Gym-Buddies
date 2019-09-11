@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<about>
+    <me.jfenn.attribouter.wedges.AppWedge
+        description="A gym buddy finding app (NTU CZ2006 SE Project for Team UnderConstruction)"
+        icon="@drawable/logo">
+        <me.jfenn.attribouter.wedges.link.LinkWedge
+            name="GitLab"
+            icon="@drawable/ic_gitlab"
+            priority="-1"
+            url="https://gitlab.com/kennethsohyq/school/university/ntu-cz2006-underconstruction" />
+    </me.jfenn.attribouter.wedges.AppWedge>
+
+    <me.jfenn.attribouter.wedges.ContributorsWedge
+        showDefaults="false"
+        title="Team Members">
+
+        <!-- Team Lead: Rainyillusionist -->
+
+        <!-- Lead developer: itachi1706 -->
+        <me.jfenn.attribouter.wedges.ContributorWedge
+            login="itachi1706"
+            name="Kenneth Soh"
+            avatar="https://avatars.githubusercontent.com/u/5357412"
+            bio="Cause I'm a potato"
+            blog="https://itachi1706.com"
+            email="kenneth@itachi1706.com"
+            position="1"
+            task="Developer">
+            <me.jfenn.attribouter.wedges.link.LinkWedge
+                name="GitLab"
+                icon="@drawable/ic_gitlab"
+                url="https://gitlab.com/itachi1706" />
+        </me.jfenn.attribouter.wedges.ContributorWedge>
+
+        <!-- Developer: ChiaYu -->
+        <!-- UI Design: Tan Wei Cong -->
+        <!-- Documentation: Sam (Zerlyna) -->
+        <!-- Documentation: Alson (AlsonKong) -->
+    </me.jfenn.attribouter.wedges.ContributorsWedge>
+
+    <me.jfenn.attribouter.wedges.LicensesWedge
+        showDefaults="false">
+
+        <!-- FirebaseUI -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Firebase UI for Android"
+            repo="firebase/FirebaseUI-Android"
+            license="apache-2.0" />
+
+        <!-- AndroidX -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="AndroidX Jetpack Support Libraries"
+            description="AndroidX is the open-source project that the Android team uses to develop, test, package, version and release libraries within Jetpack."
+            website="https://developer.android.com/jetpack/androidx"
+            licenseUrl="https://android.googlesource.com/platform/frameworks/support/+/androidx-master-dev/LICENSE.txt"
+            license="apache-2.0" />
+
+        <!-- Kotlin (lol) -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Kotlin"
+            repo="JetBrains/kotlin"
+            license="apache-2.0" />
+
+        <!-- AOSP -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Android Open Source Project"
+            description="Android is an open source software stack for a wide range of mobile devices and a corresponding open source project led by Google."
+            website="https://github.com/aosp-mirror"
+            licenseUrl="https://source.android.com/license"
+            license="apache-2.0" />
+
+    </me.jfenn.attribouter.wedges.LicensesWedge>
+</about>
