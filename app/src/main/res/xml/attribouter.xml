@@ -2,7 +2,7 @@
 <about>
     <me.jfenn.attribouter.wedges.AppWedge
         description="A gym buddy finding app (NTU CZ2006 SE Project for Team UnderConstruction)"
-        icon="@drawable/logo">
+        icon="@mipmap/ic_launcher">
         <me.jfenn.attribouter.wedges.link.LinkWedge
             name="GitLab"
             icon="@drawable/ic_gitlab"
