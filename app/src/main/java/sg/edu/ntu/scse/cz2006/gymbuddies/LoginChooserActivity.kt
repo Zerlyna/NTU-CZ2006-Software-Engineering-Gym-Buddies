@@ -38,7 +38,7 @@ class LoginChooserActivity : AppCompatActivity() {
         Log.i("AppInit", "Initializing Error Handling")
         val fabric = Fabric.Builder(this).kits(Crashlytics()).debuggable(BuildConfig.DEBUG).build()
         if (!BuildConfig.DEBUG) Fabric.with(fabric)
-        
+
         val isLogout = intent.extras?.getBoolean("logout", false) ?: false
         val firebaseUser = FirebaseAuth.getInstance().currentUser
         if (isLogout) logout() else autoLogin(firebaseUser)
