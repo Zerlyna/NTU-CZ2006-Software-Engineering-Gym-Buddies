@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import com.crashlytics.android.Crashlytics
 import me.jfenn.attribouter.Attribouter
 
 class SettingsActivity : AppCompatActivity() {
@@ -19,6 +20,7 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             findPreference<Preference>("about")?.setOnPreferenceClickListener { Attribouter.from(context).show(); true }
+            findPreference<Preference>("crash")?.setOnPreferenceClickListener { Crashlytics.getInstance().crash(); true }
         }
     }
 }

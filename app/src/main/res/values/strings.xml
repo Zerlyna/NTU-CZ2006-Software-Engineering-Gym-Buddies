@@ -53,10 +53,13 @@
     <!-- Preference Titles -->
     <string name="general_header">General Settings</string>
     <string name="app_header">App Info</string>
+    <string name="dev_header">Developer Options</string>
 
     <!-- Preferences -->
     <string name="placeholder_title">Preference Title</string>
     <string name="placeholder_pref">Preference Description</string>
     <string name="about_app">About this app</string>
     <string name="about_app_desc">Find out more info about this app and the team behind it</string>
+    <string name="crash_test_title">Force a crash</string>
+    <string name="crash_test_desc">Forces a crash of the application</string>
 </resources>
