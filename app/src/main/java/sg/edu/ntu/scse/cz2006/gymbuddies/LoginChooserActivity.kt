@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.crashlytics.android.Crashlytics
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
@@ -14,6 +15,7 @@ import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseUser
+import io.fabric.sdk.android.Fabric
 import java.util.*
 
 
@@ -33,20 +35,23 @@ class LoginChooserActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_chooser)
 
+        Log.i("AppInit", "Initializing Error Handling")
+        val fabric = Fabric.Builder(this).kits(Crashlytics()).debuggable(BuildConfig.DEBUG).build()
+        if (!BuildConfig.DEBUG) Fabric.with(fabric)
+
         val isLogout = intent.extras?.getBoolean("logout", false) ?: false
         val firebaseUser = FirebaseAuth.getInstance().currentUser
-        Log.d("Test", "onCreate")
         if (isLogout) logout() else autoLogin(firebaseUser)
     }
 
     private fun autoLogin(fbUser: FirebaseUser?) {
         if (checkingFurther) return
-        Log.d("Test", "al:check")
+        Log.d("LoginChk", "al:check")
         if (fbUser == null) {
-            Log.d("Test", "al:fail")
+            Log.d("LoginChk", "al:fail")
             login()
         } else {
-            Log.d("Test", "al:pass")
+            Log.d("LoginChk", "al:pass")
             // Launch main activity and finish this activity
             signInFlow = false
             startActivity(Intent(this, MainActivity::class.java))
@@ -64,7 +69,7 @@ class LoginChooserActivity : AppCompatActivity() {
             when (provider.toLowerCase(Locale.getDefault())) {
                 "password" -> {
                     // Check if user email is verified
-                    Log.d("Test", "PW: FC")
+                    Log.d("LoginChk", "PW: FC")
                     if (!it.isEmailVerified) {
                         // Send verification email and log them out
                         it.sendEmailVerification().addOnCompleteListener{ task->
@@ -102,7 +107,7 @@ class LoginChooserActivity : AppCompatActivity() {
                 }
                 else -> {
                     checkingFurther = false
-                    Log.d("Test", "PW: Other")
+                    Log.d("LoginChk", "PW: Other")
                     autoLogin(it)
                 }
             }
@@ -121,12 +126,12 @@ class LoginChooserActivity : AppCompatActivity() {
     }
 
     private fun logout(silent: Boolean = false) {
-        Log.d("Test", "logout")
+        Log.d("LoginChk", "logout")
         FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
         AuthUI.getInstance().signOut(this).addOnCompleteListener{
             if (it.isComplete && it.isSuccessful) {
                 if (!silent) Toast.makeText(this, "Logged Out!", Toast.LENGTH_LONG).show()
-                Log.d("Test", "LogOut:onComplete")
+                Log.d("LoginChk", "LogOut:onComplete")
                 autoLogin(FirebaseAuth.getInstance().currentUser)
             }
         }
@@ -155,7 +160,7 @@ class LoginChooserActivity : AppCompatActivity() {
                     Toast.makeText(this, "An unknown error has occurred", Toast.LENGTH_SHORT).show()
                     Log.e("Auth", "Sign-in error: ", response.error)
                 }
-                Log.d("Test", "Auth Failed")
+                Log.w("LoginChk", "Auth Failed")
                 autoLogin(FirebaseAuth.getInstance().currentUser) // Try logging in again
             }
         }

@@ -17,19 +17,15 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="@string/general_header">
-
-        <Preference app:key="placeholder"
-            app:title="@string/placeholder_title"
-            app:summary="@string/placeholder_pref" />
-
+        <Preference app:key="placeholder" app:title="@string/placeholder_title" app:summary="@string/placeholder_pref" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/app_header">
+        <Preference app:key="about" app:title="@string/about_app" app:summary="@string/about_app_desc" />
+    </PreferenceCategory>
 
-        <Preference app:key="about"
-            app:title="@string/about_app"
-            app:summary="@string/about_app_desc" />
-
+    <PreferenceCategory app:title="@string/dev_header">
+        <Preference app:key="crash" app:title="@string/crash_test_title" app:summary="@string/crash_test_desc" />
     </PreferenceCategory>
 
 </PreferenceScreen>
