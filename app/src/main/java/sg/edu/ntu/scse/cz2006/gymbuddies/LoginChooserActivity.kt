@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.crashlytics.android.Crashlytics
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
@@ -14,6 +15,7 @@ import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseUser
+import io.fabric.sdk.android.Fabric
 import java.util.*
 
 
@@ -32,6 +34,11 @@ class LoginChooserActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_chooser)
+
+        Log.i("AppInit", "Initializing Error Handling")
+        val fabric = Fabric.Builder(this).kits(Crashlytics()).debuggable(BuildConfig.DEBUG).build()
+        if (!BuildConfig.DEBUG) Fabric.with(fabric)
+
 
         val isLogout = intent.extras?.getBoolean("logout", false) ?: false
         val firebaseUser = FirebaseAuth.getInstance().currentUser
