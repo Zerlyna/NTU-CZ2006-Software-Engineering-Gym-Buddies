@@ -79,3 +79,5 @@ Send To Telegram:
   script: 
     - curl -s -X POST https://api.telegram.org/bot$TGBOT_TOKEN/sendMessage -d chat_id=$CHAT_ID -d text="***CI BUILD $CI_PIPELINE_IID ($CI_COMMIT_SHA)***%0A%0A***$CI_COMMIT_TITLE***%0A$CI_COMMIT_DESCRIPTION" -d parse_mode=markdown
     - curl -F chat_id="$CHAT_ID" -F document=@"GymBuddy.apk" https://api.telegram.org/bot$TGBOT_TOKEN/sendDocument
+  after_script:
+    -  curl -s -X POST https://api.telegram.org/bot$TGBOT_TOKEN/sendMessage -d chat_id=$CHAT_ID --data-urlencode text="$(cat meeting.MD)" -d parse_mode=markdown
