@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -28,8 +29,11 @@ import com.google.android.gms.maps.UiSettings;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.List;
+
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
@@ -47,6 +51,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
         homeViewModel.getText().observe(this, s -> textView.setText(s));
+
+        // TEST START
+        homeViewModel.getCarParks().observe(this, new Observer<List<CarPark>>() {
+            @Override
+            public void onChanged(List<CarPark> carparks) {
+                Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size());
+            }
+        });
+        // TEST END
+
 
         mapView = root.findViewById(R.id.map_view);
         setHasOptionsMenu(true);
