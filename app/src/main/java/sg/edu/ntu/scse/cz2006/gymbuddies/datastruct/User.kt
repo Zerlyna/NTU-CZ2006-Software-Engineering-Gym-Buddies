@@ -1,5 +1,7 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.datastruct
 
+import com.google.firebase.firestore.Exclude
+
 /**
  * Created by Kenneth on 16/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
@@ -22,7 +24,7 @@ data class User(var name: String = "", var prefLocation: String = "West", var ge
                 }
             }
         }
-        fun getDays(): ArrayList<Int> {
+        @Exclude fun getDays(): ArrayList<Int> {
             val list = ArrayList<Int>()
             // Add accordingly (1 - Mon, 2 - Tues ... 7 - Sun
             if (monday) list.add(1)
@@ -34,8 +36,7 @@ data class User(var name: String = "", var prefLocation: String = "West", var ge
             if (sunday) list.add(7)
             return list
         }
-
-        fun getDaysCSV(): String {
+        @Exclude fun getDaysCSV(): String {
             return getDays().joinToString(",")
         }
     }
