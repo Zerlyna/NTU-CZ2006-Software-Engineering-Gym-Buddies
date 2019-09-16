@@ -54,7 +54,7 @@ class LoginChooserActivity : AppCompatActivity() {
             Log.d("LoginChk", "al:pass")
             // Launch main activity and finish this activity
             signInFlow = false
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, ProfileCheckerActivity::class.java))
             finish()
         }
     }

@@ -22,15 +22,6 @@
     <string name="menu_forum">Forum</string>
     <string name="menu_feedback">Feedback</string>
 
-
-    <string-array name="live_region">
-        <item>Central</item>
-        <item>North</item>
-        <item>West</item>
-        <item>East</item>
-        <item>South</item>
-    </string-array>
-
     <string name="txt_day1_short">Mon</string>
     <string name="txt_day2_short">Tue</string>
     <string name="txt_day3_short">Wed</string>
