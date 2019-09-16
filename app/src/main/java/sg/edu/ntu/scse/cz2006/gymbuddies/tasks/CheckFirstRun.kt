@@ -33,29 +33,22 @@ class CheckFirstRun(activity: Activity, private val callback: Callback) : AsyncT
         Log.i(TAG, "Obtaining user object")
 
         val firebaseDb = FirebaseFirestore.getInstance()
+        val debugStart = System.currentTimeMillis()
+        Log.d(TAG, "Time Taken Data Processing Start: $debugStart")
         firebaseDb.collection("users").document(uid).get().addOnSuccessListener {
             Log.i(TAG, "User object retrieved, checking existance")
+            val debugMid = System.currentTimeMillis()
+            Log.d(TAG, "Time Taken Data Processing Middle: $debugMid")
             if (it.exists()) {
                 Log.i(TAG, "User exists, checking if firstRun")
-                val user = it.toObject(User::class.java) // Default no
-                if (user == null || user.flags.firstRun) {
-                    // First Run (Success)
-                    doCallback(true, activity)
-                } else {
-                    // Go into main activity
-                    // Not First Run
-                    doCallback(false, activity)
-                }
-            } else {
-                Log.i(TAG, "User does not exist, creating new user")
-                // First Run
-                doCallback(true, activity)
-            }
-        }.addOnFailureListener {
-            Log.w(TAG, "Error getting Firebase Collection", it)
-            // Error, Fail it
-            activity.runOnUiThread { callback.isError() }
-        }
+                val flags = it.toObject(User::class.java) // Default no
+                val debugEnd = System.currentTimeMillis()
+                Log.d(TAG, "Time Taken Data Processing End: $debugEnd")
+                Log.d(TAG, "[Calculation] Total: ${debugEnd - debugStart}ms | S -> M: ${debugMid - debugStart}ms | M -> E: ${debugEnd - debugMid}ms")
+                if (flags == null || flags.flags.firstRun) doCallback(true, activity) // User exists but has not completed first run for some reason
+                else doCallback(false, activity) // User exists and completed first run
+            } else { Log.i(TAG, "User does not exist, creating new user"); Log.d(TAG, "[Calculation] Total: ${debugMid - debugStart}ms"); doCallback(true, activity) } // New User
+        }.addOnFailureListener { Log.w(TAG, "Error getting Firebase Collection", it); activity.runOnUiThread { callback.isError() } } // Error, Fail it
         return null
     }
 

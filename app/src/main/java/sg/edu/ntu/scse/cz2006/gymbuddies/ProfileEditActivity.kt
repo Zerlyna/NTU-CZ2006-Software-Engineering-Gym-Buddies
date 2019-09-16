@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
@@ -33,6 +34,9 @@ class ProfileEditActivity : AppCompatActivity() {
         Log.d(TAG, "FirstRun: $firstRun")
 
         if (firstRun) {
+            supportActionBar?.title = "Create New Profile"
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            Log.i(TAG, "Create new profile flow called")
             val auth = FirebaseAuth.getInstance().currentUser!!
             if (!auth.displayName.isNullOrEmpty()) etName.setText(auth.displayName)
             if (auth.photoUrl != null) {
@@ -143,6 +147,14 @@ class ProfileEditActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     companion object {
