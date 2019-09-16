@@ -14,7 +14,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.CheckFirstRun
  * This checks that
  * - The user has completed their first run sequence (MUST BE AUTHENTICATED)
  */
-class ProfileCheckerActivity : AppCompatActivity() {
+class UpdateUserActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,13 +33,13 @@ class ProfileCheckerActivity : AppCompatActivity() {
         CheckFirstRun(this, object: CheckFirstRun.Callback {
             override fun isFirstRun(success: Boolean) {
                 Log.d(TAG, "isFirstRun: $success")
-                if (success) goEditProfile() else startActivity(Intent(this@ProfileCheckerActivity, MainActivity::class.java))
+                if (success) goEditProfile() else startActivity(Intent(this@UpdateUserActivity, MainActivity::class.java))
                 finish()
             }
 
             override fun isError() {
                 Log.w(TAG, "Error detected, logging out")
-                val logout = Intent(this@ProfileCheckerActivity, LoginChooserActivity::class.java).apply { putExtra("logout", true) }
+                val logout = Intent(this@UpdateUserActivity, LoginChooserActivity::class.java).apply { putExtra("logout", true) }
                 startActivity(logout)
                 finish()
             }

@@ -15,7 +15,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".ProfileEditActivity" android:label="Edit Profile" android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".ProfileCheckerActivity" />
+        <activity android:name=".UpdateUserActivity" />
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" />
