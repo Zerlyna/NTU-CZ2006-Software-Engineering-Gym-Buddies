@@ -1,18 +1,15 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.tasks
 
-import android.app.Activity
 import android.os.AsyncTask
 import android.util.Log
 import com.google.firebase.firestore.DocumentReference
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
-import java.lang.ref.WeakReference
 
 /**
  * Created by Kenneth on 16/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
  */
-class UpdateFirebaseFirestoreDocument(activity: Activity, var docRef: DocumentReference, var userObj: User, private var callback: Callback) : AsyncTask<Void, Void, Boolean>() {
-    private val actRef = WeakReference(activity)
+class UpdateFirebaseFirestoreDocument(var docRef: DocumentReference, var userObj: User, private var callback: Callback) : AsyncTask<Void, Void, Boolean>() {
 
     override fun doInBackground(vararg p0: Void?): Boolean {
         docRef.set(userObj)

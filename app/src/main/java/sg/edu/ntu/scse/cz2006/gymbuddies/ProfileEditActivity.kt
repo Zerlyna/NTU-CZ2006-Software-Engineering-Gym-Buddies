@@ -99,7 +99,7 @@ class ProfileEditActivity : AppCompatActivity() {
             user.flags.firstRun = false
             val db = FirebaseFirestore.getInstance()
             val ref = db.collection("users").document(FirebaseAuth.getInstance().currentUser!!.uid)
-            UpdateFirebaseFirestoreDocument(this, ref, user, object: UpdateFirebaseFirestoreDocument.Callback {
+            UpdateFirebaseFirestoreDocument(ref, user, object: UpdateFirebaseFirestoreDocument.Callback {
                 override fun onComplete(success: Boolean) {
                     Log.i(TAG, "Insertion Status: $success")
                     if (success) {
