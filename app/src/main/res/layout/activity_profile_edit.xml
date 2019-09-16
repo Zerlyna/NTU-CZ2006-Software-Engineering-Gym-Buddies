@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
+    android:id="@+id/coordinator"
     tools:context=".ProfileEditActivity">
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
-            android:text="Display Image"
+            android:text="Update Profile Picture"
             android:gravity="center" />
 
         <ImageView
@@ -83,7 +84,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.33"
                 android:drawableTop="@drawable/ic_human_female"
-                android:text="female" />
+                android:text="Female" />
         </RadioGroup>
 
         <TextView
@@ -122,7 +123,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Preferred workout days" />
+            android:text="Preferred workout days (pick at least one)" />
 
         <include layout="@layout/row_pref_days"/>
 
