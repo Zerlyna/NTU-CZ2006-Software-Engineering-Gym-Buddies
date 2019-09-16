@@ -15,6 +15,8 @@ class ProfileEditActivity : AppCompatActivity() {
 
         firstRun = intent.getBooleanExtra("firstrun", false)
         Log.d(TAG, "FirstRun: $firstRun")
+
+        // TODO: Retrieve existing data if not first run from database
     }
 
     override fun onBackPressed() {

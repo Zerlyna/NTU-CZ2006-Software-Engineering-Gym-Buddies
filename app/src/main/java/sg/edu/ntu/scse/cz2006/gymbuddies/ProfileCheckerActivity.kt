@@ -5,9 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_login_chooser.*
-import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.CheckFirstRun
 
 /**
  * This activity is just used to ensure that we have processed everything from our database that we need to prevent
@@ -29,27 +28,23 @@ class ProfileCheckerActivity : AppCompatActivity() {
             return
         }
 
-        message.text = "Updating database..."
+        message.text = "Updating user data..."
 
-        val firebaseDb = FirebaseFirestore.getInstance()
-        firebaseDb.collection("users").document(auth.uid).get().addOnSuccessListener {
-            if (it.exists()) {
-                val user = it.toObject(User::class.java) // Default no
-                if (user == null || user.flags.firstRun) {
-                    // First Run
-                    goEditProfile()
-                } else {
-                    // Go into main activity
-                    startActivity(Intent(this, MainActivity::class.java))
-                }
-            } else {
-                goEditProfile()
+        CheckFirstRun(this, object: CheckFirstRun.Callback {
+            override fun isFirstRun(success: Boolean) {
+                Log.d(TAG, "isFirstRun: $success")
+                if (success) goEditProfile() else startActivity(Intent(this@ProfileCheckerActivity, MainActivity::class.java))
+                finish()
             }
-        }.addOnFailureListener {
-            Log.w(TAG, "Error getting Firebase Collection", it)
-            startActivity(Intent(this, LoginChooserActivity::class.java))
-        }
-        finish()
+
+            override fun isError() {
+                Log.w(TAG, "Error detected, logging out")
+                val logout = Intent(this@ProfileCheckerActivity, LoginChooserActivity::class.java).apply { putExtra("logout", true) }
+                startActivity(logout)
+                finish()
+            }
+
+        }).execute(auth.uid)
         return
     }
 
