@@ -62,6 +62,7 @@ class ProfileEditActivity : AppCompatActivity() {
         profile_pic.setOnClickListener {
             // TODO: Allow user to take picture or upload picture
             Snackbar.make(coordinator, "Coming Soon", Snackbar.LENGTH_LONG).show()
+            // TODO: Add profile pic into cloud storage for retrieval
         }
     }
 
@@ -116,11 +117,8 @@ class ProfileEditActivity : AppCompatActivity() {
             } ).execute()
         } else {
             Snackbar.make(coordinator, "Updating of profile is coming soon", Snackbar.LENGTH_LONG).show()
+            // TODO: Update data in firebase if update
         }
-        // TODO: Add profile pic into cloud storage for retrieval
-        // TODO: Update FirebaseAuth Profile (set DisplayName as Full Name and Profile pic as the Uri retrieved from cloud storage
-        // TODO: Add data to firebase if first run
-        // TODO: Update data in firebase if update
     }
 
     private fun getSelectedDays(): ArrayList<Int> {
