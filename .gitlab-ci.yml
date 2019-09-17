@@ -111,6 +111,7 @@ Update Javadocs:
     - echo "Pushing to Git"
     - git push
   dependencies: [Generate Javadocs Documentation]
+  allow_failure: true
   only:
     - master
 
