@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -17,25 +18,31 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private HomeViewModel homeViewModel;
     private MapView mapView;
     private GoogleMap mMap;
+    private CoordinatorLayout coordinatorLayout;
 
     private BottomSheetBehavior bottomSheetBehavior;
     private View bottomSheet;
@@ -46,6 +53,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
+        coordinatorLayout = root.findViewById(R.id.coordinator);
         homeViewModel.getText().observe(this, s -> textView.setText(s));
 
         mapView = root.findViewById(R.id.map_view);
@@ -110,6 +118,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         settings.setMapToolbarEnabled(false);
 
         //zoomToLocation();
+        // Zoom to Singapore: 1.3413054,103.8074233, 12z
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
+        mMap.setOnInfoWindowClickListener(marker -> Snackbar.make(coordinatorLayout, "Feature Coming Soon! (Gym Details)", Snackbar.LENGTH_LONG).show());
+        // Process and parse markers
+        if (getActivity() != null) {
+            new ParseGymDataFile(getActivity(), (markers) -> {
+                if (markers == null) return;
+                for (MarkerOptions m : markers) { mMap.addMarker(m); }
+            }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     private boolean hasGpsPermission() {
