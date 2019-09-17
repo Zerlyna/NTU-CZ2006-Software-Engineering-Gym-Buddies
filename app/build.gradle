@@ -37,7 +37,7 @@ android {
     dokka {
         outputFormat = 'html'
         //outputDirectory = "$buildDir/javadoc"
-        outputDirectory = "../javadoc"
+        outputDirectory = "javadoc"
         reportUndocumented = true
         jdkVersion = 8
     }
