@@ -26,7 +26,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
 
-import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromGoogle;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
         View header = navigationView.getHeaderView(0);
         ((TextView) header.findViewById(R.id.email)).setText(firebaseUser.getEmail());
         ((TextView) header.findViewById(R.id.name)).setText(firebaseUser.getDisplayName());
-        if (firebaseUser.getPhotoUrl() != null)
-            new GetProfilePicFromGoogle(this, bitmap -> { if (bitmap != null) {
+        if (firebaseUser.getPhotoUrl() != null && !firebaseUser.getPhotoUrl().toString().equalsIgnoreCase("null"))
+            new GetProfilePicFromFirebaseAuth(this, bitmap -> { if (bitmap != null) {
                 RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
                 roundBitmap.setCircular(true);
                 ((ImageView) header.findViewById(R.id.profile_pic)).setImageDrawable(roundBitmap);
