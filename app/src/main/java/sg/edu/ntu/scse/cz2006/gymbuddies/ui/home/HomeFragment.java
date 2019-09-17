@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -22,6 +23,9 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,8 +37,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.Arrays;
+
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
@@ -43,6 +50,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private MapView mapView;
     private GoogleMap mMap;
     private CoordinatorLayout coordinatorLayout;
+    private RecyclerView favouritesList;
 
     private BottomSheetBehavior bottomSheetBehavior;
     private View bottomSheet;
@@ -79,12 +87,34 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         bottomSheet = root.findViewById(R.id.bottom_sheet);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setPeekHeight(100);
+        bottomSheetBehavior.setPeekHeight(200);
         bottomSheetBehavior.setHideable(false);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        bottomSheet.setOnTouchListener((view, motionEvent) -> {
+            view.performClick();
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            return false;
+        });
+
+        favouritesList = bottomSheet.findViewById(R.id.favourite_list);
+        if (favouritesList != null) {
+            favouritesList.setHasFixedSize(true);
+            LinearLayoutManager llm = new LinearLayoutManager(getContext());
+            llm.setOrientation(LinearLayoutManager.VERTICAL);
+            favouritesList.setLayoutManager(llm);
+            favouritesList.setItemAnimator(new DefaultItemAnimator());
+        }
+
+        // TODO: Get favourites list from firebase based on the key
+        // TODO: Remove default 0 hahaha
+        String[] toremove = {"No Favourites Found", "This feature is currently a WIP"};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
+        favouritesList.setAdapter(adapter);
 
         return root;
     }
+
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
