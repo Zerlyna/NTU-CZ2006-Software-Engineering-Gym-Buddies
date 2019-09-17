@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'org.jetbrains.dokka-android'
 
 android {
     compileSdkVersion 29
@@ -32,6 +33,13 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    dokka {
+        outputFormat = 'html'
+        //outputDirectory = "$buildDir/javadoc"
+        outputDirectory = "javadoc"
+        reportUndocumented = true
+        jdkVersion = 8
     }
 }
 
