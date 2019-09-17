@@ -111,8 +111,8 @@ Update Javadocs:
     - echo "Pushing to Git"
     - git push
   dependencies: [Generate Javadocs Documentation]
-  #only:
-    #- master
+  only:
+    - master
 
 
 Send To Telegram:
