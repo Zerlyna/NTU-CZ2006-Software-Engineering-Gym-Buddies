@@ -79,7 +79,7 @@ Generate Javadocs Documentation:
     - ./gradlew dokka
   artifacts:
     paths:
-      - javadoc
+      - javadoc/
 
 Update Javadocs:
   stage: Deployment
