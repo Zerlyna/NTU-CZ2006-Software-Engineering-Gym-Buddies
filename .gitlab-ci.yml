@@ -69,6 +69,52 @@ Generate Debug APK:
     paths:
       - app/build/outputs/apk/release
 
+Generate Javadocs Documentation:
+  image: itachi1706/android-alpine-sdk
+  stage: Build Or Test
+  <<: *buildbeforealpine
+  script:
+    - echo $DEBUG_KEYSTORE | base64 -d > debug.keystore
+    - cat $GOOGLE_SERVICES > ./app/google-services.json
+    - ./gradlew dokka
+  artifacts:
+    paths:
+      - javadoc
+
+Update Javadocs:
+  stage: Deployment
+  cache: {}
+  script:
+    - echo "Deploying to JavaDocs Repo"
+    - echo "Installing Dependencies"
+    - apk update && apk --no-cache add git
+    - echo "Configuring Dependencies"
+    - git config --global user.name "SE GitLab CI"
+    - git config --global user.email "gitlabci@itachi1706.com"
+    - echo "Cloning Repository"
+    - git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/itachi1706/How-to-use-Git-NTUSCSE1819-Site.git jdocs
+    - cd jdocs
+    - git pull
+    - echo "Ensuring that files are cleaned"
+    - mkdir -p projects/se/html
+    - cd projects/se/html
+    - rm -rf ./*
+    - cd ../../../../
+    - echo "Copying Javadocs" # Our deploying site
+    - cp -r ./javadoc/* ./jdocs/projects/se/html/
+    - cd jdocs
+    - echo "Viewing Git Status"
+    - git status
+    - echo "Committing"
+    - git add -A
+    - "git commit -m \"Automated GitLab Build #${CI_PIPELINE_IID} from Pipelines for ${CI_JOB_NAME}. View the build at ${CI_PIPELINE_URL}!\""
+    - echo "Pushing to Git"
+    - git push
+  dependencies: [Generate Javadocs Documentation]
+  #only:
+    #- master
+
+
 Send To Telegram:
   stage: Deployment
   dependencies: [Generate Debug APK]
