@@ -20,36 +20,9 @@ public abstract class GBDatabase extends RoomDatabase {
                     GBDatabase.class,
                     "db_gym_buddies")
                     .fallbackToDestructiveMigration()
-//                    .createFromAsset(FILE_DB_NAME)
-//                    .addCallback( roomCallback )
+                    .createFromAsset(FILE_DB_NAME)
                     .build();
         }
         return instance;
     }
-
-
-//    private static RoomDatabase.Callback roomCallback = new RoomDatabase.Callback(){
-//
-//        @Override
-//        public void onCreate(@NonNull SupportSQLiteDatabase db) {
-//            super.onCreate(db);
-//            new PopulateDbAsyncTask(instance).execute();
-//        }
-//    };
-//
-//    private static class PopulateDbAsyncTask extends AsyncTask<Void, Void, Void>{
-//        private CarParkDao carParkDao;
-//
-//        public PopulateDbAsyncTask(GBDatabase db){
-//            carParkDao = db.carParkDao();
-//        }
-//
-//        @Override
-//        protected Void doInBackground(Void... voids) {
-//            carParkDao.insert(new CarPark("Y1", "Test addr 1", "A"));
-//            carParkDao.insert(new CarPark("Y2", "Test addr 2", "A"));
-//            carParkDao.insert(new CarPark("Y3", "Test addr 3", "B"));
-//            return null;
-//        }
-//    }
 }

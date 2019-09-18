@@ -27,7 +27,7 @@ public class HomeViewModel extends AndroidViewModel {
 
 
 
-        // TEST: attempt to get room database
+        // TODO: move to gym details view model
         try{
             GBDatabase db = GBDatabase.getInstance(application);
             CarParkDao dao = db.carParkDao();

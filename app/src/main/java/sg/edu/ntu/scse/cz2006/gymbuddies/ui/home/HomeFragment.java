@@ -52,14 +52,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         final TextView textView = root.findViewById(R.id.text_home);
         homeViewModel.getText().observe(this, s -> textView.setText(s));
 
-        // TEST START
+
+        // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
         homeViewModel.getCarParks().observe(this, new Observer<List<CarPark>>() {
             @Override
             public void onChanged(List<CarPark> carparks) {
                 Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size());
             }
         });
-        // TEST END
 
 
         mapView = root.findViewById(R.id.map_view);
