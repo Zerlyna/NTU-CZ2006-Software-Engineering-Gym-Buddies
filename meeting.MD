@@ -4,6 +4,7 @@ _Useful Links_
 _Issue Tracking:_ https://jira.itachi1706.com:8123/browse/NTUSE
 _Code Repository:_ https://gitlab.com/kennethsohyq/school/university/ntu-cz2006-underconstruction
 _SVN Link (Requires NTU Intranet):_ https://155.69.100.25/svn/CX2006/SSP4/UnderConstruction
+_Android JavaDocs:_ https://ntugit.itachi1706.com/projects/se/html/app
 
 *TODO before next meeting:*
 - *FINALISATION* on Lab #2 Deliverables: Conceptual model

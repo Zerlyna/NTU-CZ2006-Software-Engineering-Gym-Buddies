@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'org.jetbrains.dokka-android'
 
 android {
     compileSdkVersion 29
@@ -33,9 +34,27 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    dokka {
+        outputFormat = 'html'
+        //outputDirectory = "$buildDir/javadoc"
+        outputDirectory = "javadoc"
+        reportUndocumented = true
+        jdkVersion = 8
+    }
 }
 
 dependencies {
+    def room_version = "2.2.0-rc01"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version" // For Kotlin use kapt instead of annotationProcessor
+    implementation "androidx.room:room-ktx:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+    implementation "androidx.room:room-guava:$room_version"
+    testImplementation "androidx.room:room-testing:$room_version"
+
+
+
+
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.1.0-alpha10'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
@@ -43,6 +62,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
 
     implementation 'androidx.preference:preference-ktx:1.1.0'
+    implementation 'com.google.firebase:firebase-firestore-ktx:21.1.1'
+    implementation 'com.google.firebase:firebase-storage:19.0.1'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'])

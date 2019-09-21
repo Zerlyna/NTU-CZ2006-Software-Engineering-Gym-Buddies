@@ -11,7 +11,7 @@ import java.lang.ref.WeakReference
  * Created by Kenneth on 9/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
  */
-class GetProfilePicFromGoogle(activity: Activity, var callback: Callback) : AsyncTask<Uri, Void, Void>() {
+class GetProfilePicFromFirebaseAuth(activity: Activity, var callback: Callback) : AsyncTask<Uri, Void, Void>() {
     interface Callback {
         fun onComplete(bitmap: Bitmap?)
     }

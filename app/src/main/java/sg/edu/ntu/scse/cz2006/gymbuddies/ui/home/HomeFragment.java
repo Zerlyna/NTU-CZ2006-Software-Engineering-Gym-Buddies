@@ -22,6 +22,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,10 +39,12 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.Arrays;
+import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
@@ -63,6 +66,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         final TextView textView = root.findViewById(R.id.text_home);
         coordinatorLayout = root.findViewById(R.id.coordinator);
         homeViewModel.getText().observe(this, s -> textView.setText(s));
+
+
+        // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
+        homeViewModel.getCarParks().observe(this, new Observer<List<CarPark>>() {
+            @Override
+            public void onChanged(List<CarPark> carparks) {
+                Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size());
+            }
+        });
+
 
         mapView = root.findViewById(R.id.map_view);
         setHasOptionsMenu(true);
