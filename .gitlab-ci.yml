@@ -31,7 +31,7 @@ code_quality:
     paths: [gl-code-quality-report.json]
     expire_in: 1 week
 
-sast:
+.sast:
   stage: Build Or Test
   before_script:
     - chmod +x ./gradlew
