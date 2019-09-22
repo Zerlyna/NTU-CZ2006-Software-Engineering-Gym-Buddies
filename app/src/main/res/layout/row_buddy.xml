@@ -16,21 +16,30 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:srcCompat="@tools:sample/avatars" />
 
+    <ImageView
+        android:id="@+id/img_bd_gender"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="10dp"
+        app:layout_constraintStart_toEndOf="@+id/img_bd_pic"
+        app:layout_constraintTop_toTopOf="@+id/img_bd_pic"
+        tools:srcCompat="@drawable/ic_human_male" />
+
     <TextView
         android:id="@+id/tv_bd_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Name"
-
-        android:layout_marginStart="10dp"
-        app:layout_constraintStart_toEndOf="@+id/img_bd_pic"
-        app:layout_constraintTop_toTopOf="@+id/img_bd_pic" />
+        android:layout_marginStart="5dp"
+        app:layout_constraintStart_toEndOf="@+id/img_bd_gender"
+        app:layout_constraintTop_toTopOf="@+id/img_bd_pic"
+        app:layout_constraintBottom_toBottomOf="@+id/img_bd_gender"/>
 
     <TextView
         android:id="@+id/tv_bd_region"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Live region"
-        app:layout_constraintStart_toStartOf="@+id/tv_bd_name"
+        app:layout_constraintStart_toStartOf="@+id/img_bd_gender"
         app:layout_constraintTop_toBottomOf="@+id/tv_bd_name" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -35,7 +35,7 @@
 
         <RadioButton
             style="@style/cb_highlight"
-            android:id="@+id/fb_male"
+            android:id="@+id/rb_male"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.33"
@@ -70,5 +70,10 @@
 
     <include layout="@layout/row_pref_days"/>
 
+    <Button
+        android:id="@+id/btn_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/txt_search" />
 
 </LinearLayout>
