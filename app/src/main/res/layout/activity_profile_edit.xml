@@ -16,6 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
+            android:id="@+id/tv_profile_pic_update_lbl"
             android:text="Update Profile Picture"
             android:gravity="center" />
 
@@ -137,6 +138,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="Preferred workout days (pick at least one)" />
+
+        <TextView
+            android:id="@+id/tv_label_pref_days_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginTop="10dp"
+            android:text="Preferred workout days" />
 
         <include layout="@layout/row_pref_days"/>
 

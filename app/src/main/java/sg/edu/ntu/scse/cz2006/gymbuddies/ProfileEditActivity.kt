@@ -10,8 +10,10 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.RadioButton
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.view.children
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -45,9 +47,9 @@ class ProfileEditActivity : AppCompatActivity() {
         val auth = FirebaseAuth.getInstance().currentUser!!
         uid = auth.uid
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         if (firstRun) {
             supportActionBar?.title = "Create New Profile"
-            supportActionBar?.setDisplayHomeAsUpEnabled(true)
             Log.i(TAG, "Create new profile flow called")
             if (!auth.displayName.isNullOrEmpty()) etName.setText(auth.displayName)
             if (auth.photoUrl != null && auth.photoUrl.toString().toLowerCase(Locale.getDefault()) != "null") {
@@ -67,21 +69,107 @@ class ProfileEditActivity : AppCompatActivity() {
                 profile_pic.setImageResource(R.mipmap.ic_launcher) // Default Image
             }
         } else {
-            // TODO: Retrieve existing data if not first run from database
+            if (intent.getBooleanExtra("view", false)) enterViewOnlyMode()
+            loadImage.visibility = View.VISIBLE
+            Toast.makeText(this, "Loading user data...", Toast.LENGTH_SHORT).show()
+            FirebaseFirestore.getInstance().collection("users").document(uid).get().addOnSuccessListener {
+                loadImage.visibility = View.GONE
+                if (it.exists()) {
+                    editUser = it.toObject(User::class.java)
+                    editUser?.let { user -> updateData(user) }
+                }
+            }.addOnFailureListener { loadImage.visibility = View.GONE; Log.e(TAG, "Error occurred retriving data for viewing")}
         }
         fab.setOnClickListener {
-            InputHelper.hideSoftKeyboard(this)
-            // Check if uploading image
-            if (loadImage.visibility == View.VISIBLE) Snackbar.make(coordinator, "Currently uploading profile picture. Wait for it to finish before saving profile", Snackbar.LENGTH_LONG).show()
-            else {
-                if (validate()) addOrUpdate()
-                else Snackbar.make(coordinator, "Please complete your profile before continuing", Snackbar.LENGTH_LONG).show()
-            }
+            Log.d(TAG, "FAB Clicked - Edit Mode: $editMode")
+            if (editMode) {
+                InputHelper.hideSoftKeyboard(this)
+                // Check if uploading image
+                if (loadImage.visibility == View.VISIBLE) Snackbar.make(coordinator, "Currently uploading profile picture. Wait for it to finish before saving profile", Snackbar.LENGTH_LONG).show()
+                else {
+                    if (validate()) addOrUpdate()
+                    else Snackbar.make(coordinator, "Please complete your profile before continuing", Snackbar.LENGTH_LONG).show()
+                }
+            } else exitViewOnlyMode()
         }
         profile_pic.setOnClickListener {
             val photoIntent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
             startActivityForResult(photoIntent, REQUEST_PROFILE_PIC)
         }
+    }
+
+    private var editMode: Boolean = true
+    private var editUser: User? = null
+
+    private fun enterViewOnlyMode() {
+        // Disables FAB and basically everything else
+        Log.i(TAG, "Entering View Only Mode for Profile")
+        supportActionBar?.title = "View Profile"
+        profile_pic.isClickable = false
+        etName.isEnabled = false
+        location.isEnabled = false
+        radio_gender.children.iterator().forEach { view -> view.isClickable = false }
+        radio_time.children.iterator().forEach { view -> view.isClickable = false }
+        cb_day1.isClickable = false
+        cb_day2.isClickable = false
+        cb_day3.isClickable = false
+        cb_day4.isClickable = false
+        cb_day5.isClickable = false
+        cb_day6.isClickable = false
+        cb_day7.isClickable = false
+        tv_label_pref_days.visibility = View.GONE
+        tv_label_pref_days_view.visibility = View.VISIBLE
+        fab.setImageResource(R.drawable.ic_edit)
+        tv_profile_pic_update_lbl.visibility = View.GONE
+        editMode = false
+    }
+
+    private fun exitViewOnlyMode() {
+        // Enter edit mode
+        profile_pic.isClickable = true
+        Log.i(TAG, "Exiting View Only Mode for Profile")
+        supportActionBar?.title = "Edit Profile"
+        etName.isEnabled = true
+        location.isEnabled = true
+        radio_gender.children.iterator().forEach { view -> view.isClickable = true}
+        radio_time.children.iterator().forEach { view -> view.isClickable = true }
+        tv_profile_pic_update_lbl.visibility = View.VISIBLE
+        cb_day1.isClickable = true
+        cb_day2.isClickable = true
+        cb_day3.isClickable = true
+        cb_day4.isClickable = true
+        cb_day5.isClickable = true
+        cb_day6.isClickable = true
+        cb_day7.isClickable = true
+        tv_label_pref_days.visibility = View.VISIBLE
+        tv_label_pref_days_view.visibility = View.GONE
+        fab.setImageResource(R.drawable.ic_save)
+        editMode = true
+    }
+
+    private fun updateData(user: User) {
+        etName.setText(user.name)
+        profileUri = Uri.parse(user.profilePicUri)
+        GetProfilePicFromFirebaseAuth(this, object: GetProfilePicFromFirebaseAuth.Callback {
+            override fun onComplete(bitmap: Bitmap?) {
+                // Update image drawable
+                profileImage = bitmap
+                val roundBitmap = RoundedBitmapDrawableFactory.create(resources, bitmap)
+                roundBitmap.isCircular = true
+                profile_pic.setImageDrawable(roundBitmap)
+            }
+        }).execute(profileUri)
+        val locations = resources.getStringArray(R.array.live_region)
+        locations.forEachIndexed { index, s -> if (s == user.prefLocation) location.setSelection(index) }
+        radio_gender.children.iterator().forEach { v -> if (v is RadioButton) { if (v.text.toString() == user.gender) v.isChecked = true } }
+        radio_time.children.iterator().forEach { v -> if (v is RadioButton) { if (v.text.toString() == user.prefTime) v.isChecked = true } }
+        cb_day1.isChecked = user.prefDay.monday
+        cb_day2.isChecked = user.prefDay.tuesday
+        cb_day3.isChecked = user.prefDay.wednesday
+        cb_day4.isChecked = user.prefDay.thursday
+        cb_day5.isChecked = user.prefDay.friday
+        cb_day6.isChecked = user.prefDay.saturday
+        cb_day7.isChecked = user.prefDay.sunday
     }
 
     private fun validate(): Boolean {
@@ -112,36 +200,31 @@ class ProfileEditActivity : AppCompatActivity() {
         val gender = findViewById<RadioButton>(radio_gender.checkedRadioButtonId).text.toString()
         val timeRange = findViewById<RadioButton>(radio_time.checkedRadioButtonId).text.toString()
         val selectedDays = getSelectedDays()
-        if (firstRun) {
-            val user = User(name=name, prefLocation = prefLocation, gender = gender, prefTime = timeRange, prefDay = User.PrefDays(selectedDays), profilePicUri = profileUri.toString())
-            user.flags.firstRun = false
-            val db = FirebaseFirestore.getInstance()
-            val ref = db.collection("users").document(uid)
-            UpdateFirebaseFirestoreDocument(ref, user, object: UpdateFirebaseFirestoreDocument.Callback {
-                override fun onComplete(success: Boolean) {
-                    Log.i(TAG, "Insertion Status: $success")
-                    if (success) {
-                        val userProfileBuilder = UserProfileChangeRequest.Builder().apply {
-                            setDisplayName(name)
-                            if (user.profilePicUri.isNotEmpty()) setPhotoUri(Uri.parse(user.profilePicUri))
-                        }
-                        val currentUser = FirebaseAuth.getInstance().currentUser!!
-                        Snackbar.make(coordinator, "Creating Profile...", Snackbar.LENGTH_LONG).show()
-                        currentUser.updateProfile(userProfileBuilder.build()).addOnCompleteListener {
-                            currentUser.reload().addOnCompleteListener {
-                                startActivity(Intent(this@ProfileEditActivity, MainActivity::class.java))
-                                finish()
-                            }
-                        }
-                    } else {
-                        Snackbar.make(coordinator, "An error occurred updating profile", Snackbar.LENGTH_LONG).show()
+        val user = if (!firstRun && editUser != null) editUser!!.copy(name=name, prefLocation=prefLocation, gender=gender, prefTime=timeRange, prefDay=User.PrefDays(selectedDays), profilePicUri=profileUri.toString())
+            else User(name=name, prefLocation = prefLocation, gender = gender, prefTime = timeRange, prefDay = User.PrefDays(selectedDays), profilePicUri = profileUri.toString()).apply { flags.firstRun = false }
+        val db = FirebaseFirestore.getInstance()
+        val ref = db.collection("users").document(uid)
+        UpdateFirebaseFirestoreDocument(ref, user, object: UpdateFirebaseFirestoreDocument.Callback {
+            override fun onComplete(success: Boolean) {
+                Log.i(TAG, "Insertion Status: $success")
+                if (success) {
+                    val userProfileBuilder = UserProfileChangeRequest.Builder().apply {
+                        setDisplayName(name)
+                        if (user.profilePicUri.isNotEmpty()) setPhotoUri(Uri.parse(user.profilePicUri))
                     }
+                    val currentUser = FirebaseAuth.getInstance().currentUser!!
+                    Snackbar.make(coordinator, if (firstRun) "Creating Profile..." else "Updating Profile...", Snackbar.LENGTH_LONG).show()
+                    currentUser.updateProfile(userProfileBuilder.build()).addOnCompleteListener {
+                        currentUser.reload().addOnCompleteListener {
+                            startActivity(Intent(this@ProfileEditActivity, MainActivity::class.java))
+                            finish()
+                        }
+                    }
+                } else {
+                    Snackbar.make(coordinator, "An error occurred updating profile", Snackbar.LENGTH_LONG).show()
                 }
-            } ).execute()
-        } else {
-            Snackbar.make(coordinator, "Updating of profile is coming soon", Snackbar.LENGTH_LONG).show()
-            // TODO: Update data in firebase if update
-        }
+            }
+        } ).execute()
     }
 
     private fun getSelectedDays(): ArrayList<Int> {
