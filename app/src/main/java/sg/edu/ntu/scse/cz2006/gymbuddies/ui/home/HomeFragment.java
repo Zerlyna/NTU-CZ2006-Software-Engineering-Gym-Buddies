@@ -153,10 +153,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             if (mMap != null) {
                 hasGps(true);
             }
-
-            /*if (requestCode == RC_LOC_BTN) {
-                // TODO: When FAB clicked do something
-            }*/
             return;
         }
 

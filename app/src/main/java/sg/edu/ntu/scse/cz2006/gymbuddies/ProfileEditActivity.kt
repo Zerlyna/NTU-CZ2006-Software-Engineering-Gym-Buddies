@@ -69,28 +69,28 @@ class ProfileEditActivity : AppCompatActivity() {
                 profile_pic.setImageResource(R.mipmap.ic_launcher) // Default Image
             }
         } else {
-            // TODO: Retrieve existing data if not first run from database
-            if (intent.getBooleanExtra("view", false)) {
-                enterViewOnlyMode()
-            }
+            if (intent.getBooleanExtra("view", false)) enterViewOnlyMode()
             loadImage.visibility = View.VISIBLE
-            Toast.makeText(this, "Loading user data...", Toast.LENGTH_LONG).show()
-            val firebaseDb = FirebaseFirestore.getInstance().collection("users").document(uid).get().addOnSuccessListener {
+            Toast.makeText(this, "Loading user data...", Toast.LENGTH_SHORT).show()
+            FirebaseFirestore.getInstance().collection("users").document(uid).get().addOnSuccessListener {
                 loadImage.visibility = View.GONE
                 if (it.exists()) {
-                    val user = it.toObject(User::class.java)
-                    user?.let { user -> updateData(user) }
+                    editUser = it.toObject(User::class.java)
+                    editUser?.let { user -> updateData(user) }
                 }
             }.addOnFailureListener { loadImage.visibility = View.GONE; Log.e(TAG, "Error occurred retriving data for viewing")}
         }
         fab.setOnClickListener {
-            InputHelper.hideSoftKeyboard(this)
-            // Check if uploading image
-            if (loadImage.visibility == View.VISIBLE) Snackbar.make(coordinator, "Currently uploading profile picture. Wait for it to finish before saving profile", Snackbar.LENGTH_LONG).show()
-            else {
-                if (validate()) addOrUpdate()
-                else Snackbar.make(coordinator, "Please complete your profile before continuing", Snackbar.LENGTH_LONG).show()
-            }
+            Log.d(TAG, "FAB Clicked - Edit Mode: $editMode")
+            if (editMode) {
+                InputHelper.hideSoftKeyboard(this)
+                // Check if uploading image
+                if (loadImage.visibility == View.VISIBLE) Snackbar.make(coordinator, "Currently uploading profile picture. Wait for it to finish before saving profile", Snackbar.LENGTH_LONG).show()
+                else {
+                    if (validate()) addOrUpdate()
+                    else Snackbar.make(coordinator, "Please complete your profile before continuing", Snackbar.LENGTH_LONG).show()
+                }
+            } else exitViewOnlyMode()
         }
         profile_pic.setOnClickListener {
             val photoIntent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
@@ -99,6 +99,7 @@ class ProfileEditActivity : AppCompatActivity() {
     }
 
     private var editMode: Boolean = true
+    private var editUser: User? = null
 
     private fun enterViewOnlyMode() {
         // Disables FAB and basically everything else
@@ -118,7 +119,7 @@ class ProfileEditActivity : AppCompatActivity() {
         cb_day7.isClickable = false
         tv_label_pref_days.visibility = View.GONE
         tv_label_pref_days_view.visibility = View.VISIBLE
-        fab.hide()
+        fab.setImageResource(R.drawable.ic_edit)
         tv_profile_pic_update_lbl.visibility = View.GONE
         editMode = false
     }
@@ -126,10 +127,12 @@ class ProfileEditActivity : AppCompatActivity() {
     private fun exitViewOnlyMode() {
         // Enter edit mode
         profile_pic.isClickable = true
+        Log.i(TAG, "Exiting View Only Mode for Profile")
+        supportActionBar?.title = "Edit Profile"
         etName.isEnabled = true
         location.isEnabled = true
-        radio_gender.isEnabled = true
-        radio_time.isEnabled = true
+        radio_gender.children.iterator().forEach { view -> view.isClickable = true}
+        radio_time.children.iterator().forEach { view -> view.isClickable = true }
         tv_profile_pic_update_lbl.visibility = View.VISIBLE
         cb_day1.isClickable = true
         cb_day2.isClickable = true
@@ -140,7 +143,8 @@ class ProfileEditActivity : AppCompatActivity() {
         cb_day7.isClickable = true
         tv_label_pref_days.visibility = View.VISIBLE
         tv_label_pref_days_view.visibility = View.GONE
-        fab.show()
+        fab.setImageResource(R.drawable.ic_save)
+        editMode = true
     }
 
     private fun updateData(user: User) {
@@ -196,8 +200,8 @@ class ProfileEditActivity : AppCompatActivity() {
         val gender = findViewById<RadioButton>(radio_gender.checkedRadioButtonId).text.toString()
         val timeRange = findViewById<RadioButton>(radio_time.checkedRadioButtonId).text.toString()
         val selectedDays = getSelectedDays()
-        val user = User(name=name, prefLocation = prefLocation, gender = gender, prefTime = timeRange, prefDay = User.PrefDays(selectedDays), profilePicUri = profileUri.toString())
-        if (firstRun) user.flags.firstRun = false
+        val user = if (!firstRun && editUser != null) editUser!!.copy(name=name, prefLocation=prefLocation, gender=gender, prefTime=timeRange, prefDay=User.PrefDays(selectedDays), profilePicUri=profileUri.toString())
+            else User(name=name, prefLocation = prefLocation, gender = gender, prefTime = timeRange, prefDay = User.PrefDays(selectedDays), profilePicUri = profileUri.toString()).apply { flags.firstRun = false }
         val db = FirebaseFirestore.getInstance()
         val ref = db.collection("users").document(uid)
         UpdateFirebaseFirestoreDocument(ref, user, object: UpdateFirebaseFirestoreDocument.Callback {
@@ -209,7 +213,7 @@ class ProfileEditActivity : AppCompatActivity() {
                         if (user.profilePicUri.isNotEmpty()) setPhotoUri(Uri.parse(user.profilePicUri))
                     }
                     val currentUser = FirebaseAuth.getInstance().currentUser!!
-                    Snackbar.make(coordinator, "Creating Profile...", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(coordinator, if (firstRun) "Creating Profile..." else "Updating Profile...", Snackbar.LENGTH_LONG).show()
                     currentUser.updateProfile(userProfileBuilder.build()).addOnCompleteListener {
                         currentUser.reload().addOnCompleteListener {
                             startActivity(Intent(this@ProfileEditActivity, MainActivity::class.java))
