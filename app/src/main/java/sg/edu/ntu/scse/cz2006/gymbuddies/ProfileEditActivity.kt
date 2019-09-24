@@ -93,8 +93,10 @@ class ProfileEditActivity : AppCompatActivity() {
             } else exitViewOnlyMode()
         }
         profile_pic.setOnClickListener {
-            val photoIntent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
-            startActivityForResult(photoIntent, REQUEST_PROFILE_PIC)
+            if (editMode) {
+                val photoIntent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
+                startActivityForResult(photoIntent, REQUEST_PROFILE_PIC)
+            }
         }
     }
 
