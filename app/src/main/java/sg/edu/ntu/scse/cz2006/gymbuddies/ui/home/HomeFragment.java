@@ -22,12 +22,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -39,12 +40,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.Arrays;
-import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
-import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
@@ -69,12 +68,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
 
         // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
-        homeViewModel.getCarParks().observe(this, new Observer<List<CarPark>>() {
-            @Override
-            public void onChanged(List<CarPark> carparks) {
-                Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size());
-            }
-        });
+        homeViewModel.getCarParks().observe(this, carparks -> Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size()));
 
 
         mapView = root.findViewById(R.id.map_view);
@@ -160,7 +154,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         //settings.setZoomControlsEnabled(true);
         settings.setMapToolbarEnabled(false);
 
-        //zoomToLocation();
+        //zoomToMyLocation();
         // Zoom to Singapore: 1.3413054,103.8074233, 12z
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
         mMap.setOnInfoWindowClickListener(marker -> Snackbar.make(coordinatorLayout, "Feature Coming Soon! (Gym Details)", Snackbar.LENGTH_LONG).show());
@@ -177,11 +171,26 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         return hasGps(false);
     }
 
+    private FusedLocationProviderClient locationClient;
+
+    private void zoomToMyLocation() {
+        if (getActivity() != null) {
+            locationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+            locationClient.getLastLocation().addOnSuccessListener(getActivity(), location -> {
+                if (location == null) return;
+
+                LatLng currentLoc = new LatLng(location.getLatitude(), location.getLongitude());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 15f));
+            });
+        }
+    }
+
     private boolean hasGps(boolean startCheck) {
         if (getContext() == null) return false;
         boolean permGranted = ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         if (permGranted && startCheck) {
             mMap.setMyLocationEnabled(true);
+            zoomToMyLocation();
         }
         return permGranted;
     }
