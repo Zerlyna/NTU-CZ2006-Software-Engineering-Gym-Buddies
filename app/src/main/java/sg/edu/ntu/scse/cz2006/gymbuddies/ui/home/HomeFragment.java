@@ -39,12 +39,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
@@ -162,7 +164,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (getActivity() != null) {
             new ParseGymDataFile(getActivity(), (markers) -> {
                 if (markers == null) return;
-                for (MarkerOptions m : markers) { mMap.addMarker(m); }
+                markerList = markers;
+
+                if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
+                else {
+                    // TODO: Update count to user changable in settings
+                    new TrimNearbyGyms(10, lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
             }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
@@ -171,7 +179,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         return hasGps(false);
     }
 
+    private void updateNearbyMarkers(ArrayList<MarkerOptions> results) {
+        mMap.clear();
+        for (MarkerOptions m : results) { mMap.addMarker(m); }
+    }
+
     private FusedLocationProviderClient locationClient;
+    private boolean hasLocationPermission = false;
+    private ArrayList<MarkerOptions> markerList = new ArrayList<>();
+    private LatLng lastLocation = null;
 
     private void zoomToMyLocation() {
         if (getActivity() != null) {
@@ -179,8 +195,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             locationClient.getLastLocation().addOnSuccessListener(getActivity(), location -> {
                 if (location == null) return;
 
-                LatLng currentLoc = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 15f));
+                lastLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f));
+
+                if (markerList.size() > 0) {
+                    new TrimNearbyGyms(10, lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
             });
         }
     }
@@ -189,6 +209,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (getContext() == null) return false;
         boolean permGranted = ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         if (permGranted && startCheck) {
+            hasLocationPermission = true;
             mMap.setMyLocationEnabled(true);
             zoomToMyLocation();
         }
