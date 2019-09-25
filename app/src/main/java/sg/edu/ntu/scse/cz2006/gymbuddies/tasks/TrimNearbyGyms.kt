@@ -10,7 +10,7 @@ import com.google.android.gms.maps.model.MarkerOptions
  * Created by Kenneth on 25/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
  */
-class TrimNearbyGyms(private val count: Int, private val location: LatLng, private val markers: ArrayList<MarkerOptions>, private val callback: Callback) : AsyncTask<Void, Void, ArrayList<MarkerOptions>>() {
+class TrimNearbyGyms(private var count: Int, private val location: LatLng, private val markers: ArrayList<MarkerOptions>, private val callback: Callback) : AsyncTask<Void, Void, ArrayList<MarkerOptions>>() {
 
     interface Callback {
         fun onComplete(results: ArrayList<MarkerOptions>)
@@ -36,6 +36,10 @@ class TrimNearbyGyms(private val count: Int, private val location: LatLng, priva
 
         // Select the first x amount determined by count
         Log.i(TAG, "Retrieving first $count gyms")
+        if (count > distances.size) {
+            Log.w(TAG, "Count from user preference ($count) is larger than the gym list (${distances.size}), defaulting to full list")
+            count = distances.size
+        }
         val resultSubList = distances.subList(0, count)
         val result = ArrayList<MarkerOptions>()
         resultSubList.forEach{ it.marker?.let{ marker -> result.add(marker) } }

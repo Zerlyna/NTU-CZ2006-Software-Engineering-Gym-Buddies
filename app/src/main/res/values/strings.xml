@@ -53,4 +53,6 @@
     <string name="about_app_desc">Find out more info about this app and the team behind it</string>
     <string name="crash_test_title">Force a crash</string>
     <string name="crash_test_desc">Forces a crash of the application</string>
+    <string name="nearby_gym_count_title">Nearby Gyms Count</string>
+    <string name="value_placeholder">%s</string>
 </resources>

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_login_chooser.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.CheckFirstRun
@@ -29,6 +30,9 @@ class UpdateUserActivity : AppCompatActivity() {
         }
 
         message.text = "Updating user data..."
+
+        val sp = PreferenceManager.getDefaultSharedPreferences(this)
+        if (!sp.contains("nearby-gyms")) sp.edit().putInt("nearby-gyms", 10).apply() // Default to 10 nearby gyms
 
         CheckFirstRun(this, object: CheckFirstRun.Callback {
             override fun isFirstRun(success: Boolean) {

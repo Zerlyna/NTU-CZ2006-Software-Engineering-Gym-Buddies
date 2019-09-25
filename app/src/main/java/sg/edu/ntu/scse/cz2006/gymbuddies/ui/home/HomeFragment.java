@@ -2,6 +2,7 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.ui.home;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -23,6 +24,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -55,6 +57,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private GoogleMap mMap;
     private CoordinatorLayout coordinatorLayout;
     private RecyclerView favouritesList;
+    private SharedPreferences sp;
 
     private BottomSheetBehavior bottomSheetBehavior;
     private View bottomSheet;
@@ -67,6 +70,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         final TextView textView = root.findViewById(R.id.text_home);
         coordinatorLayout = root.findViewById(R.id.coordinator);
         homeViewModel.getText().observe(this, s -> textView.setText(s));
+
+        sp = PreferenceManager.getDefaultSharedPreferences(root.getContext());
 
 
         // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
@@ -136,6 +141,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     public void onResume() {
         super.onResume();
         mapView.onResume();
+
+        if (!firstMarkerLoad) {
+            new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     @Override
@@ -168,8 +177,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
                 if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
                 else {
-                    // TODO: Update count to user changable in settings
-                    new TrimNearbyGyms(10, lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
@@ -179,9 +187,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         return hasGps(false);
     }
 
+    private boolean firstMarkerLoad = true;
+
     private void updateNearbyMarkers(ArrayList<MarkerOptions> results) {
         mMap.clear();
         for (MarkerOptions m : results) { mMap.addMarker(m); }
+        firstMarkerLoad = false;
     }
 
     private FusedLocationProviderClient locationClient;
@@ -199,7 +210,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f));
 
                 if (markerList.size() > 0) {
-                    new TrimNearbyGyms(10, lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             });
         }
