@@ -8,8 +8,9 @@ _Android JavaDocs:_ https://ntugit.itachi1706.com/projects/se/html/app
 
 *TODO before next meeting:*
 - Short meet-up to discuss certain issues:
-    * Updating of _class diagram_ to show *conceptual model*
-    * Updating of _sequence diagram_ to show more *in-depth use case flow*
+    + Updating of _class diagram_ to show *conceptual model*
+    + Updating of _sequence diagram_ to show more *in-depth use case flow*
 - Progressively start of Software Requirements Specification (SRS) document
-    * Update documentation into SRS, as well as diagrams
+    + Update documentation into SRS, as well as diagrams
 - *TODO FOR TL*: _E-mail Liu Shangqing to update on Lab 2's failed deliverables, by end of Tuesday._
+- Halp la knn
