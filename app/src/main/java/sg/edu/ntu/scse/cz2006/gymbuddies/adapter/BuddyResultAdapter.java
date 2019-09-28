@@ -62,7 +62,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.updateAs(position);
+        holder.setPosition(position);
     }
 
 

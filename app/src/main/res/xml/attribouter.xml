@@ -108,6 +108,12 @@
             repo="firebase/FirebaseUI-Android"
             license="apache-2.0" />
 
+        <!-- Gson -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Google Gson"
+            repo="google/gson"
+            license="apache-2.0" />
+
         <!-- AndroidX -->
         <me.jfenn.attribouter.wedges.LicenseWedge
             title="AndroidX Jetpack Support Libraries"

@@ -2,14 +2,17 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.ui.home;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -17,29 +20,44 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
-import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark;
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private HomeViewModel homeViewModel;
     private MapView mapView;
     private GoogleMap mMap;
+    private CoordinatorLayout coordinatorLayout;
+    private RecyclerView favouritesList;
+    private SharedPreferences sp;
 
     private BottomSheetBehavior bottomSheetBehavior;
     private View bottomSheet;
@@ -50,16 +68,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
+        coordinatorLayout = root.findViewById(R.id.coordinator);
         homeViewModel.getText().observe(this, s -> textView.setText(s));
+
+        sp = PreferenceManager.getDefaultSharedPreferences(root.getContext());
 
 
         // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
-        homeViewModel.getCarParks().observe(this, new Observer<List<CarPark>>() {
-            @Override
-            public void onChanged(List<CarPark> carparks) {
-                Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size());
-            }
-        });
+        homeViewModel.getCarParks().observe(this, carparks -> Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size()));
 
 
         mapView = root.findViewById(R.id.map_view);
@@ -85,12 +101,34 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         bottomSheet = root.findViewById(R.id.bottom_sheet);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setPeekHeight(100);
+        bottomSheetBehavior.setPeekHeight(200);
         bottomSheetBehavior.setHideable(false);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        bottomSheet.setOnTouchListener((view, motionEvent) -> {
+            view.performClick();
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            return false;
+        });
+
+        favouritesList = bottomSheet.findViewById(R.id.favourite_list);
+        if (favouritesList != null) {
+            favouritesList.setHasFixedSize(true);
+            LinearLayoutManager llm = new LinearLayoutManager(getContext());
+            llm.setOrientation(LinearLayoutManager.VERTICAL);
+            favouritesList.setLayoutManager(llm);
+            favouritesList.setItemAnimator(new DefaultItemAnimator());
+        }
+
+        // TODO: Get favourites list from firebase based on the key
+        // TODO: Remove default 0 hahaha
+        String[] toremove = {"No Favourites Found", "This feature is currently a WIP"};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
+        favouritesList.setAdapter(adapter);
 
         return root;
     }
+
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -103,6 +141,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     public void onResume() {
         super.onResume();
         mapView.onResume();
+
+        if (!firstMarkerLoad) {
+            new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     @Override
@@ -123,18 +165,64 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         //settings.setZoomControlsEnabled(true);
         settings.setMapToolbarEnabled(false);
 
-        //zoomToLocation();
+        //zoomToMyLocation();
+        // Zoom to Singapore: 1.3413054,103.8074233, 12z
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
+        mMap.setOnInfoWindowClickListener(marker -> Snackbar.make(coordinatorLayout, "Feature Coming Soon! (Gym Details)", Snackbar.LENGTH_LONG).show());
+        // Process and parse markers
+        if (getActivity() != null) {
+            new ParseGymDataFile(getActivity(), (markers) -> {
+                if (markers == null) return;
+                markerList = markers;
+
+                if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
+                else {
+                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
+            }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     private boolean hasGpsPermission() {
         return hasGps(false);
     }
 
+    private boolean firstMarkerLoad = true;
+
+    private void updateNearbyMarkers(ArrayList<MarkerOptions> results) {
+        mMap.clear();
+        for (MarkerOptions m : results) { mMap.addMarker(m); }
+        firstMarkerLoad = false;
+    }
+
+    private FusedLocationProviderClient locationClient;
+    private boolean hasLocationPermission = false;
+    private ArrayList<MarkerOptions> markerList = new ArrayList<>();
+    private LatLng lastLocation = null;
+
+    private void zoomToMyLocation() {
+        if (getActivity() != null) {
+            locationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+            locationClient.getLastLocation().addOnSuccessListener(getActivity(), location -> {
+                if (location == null) return;
+
+                lastLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f));
+
+                if (markerList.size() > 0) {
+                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
+            });
+        }
+    }
+
     private boolean hasGps(boolean startCheck) {
         if (getContext() == null) return false;
         boolean permGranted = ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         if (permGranted && startCheck) {
+            hasLocationPermission = true;
             mMap.setMyLocationEnabled(true);
+            zoomToMyLocation();
         }
         return permGranted;
     }
@@ -153,10 +241,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             if (mMap != null) {
                 hasGps(true);
             }
-
-            /*if (requestCode == RC_LOC_BTN) {
-                // TODO: When FAB clicked do something
-            }*/
             return;
         }
 

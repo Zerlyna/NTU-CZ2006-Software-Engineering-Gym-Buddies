@@ -79,8 +79,12 @@ public class MainActivity extends AppCompatActivity {
                 RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
                 roundBitmap.setCircular(true);
                 ((ImageView) header.findViewById(R.id.profile_pic)).setImageDrawable(roundBitmap);
-            } })
-                    .execute(firebaseUser.getPhotoUrl()); // Download and set as profile pic
+            } }).execute(firebaseUser.getPhotoUrl()); // Download and set as profile pic
+        header.setOnClickListener(v -> {
+            Intent i = new Intent(this, ProfileEditActivity.class);
+            i.putExtra("view", true);
+            startActivity(i);
+        });
 
         navigationView.getMenu().findItem(R.id.nav_logout).setOnMenuItemClickListener(menuItem -> {
             logout();
