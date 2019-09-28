@@ -14,7 +14,9 @@ import android.view.MenuItem;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 
-public class BuddySearchResultActivity extends AppCompatActivity {
+public class BuddySearchResultActivity extends AppCompatActivity implements BuddyResultAdapter.OnBuddyClickedListener{
     private String TAG = "GB.BuddySearchResult";
     private RecyclerView rvResult;
     ArrayList<User> listData;
@@ -51,6 +53,7 @@ public class BuddySearchResultActivity extends AppCompatActivity {
 
         listData = new ArrayList<>();
         adapter = new BuddyResultAdapter(listData);
+        adapter.setOnBuddyClickedListener(this);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setOrientation(RecyclerView.VERTICAL);
 
@@ -68,10 +71,46 @@ public class BuddySearchResultActivity extends AppCompatActivity {
         pd.setMessage("loading");
         pd.show();
 
-        // TODO: Add WHERE Clause on query
+        int[] arrPrefDays = getIntent().getExtras().getIntArray("pref_days");
+        String gender = getIntent().getExtras().getString("gender");
+
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference userRef = db.collection("users");
-        userRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+
+        // step 1: limit to location
+        Query q =  userRef.whereEqualTo("prefLocation", "East");
+
+        // step 2: by gender
+        if ( !gender.equalsIgnoreCase("Both")){
+            q = q.whereEqualTo("gender", gender);
+        }
+        // TODO: step 3: by am/pm
+
+        // step 4: by days
+        if (arrPrefDays[0]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "monday"), true);
+        }
+        if (arrPrefDays[1]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "tuesday"), true);
+        }
+        if (arrPrefDays[2]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "wednesday"), true);
+        }
+        if (arrPrefDays[3]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "thursday"), true);
+        }
+        if (arrPrefDays[4]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "friday"), true);
+        }
+        if (arrPrefDays[5]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "saturday"), true);
+        }
+        if (arrPrefDays[6]==1){
+            q = q.whereEqualTo( FieldPath.of(  "prefDay", "sunday"), true);
+        }
+        // step 4: by days
+        q.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 pd.dismiss();
@@ -81,7 +120,7 @@ public class BuddySearchResultActivity extends AppCompatActivity {
 
                 Log.d(TAG, "size: "+listData.size());
                 for (User u : listData){
-                    Log.d(TAG, u.getName()+", pic: "+u.getProfilePicUri()+", days: "+u.getPrefDay());
+                    Log.d(TAG, u.getName()+", days: "+u.getPrefDay()+", "+u.getPrefLocation());
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -101,9 +140,20 @@ public class BuddySearchResultActivity extends AppCompatActivity {
             case android.R.id.home:
                 finish();
                 return true;
-
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onBuddyItemClicked(BuddyResultAdapter.ViewHolder holder, int action, int position) {
+        Log.d(TAG, "onBuddyItemClicked::action: "+action+", pos: "+position);
+        // TODO: handle action event
+    }
+
+    @Override
+    public void onBuddyItemCheckChanged(BuddyResultAdapter.ViewHolder holder, int action, int position, boolean checked) {
+        Log.d(TAG, "onBuddyItemCheckChanged::action: "+action+", pos: "+position+", checked: "+checked);
+        // TODO: handle action event
     }
 }

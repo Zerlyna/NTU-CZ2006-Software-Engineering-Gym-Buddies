@@ -11,7 +11,7 @@
         android:id="@+id/tv_label_region"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Living region" />
+        android:text="@string/txt_pref_location" />
 
     <Spinner
         android:id="@+id/spinner_live_region"
@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="Buddy gender" />
+        android:text="@string/txt_buddy_gender" />
 
     <RadioGroup
         android:id="@+id/rg_bd_gender"
@@ -41,7 +41,7 @@
             android:layout_weight="0.33"
             android:checked="true"
             android:drawableTop="@drawable/ic_human_male"
-            android:text="Male" />
+            android:text="@string/txt_male" />
         <RadioButton
             style="@style/cb_highlight"
             android:id="@+id/rb_female"
@@ -49,7 +49,7 @@
             android:layout_height="match_parent"
             android:layout_weight="0.33"
             android:drawableTop="@drawable/ic_human_female"
-            android:text="female" />
+            android:text="@string/txt_female" />
         <RadioButton
             style="@style/cb_highlight"
             android:id="@+id/rb_both"
@@ -57,14 +57,14 @@
             android:layout_height="match_parent"
             android:layout_weight="0.33"
             android:drawableTop="@drawable/ic_human_male_female"
-            android:text="both" />
+            android:text="@string/txt_both" />
     </RadioGroup>
     <TextView
         android:id="@+id/tv_label_pref_days"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="Preferred workout days"
+        android:text="@string/txt_pref_dym_days"
         app:layout_constraintTop_toBottomOf="@+id/rg_bd_gender" />
 
 
