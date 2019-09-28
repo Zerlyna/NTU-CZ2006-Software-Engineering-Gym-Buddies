@@ -31,15 +31,17 @@
     <string name="txt_day7_short">Sun</string>
 
 
+    <string name="txt_search">Search</string>
     <string name="txt_both">Both</string>
     <string name="txt_male">Male</string>
     <string name="txt_female">Female</string>
-    <string name="txt_live_region">Live region</string>
+    <string name="txt_pref_location">Preferred Location</string>
     <string name="txt_buddy_gender">Buddy gender</string>
     <string name="txt_pref_dym_days">Preferred workout days</string>
     <string name="logout">Log Out</string>
     <string name="action_search">Search</string>
     <string name="title_activity_settings">App Settings</string>
+    <string name="title_activity_buddy_search_result">Buddy Search Result</string>
 
     <!-- Preference Titles -->
     <string name="general_header">General Settings</string>

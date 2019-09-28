@@ -22,5 +22,6 @@
         <item name="android:background">@drawable/btn_bg_highlight</item>
         <item name="android:button">@android:color/transparent</item>
         <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/tint_text_highlight_color</item>
     </style>
 </resources>

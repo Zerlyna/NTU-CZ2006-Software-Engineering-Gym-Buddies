@@ -7,10 +7,16 @@
     android:fitsSystemWindows="true"
     android:id="@+id/coordinator"
     tools:context=".ProfileEditActivity">
-    <LinearLayout
-        android:layout_width="match_parent"
+
+    <ScrollView
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_width="match_parent" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingBottom="60dp" >
 
         <TextView
             android:layout_width="match_parent"
@@ -76,30 +82,30 @@
             android:layout_marginTop="10dp"
             android:text="Gender" />
 
-        <RadioGroup
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/radio_gender"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-            <RadioButton
-                style="@style/cb_highlight"
-                android:id="@+id/fb_male"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.33"
-                android:checked="true"
-                android:drawableTop="@drawable/ic_human_male"
-                android:text="Male" />
-            <RadioButton
-                style="@style/cb_highlight"
-                android:id="@+id/rb_female"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.33"
-                android:drawableTop="@drawable/ic_human_female"
-                android:text="Female" />
-        </RadioGroup>
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/radio_gender"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <RadioButton
+                    style="@style/cb_highlight"
+                    android:id="@+id/rb_male"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.33"
+                    android:checked="true"
+                    android:drawableTop="@drawable/ic_human_male"
+                    android:text="Male" />
+                <RadioButton
+                    style="@style/cb_highlight"
+                    android:id="@+id/rb_female"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.33"
+                    android:drawableTop="@drawable/ic_human_female"
+                    android:text="Female" />
+            </RadioGroup>
 
         <TextView
             android:layout_width="match_parent"
@@ -149,7 +155,10 @@
 
         <include layout="@layout/row_pref_days"/>
 
-    </LinearLayout>
+        </LinearLayout>
+
+    </ScrollView>
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"

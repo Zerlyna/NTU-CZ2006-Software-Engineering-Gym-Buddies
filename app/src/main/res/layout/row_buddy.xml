@@ -3,34 +3,72 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="?listPreferredItemHeightLarge">
+    android:layout_height="?listPreferredItemHeightLarge"
+    android:background="?android:attr/selectableItemBackground">
 
 
     <ImageView
         android:id="@+id/img_bd_pic"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_marginStart="10dp"
+        android:padding="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+
         tools:srcCompat="@tools:sample/avatars" />
 
-    <TextView
-        android:id="@+id/tv_bd_name"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/ll_user_name"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Name"
-
-        android:layout_marginStart="10dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toStartOf="@+id/cb_bd_fav"
+        app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@+id/img_bd_pic"
-        app:layout_constraintTop_toTopOf="@+id/img_bd_pic" />
 
-    <TextView
-        android:id="@+id/tv_bd_region"
+        app:layout_constraintTop_toTopOf="@+id/img_bd_pic">
+
+        <ImageView
+            android:id="@+id/img_bd_gender"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:id="@+id/tv_bd_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp" />
+
+
+    </LinearLayout>
+
+
+    <CheckBox
+        android:id="@+id/cb_bd_fav"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Live region"
-        app:layout_constraintStart_toStartOf="@+id/tv_bd_name"
-        app:layout_constraintTop_toBottomOf="@+id/tv_bd_name" />
+        android:button="@drawable/btn_fav"
+        android:buttonTint="#F00"
+        android:minWidth="36dp"
+        android:minHeight="36dp"
+        android:padding="10dp"
+        android:translationX="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/cb_bd_fav"
+        app:layout_constraintStart_toStartOf="@+id/ll_user_name"
+        app:layout_constraintTop_toBottomOf="@+id/ll_user_name">
+        <include layout="@layout/row_pref_days"/>
+    </FrameLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
