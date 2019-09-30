@@ -4,8 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:id="@+id/gym_details_sheet"
     android:background="@android:color/white"
-    app:behavior_peekHeight="90dp"
+    android:paddingTop="?attr/dialogPreferredPadding"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="95dp"
+    android:clipToPadding="true"
+    android:clickable="true"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
     <LinearLayout
@@ -61,6 +66,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
+                android:paddingTop="?attr/dialogPreferredPadding"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="12dp"
                 android:background="#5d5d5d" />

@@ -55,4 +55,5 @@
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+    <include layout="@layout/fragment_gym_details" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

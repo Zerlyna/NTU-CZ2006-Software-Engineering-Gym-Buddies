@@ -59,8 +59,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private RecyclerView favouritesList;
     private SharedPreferences sp;
 
-    private BottomSheetBehavior bottomSheetBehavior;
-    private View bottomSheet;
+    // Favourites
+    private BottomSheetBehavior favBottomSheetBehavior;
+    private View favBottomSheet;
+
+    private BottomSheetBehavior gymBottomSheetBehavior;
+    private View gymBottomSheet;
 
     private static final int RC_LOC = 1001, RC_LOC_BTN = 1002;
 
@@ -99,18 +103,22 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
         }
 
-        bottomSheet = root.findViewById(R.id.bottom_sheet);
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setPeekHeight(200);
-        bottomSheetBehavior.setHideable(false);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        bottomSheet.setOnTouchListener((view, motionEvent) -> {
+        favBottomSheet = root.findViewById(R.id.bottom_sheet);
+        favBottomSheetBehavior = BottomSheetBehavior.from(favBottomSheet);
+        favBottomSheetBehavior.setPeekHeight(200);
+        favBottomSheetBehavior.setHideable(false);
+        favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        favBottomSheet.setOnTouchListener((view, motionEvent) -> {
             view.performClick();
-            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN && favBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             return false;
         });
 
-        favouritesList = bottomSheet.findViewById(R.id.favourite_list);
+        gymBottomSheet = root.findViewById(R.id.gym_details_sheet);
+        gymBottomSheetBehavior = BottomSheetBehavior.from(gymBottomSheet);
+        gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        favouritesList = favBottomSheet.findViewById(R.id.favourite_list);
         if (favouritesList != null) {
             favouritesList.setHasFixedSize(true);
             LinearLayoutManager llm = new LinearLayoutManager(getContext());
@@ -159,16 +167,30 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         Log.d(TAG, "Google Map Ready");
         mMap = googleMap;
         mMap.setTrafficEnabled(true);
-        hasGps(true);
-        //checkGpsForCurrentLocation();
-        UiSettings settings = mMap.getUiSettings();
-        //settings.setZoomControlsEnabled(true);
-        settings.setMapToolbarEnabled(false);
+            hasGps(true);
+            //checkGpsForCurrentLocation();
+            UiSettings settings = mMap.getUiSettings();
+            //settings.setZoomControlsEnabled(true);
+            settings.setMapToolbarEnabled(false);
 
-        //zoomToMyLocation();
-        // Zoom to Singapore: 1.3413054,103.8074233, 12z
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
-        mMap.setOnInfoWindowClickListener(marker -> Snackbar.make(coordinatorLayout, "Feature Coming Soon! (Gym Details)", Snackbar.LENGTH_LONG).show());
+            //zoomToMyLocation();
+            // Zoom to Singapore: 1.3413054,103.8074233, 12z
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
+            mMap.setOnInfoWindowClickListener(marker -> Snackbar.make(coordinatorLayout, "Feature Coming Soon! (Gym Details)", Snackbar.LENGTH_LONG).show());
+            mMap.setOnMapClickListener(latLng -> {
+                Log.d("mMap", "mapClicked()");
+                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                favBottomSheetBehavior.setHideable(false);
+            });
+            mMap.setOnMarkerClickListener(marker -> {
+                // Hide and reshow gym
+                Log.d("mMap", "markerClicked()");
+                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                favBottomSheetBehavior.setHideable(true);
+                favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                return false; // We still want to show the info window right now
+        });
         // Process and parse markers
         if (getActivity() != null) {
             new ParseGymDataFile(getActivity(), (markers) -> {
