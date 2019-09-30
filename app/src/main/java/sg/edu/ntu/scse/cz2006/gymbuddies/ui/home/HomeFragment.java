@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -80,7 +81,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
 
         // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
-        homeViewModel.getCarParks().observe(this, carparks -> Log.d("Cy.GymBuddies.HomeFrag", "size: " +carparks.size()));
+        homeViewModel.getCarParks().observe(this, carparks -> Log.d("Cy.GymBuddies.HomeFrag", "size: " + carparks.size()));
 
 
         mapView = root.findViewById(R.id.map_view);
@@ -99,7 +100,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
 
         if (getActivity() != null) {
-            MainActivity activity = (MainActivity)getActivity();
+            MainActivity activity = (MainActivity) getActivity();
             activity.fab.hide();
             activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
         }
@@ -111,7 +112,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         favBottomSheet.setOnTouchListener((view, motionEvent) -> {
             view.performClick();
-            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN && favBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN && favBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED)
+                favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             return false;
         });
 
@@ -122,9 +124,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 bottomSheet.findViewById(R.id.drag_bar).setVisibility((newState == BottomSheetBehavior.STATE_EXPANDED) ? View.INVISIBLE : View.VISIBLE);
+                backStack.setEnabled(newState == BottomSheetBehavior.STATE_EXPANDED);
                 if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
-                    if (newState == BottomSheetBehavior.STATE_EXPANDED) ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("View Gym Detail");
-                    else ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.menu_home);
+                    if (newState == BottomSheetBehavior.STATE_EXPANDED)
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("View Gym Detail");
+                    else
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.menu_home);
                 }
             }
 
@@ -150,9 +155,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
         favouritesList.setAdapter(adapter);
 
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
+        backStack.setEnabled(false);
+
         return root;
     }
 
+    private OnBackPressedCallback backStack = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            if (gymBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
+        }
+    };
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
