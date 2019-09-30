@@ -6,12 +6,23 @@
     android:orientation="vertical"
     android:id="@+id/gym_details_sheet"
     android:background="@android:color/white"
-    android:paddingTop="?attr/dialogPreferredPadding"
+    android:paddingTop="4dp"
     app:behavior_hideable="true"
-    app:behavior_peekHeight="95dp"
+    app:behavior_peekHeight="90dp"
     android:clipToPadding="true"
     android:clickable="true"
+    android:focusable="true"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:contentDescription="@string/drag_bar_content_desc"
+        android:id="@+id/drag_bar"
+        android:paddingBottom="2dp"
+        app:srcCompat="@drawable/ic_dragbar" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,7 +43,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="North Hill Gym"
+                android:text="@string/gym_detail_title_placeholder"
                 android:textColor="#000000"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -53,13 +64,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1.0" />
+                    android:layout_marginStart="4dp"
+                    android:text="@string/gym_detail_rating_placeholder" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:text="(4)" />
+                    android:layout_marginStart="8dp"
+                    android:text="@string/number_placeholder" />
 
             </LinearLayout>
 
@@ -80,18 +92,18 @@
                     android:layout_height="wrap_content"
                     android:tintMode="src_atop"
                     android:tint="#FF0000"
-                    app:srcCompat="@drawable/ic_heart" />
+                    app:srcCompat="@drawable/selector_heart" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="4dp"
-                    android:text="Favourites"
+                    android:layout_marginStart="4dp"
+                    android:text="@string/favourite"
                     android:textColor="#FF0000" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:text="(0)" />
+                    android:layout_marginStart="8dp"
+                    android:text="@string/number_placeholder" />
             </LinearLayout>
 
             <View
@@ -109,24 +121,31 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:drawableLeft="@drawable/ic_location"
+        android:drawableStart="@drawable/ic_location"
         android:drawablePadding="16dp"
-        android:text="60 Nanyang Crescent, Level 3, 19A Binjal Hall of Residence, Nanyang Technological University, SG" />
+        android:text="@string/gym_details_loc_placeholder" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:drawableLeft="@drawable/ic_description"
+        android:drawableStart="@drawable/ic_description"
         android:drawablePadding="16dp"
-        android:text="This gym has no features" />
+        android:text="@string/gym_desc_placeholder_rant" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:background="@color/colorAccent"
-        android:text="FAVOURITE GYM?"
+        android:text="@string/view_nearby_carparks"
+        android:textColor="#fff" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:background="@color/colorAccent"
+        android:text="Rate and Review Gym (maybe)"
         android:textColor="#fff" />
 
 </LinearLayout>

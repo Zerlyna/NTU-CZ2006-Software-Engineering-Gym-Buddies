@@ -20,6 +20,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -117,6 +118,22 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         gymBottomSheet = root.findViewById(R.id.gym_details_sheet);
         gymBottomSheetBehavior = BottomSheetBehavior.from(gymBottomSheet);
         gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        BottomSheetBehavior.BottomSheetCallback callback = new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                bottomSheet.findViewById(R.id.drag_bar).setVisibility((newState == BottomSheetBehavior.STATE_EXPANDED) ? View.INVISIBLE : View.VISIBLE);
+                if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+                    if (newState == BottomSheetBehavior.STATE_EXPANDED) ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("View Gym Detail");
+                    else ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.menu_home);
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                // Not used
+            }
+        };
+        gymBottomSheetBehavior.setBottomSheetCallback(callback);
 
         favouritesList = favBottomSheet.findViewById(R.id.favourite_list);
         if (favouritesList != null) {
@@ -135,7 +152,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         return root;
     }
-
 
 
     @Override
@@ -176,9 +192,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             //zoomToMyLocation();
             // Zoom to Singapore: 1.3413054,103.8074233, 12z
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
-            mMap.setOnInfoWindowClickListener(marker -> Snackbar.make(coordinatorLayout, "Feature Coming Soon! (Gym Details)", Snackbar.LENGTH_LONG).show());
+            mMap.setOnInfoWindowClickListener(marker -> gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
             mMap.setOnMapClickListener(latLng -> {
                 Log.d("mMap", "mapClicked()");
+                gymBottomSheetBehavior.setHideable(true);
                 gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 favBottomSheetBehavior.setHideable(false);
@@ -187,6 +204,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 // Hide and reshow gym
                 Log.d("mMap", "markerClicked()");
                 gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                gymBottomSheetBehavior.setHideable(false);
                 favBottomSheetBehavior.setHideable(true);
                 favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 return false; // We still want to show the info window right now
