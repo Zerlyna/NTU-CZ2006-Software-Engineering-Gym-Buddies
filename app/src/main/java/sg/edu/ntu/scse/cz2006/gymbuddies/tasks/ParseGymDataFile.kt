@@ -7,6 +7,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
 import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.JsonHelper
 import java.lang.ref.WeakReference
 
@@ -18,7 +19,7 @@ class ParseGymDataFile(activity: Activity, private val callback: Callback) : Asy
     private val actRef = WeakReference(activity)
 
     interface Callback {
-        fun onComplete(results: ArrayList<MarkerOptions>?)
+        fun onComplete(results: HashMap<MarkerOptions, GymList.GymShell>?)
     }
 
     override fun doInBackground(vararg p0: Void?): Void? {
@@ -30,21 +31,9 @@ class ParseGymDataFile(activity: Activity, private val callback: Callback) : Asy
             activity.runOnUiThread { callback.onComplete(null) }
             return null
         }
-        val markers = ArrayList<MarkerOptions>()
-        gymlist.gyms.forEach {
-            markers.add(MarkerOptions().position(LatLng(it.geometry.getLat(), it.geometry.getLng())).title(it.properties.Name).snippet(generateAddress(it.properties)))
-        }
+        val markers = HashMap<MarkerOptions, GymList.GymShell>()
+        gymlist.gyms.forEach { markers[MarkerOptions().position(LatLng(it.geometry.getLat(), it.geometry.getLng())).title(it.properties.Name).snippet(GymHelper.generateAddress(it.properties))] = it }
         activity.runOnUiThread { callback.onComplete(markers) }
         return null
-    }
-
-    private fun generateAddress(prop: GymList.GymProperties): String {
-        val sb = StringBuilder()
-        prop.ADDRESSBLOCKHOUSENUMBER?.let { sb.append("$it ") }
-        prop.ADDRESSBUILDINGNAME?.let { sb.append("$it ") }
-        sb.append("${prop.ADDRESSSTREETNAME} ")
-        if (prop.ADDRESSFLOORNUMBER != null && prop.ADDRESSUNITNUMBER != null) sb.append("#${prop.ADDRESSFLOORNUMBER}-${prop.ADDRESSUNITNUMBER} ")
-        prop.ADDRESSPOSTALCODE.let { sb.append("S($it)")}
-        return sb.toString()
     }
 }

@@ -15,6 +15,9 @@ import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -39,18 +42,22 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
@@ -131,6 +138,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     else
                         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.menu_home);
                 }
+                gymTitle.setSingleLine(newState == BottomSheetBehavior.STATE_COLLAPSED);
             }
 
             @Override
@@ -139,6 +147,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             }
         };
         gymBottomSheetBehavior.setBottomSheetCallback(callback);
+        setupGymDetailsControls();
 
         favouritesList = favBottomSheet.findViewById(R.id.favourite_list);
         if (favouritesList != null) {
@@ -156,12 +165,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         favouritesList.setAdapter(adapter);
 
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
-        backStack.setEnabled(false);
 
         return root;
     }
 
-    private OnBackPressedCallback backStack = new OnBackPressedCallback(true) {
+    private OnBackPressedCallback backStack = new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
             if (gymBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
@@ -183,7 +191,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mapView.onResume();
 
         if (!firstMarkerLoad) {
-            new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
 
@@ -211,10 +219,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             mMap.setOnInfoWindowClickListener(marker -> gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
             mMap.setOnMapClickListener(latLng -> {
                 Log.d("mMap", "mapClicked()");
-                gymBottomSheetBehavior.setHideable(true);
-                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 favBottomSheetBehavior.setHideable(false);
+                gymBottomSheetBehavior.setHideable(true);
+                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             });
             mMap.setOnMarkerClickListener(marker -> {
                 // Hide and reshow gym
@@ -223,6 +231,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 gymBottomSheetBehavior.setHideable(false);
                 favBottomSheetBehavior.setHideable(true);
                 favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                if (marker.getTag() instanceof GymList.GymShell) updateGymDetails((GymList.GymShell) marker.getTag());
                 return false; // We still want to show the info window right now
         });
         // Process and parse markers
@@ -231,9 +240,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 if (markers == null) return;
                 markerList = markers;
 
-                if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
+                if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers.keySet()) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
                 else {
-                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
@@ -247,13 +256,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private void updateNearbyMarkers(ArrayList<MarkerOptions> results) {
         mMap.clear();
-        for (MarkerOptions m : results) { mMap.addMarker(m); }
+        for (MarkerOptions m : results) {
+            Marker mark = mMap.addMarker(m);
+            if (markerList.containsKey(m)) mark.setTag(markerList.get(m));
+        }
         firstMarkerLoad = false;
     }
 
     private FusedLocationProviderClient locationClient;
     private boolean hasLocationPermission = false;
-    private ArrayList<MarkerOptions> markerList = new ArrayList<>();
+    private HashMap<MarkerOptions, GymList.GymShell> markerList = new HashMap<>();
     private LatLng lastLocation = null;
 
     private void zoomToMyLocation() {
@@ -266,7 +278,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f));
 
                 if (markerList.size() > 0) {
-                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList, this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             });
         }
@@ -321,4 +333,46 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private static final String TAG = "HomeFrag";
+
+    // Gym Details
+    private TextView gymTitle, gymLocation, gymDesc;
+    private LinearLayout favourite;
+    private ImageView heartIcon;
+    private Button carpark, rate;
+    private RecyclerView reviews;
+    private void setupGymDetailsControls() {
+        // Init Elements
+        gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
+        gymDesc = gymBottomSheet.findViewById(R.id.gym_details_description);
+        gymLocation = gymBottomSheet.findViewById(R.id.gym_details_location);
+        favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
+        heartIcon = gymBottomSheet.findViewById(R.id.gym_details_fav_icon);
+        carpark = gymBottomSheet.findViewById(R.id.gym_details_nearby_carparks_btn);
+        rate = gymBottomSheet.findViewById(R.id.gym_details_rate_btn);
+        reviews = gymBottomSheet.findViewById(R.id.review_recycler);
+
+        if (reviews != null) {
+            reviews.setHasFixedSize(true);
+            LinearLayoutManager llm = new LinearLayoutManager(getContext());
+            llm.setOrientation(LinearLayoutManager.VERTICAL);
+            reviews.setLayoutManager(llm);
+            reviews.setItemAnimator(new DefaultItemAnimator());
+        }
+
+        // TODO: Get reviews list from firebase based on the gym key
+        String[] toremove = {"No Reviews Found for this gym", "This feature is currently a WIP"};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
+        reviews.setAdapter(adapter);
+
+        // On Click
+        carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
+        rate.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
+    }
+
+    private void updateGymDetails(@Nullable GymList.GymShell gym) {
+        if (gym == null) return;
+        gymTitle.setText(gym.getProperties().getName());
+        gymDesc.setText(gym.getProperties().getDescription());
+        gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
+    }
 }
