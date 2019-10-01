@@ -16,9 +16,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -58,6 +58,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
+import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
@@ -337,7 +338,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     // Gym Details
     private TextView gymTitle, gymLocation, gymDesc;
     private LinearLayout favourite;
-    private ImageView heartIcon;
+    private FavButtonView heartIcon;
     private Button carpark, rate;
     private RecyclerView reviews;
     private LatLng coordinates = null;
@@ -371,6 +372,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         // On Click
         carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         rate.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
+        favourite.setOnClickListener(v -> heartIcon.callOnClick());
+        heartIcon.setOnClickListener(v -> {
+            if (v instanceof FavButtonView) {
+                FavButtonView heart = (FavButtonView) v;
+                heart.onClick(v); // Execute existing view onclick listener
+                Toast.makeText(v.getContext(), (heart.isChecked()) ? "[DEBUG] Favourited" : "[DEBUG] Unfavourited", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateGymDetails(@Nullable GymList.GymShell gym) {
@@ -379,5 +388,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         gymDesc.setText(gym.getProperties().getDescription());
         gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
+        heartIcon.setChecked(false);
+        // TODO: Update heart icon according to if the gym is favourited or not
     }
 }

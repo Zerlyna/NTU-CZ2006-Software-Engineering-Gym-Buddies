@@ -59,7 +59,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
 
     implementation 'androidx.preference:preference-ktx:1.1.0'
-    implementation 'com.vanniktech:vntnumberpickerpreference:1.0.0'
     implementation 'com.h6ah4i.android.preference:numberpickerprefcompat:1.0.0'
     implementation 'com.google.firebase:firebase-firestore-ktx:21.1.1'
     implementation 'com.google.firebase:firebase-storage:19.0.1'

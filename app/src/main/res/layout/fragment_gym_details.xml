@@ -77,7 +77,6 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
                     android:text="@string/number_placeholder" />
-
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
