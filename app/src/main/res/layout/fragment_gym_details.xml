@@ -44,6 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/gym_detail_title_placeholder"
+                android:id="@+id/gym_details_title"
                 android:textColor="#000000"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -80,17 +81,24 @@
                 android:layout_height="0.5dp"
                 android:paddingTop="?attr/dialogPreferredPadding"
                 android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="2dp"
                 android:background="#5d5d5d" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/gym_details_fav"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="10dp"
+                android:background="?android:attr/selectableItemBackground"
                 android:orientation="horizontal">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="@string/gym_details_fav_icon_content_desc"
                     android:tintMode="src_atop"
+                    android:id="@+id/gym_details_fav_icon"
                     android:tint="#FF0000"
                     app:srcCompat="@drawable/selector_heart" />
                 <TextView
@@ -109,7 +117,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="2dp"
                 android:layout_marginBottom="12dp"
                 android:background="#5d5d5d" />
 
@@ -123,6 +131,7 @@
         android:layout_margin="8dp"
         android:drawableStart="@drawable/ic_location"
         android:drawablePadding="16dp"
+        android:id="@+id/gym_details_location"
         android:text="@string/gym_details_loc_placeholder" />
 
     <TextView
@@ -130,6 +139,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:drawableStart="@drawable/ic_description"
+        android:id="@+id/gym_details_description"
         android:drawablePadding="16dp"
         android:text="@string/gym_desc_placeholder_rant" />
 
@@ -137,15 +147,39 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@color/colorAccent"
+        android:theme="@style/ColourButtonAccent"
         android:text="@string/view_nearby_carparks"
-        android:textColor="#fff" />
+        android:id="@+id/gym_details_nearby_carparks_btn" />
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:background="@color/colorAccent"
-        android:text="Rate and Review Gym (maybe)"
-        android:textColor="#fff" />
+        android:theme="@style/ColourButtonAccent"
+        android:text="@string/rate_review_btn"
+        android:id="@+id/gym_details_rate_btn" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/gym_reviews"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/number_placeholder"
+            android:layout_marginStart="4dp"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:id="@+id/review_recycler" />
 
 </LinearLayout>

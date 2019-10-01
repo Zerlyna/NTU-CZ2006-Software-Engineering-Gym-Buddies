@@ -65,4 +65,8 @@
     <string name="gym_detail_title_placeholder">North Hill Gym</string>
     <string name="gym_detail_rating_placeholder">1.0</string>
     <string name="drag_bar_content_desc">Drag Bar</string>
+    <string name="coming_soon_feature">(WIP) Feature is coming soon!</string>
+    <string name="gym_reviews">Gym Reviews</string>
+    <string name="rate_review_btn">Rate and Review Gym</string>
+    <string name="gym_details_fav_icon_content_desc">A heart</string>
 </resources>
