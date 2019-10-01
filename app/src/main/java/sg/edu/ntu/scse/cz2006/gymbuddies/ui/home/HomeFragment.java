@@ -130,6 +130,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         BottomSheetBehavior.BottomSheetCallback callback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                Log.d("GymDetailsSheet", "State Changed: " + newState);
                 bottomSheet.findViewById(R.id.drag_bar).setVisibility((newState == BottomSheetBehavior.STATE_EXPANDED) ? View.INVISIBLE : View.VISIBLE);
                 backStack.setEnabled(newState == BottomSheetBehavior.STATE_EXPANDED);
                 if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
@@ -200,7 +201,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         super.onPause();
         mapView.onPause();
     }
-
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -340,6 +340,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private ImageView heartIcon;
     private Button carpark, rate;
     private RecyclerView reviews;
+    private LatLng coordinates = null;
+
     private void setupGymDetailsControls() {
         // Init Elements
         gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
@@ -350,6 +352,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         carpark = gymBottomSheet.findViewById(R.id.gym_details_nearby_carparks_btn);
         rate = gymBottomSheet.findViewById(R.id.gym_details_rate_btn);
         reviews = gymBottomSheet.findViewById(R.id.review_recycler);
+        gymLocation.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" + ((coordinates == null) ?
+                gymLocation.getText().toString() : (coordinates.latitude + "," + coordinates.longitude))))));
 
         if (reviews != null) {
             reviews.setHasFixedSize(true);
@@ -374,5 +378,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         gymTitle.setText(gym.getProperties().getName());
         gymDesc.setText(gym.getProperties().getDescription());
         gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
+        coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
     }
 }

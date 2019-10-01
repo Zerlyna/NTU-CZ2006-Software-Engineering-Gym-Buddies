@@ -127,11 +127,14 @@
     </LinearLayout>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:padding="8dp"
         android:drawableStart="@drawable/ic_location"
         android:drawablePadding="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"
         android:id="@+id/gym_details_location"
         android:text="@string/gym_details_loc_placeholder" />
 
@@ -162,6 +165,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
         android:layout_marginStart="8dp"
         android:orientation="horizontal">
         <TextView
