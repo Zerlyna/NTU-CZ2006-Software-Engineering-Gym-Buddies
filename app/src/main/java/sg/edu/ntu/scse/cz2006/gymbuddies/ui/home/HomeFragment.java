@@ -198,6 +198,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private ListenerRegistration favListener;
+    private User currentUserObj;
 
     @Override
     public void onResume() {
@@ -216,6 +217,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     User userTmp = documentSnapshot.toObject(User.class);
                     if (userTmp == null) emptyFavourites();
                     else {
+                        currentUserObj = userTmp;
                         ArrayList<String> favGymIds = userTmp.getGymFavourites();
                         // TODO: Get Gym details to display with custom adapter
                         if (favGymIds.size() == 0) emptyFavourites();
@@ -432,6 +434,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
         heartIcon.setChecked(false);
         selectedGymUid = gym.getProperties().getINC_CRC();
-        // TODO: Update heart icon according to if the gym is favourited or not
+        if (currentUserObj != null && currentUserObj.getGymFavourites().contains(gym.getProperties().getINC_CRC())) heartIcon.setChecked(true);
     }
 }
