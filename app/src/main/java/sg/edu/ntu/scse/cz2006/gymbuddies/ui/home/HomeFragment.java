@@ -47,6 +47,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +58,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
@@ -162,16 +165,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             favouritesList.setItemAnimator(new DefaultItemAnimator());
         }
 
-        // TODO: Get favourites list from firebase based on the key
+
         // TODO: Remove default 0 hahaha
-        String[] toremove = {"No Favourites Found", "This feature is currently a WIP"};
-        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
-        favouritesList.setAdapter(adapter);
+        emptyFavourites();
 
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
 
         return root;
     }
+
 
     private OnBackPressedCallback backStack = new OnBackPressedCallback(false) {
         @Override
@@ -189,6 +191,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mapView.getMapAsync(this);
     }
 
+    private void emptyFavourites() {
+        String[] toremove = {"No Favourites Saved"};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
+        favouritesList.setAdapter(adapter);
+    }
+
+    private ListenerRegistration favListener;
+
     @Override
     public void onResume() {
         super.onResume();
@@ -197,12 +207,35 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (!firstMarkerLoad) {
             new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null && favListener == null) {
+            favListener = FirebaseFirestore.getInstance().collection("users").document(user.getUid()).addSnapshotListener((documentSnapshot, e) -> {
+                // Update favourites
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    User userTmp = documentSnapshot.toObject(User.class);
+                    if (userTmp == null) emptyFavourites();
+                    else {
+                        ArrayList<String> favGymIds = userTmp.getGymFavourites();
+                        // TODO: Get Gym details to display with custom adapter
+                        if (favGymIds.size() == 0) emptyFavourites();
+                        else {
+                            favGymIds.add("This feature is a WIP and WILL change");
+                            StringRecyclerAdapter adapter = new StringRecyclerAdapter(favGymIds);
+                            favouritesList.setAdapter(adapter);
+                        }
+                    }
+                } else emptyFavourites();
+            });
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mapView.onPause();
+        favListener.remove();
+        favListener = null;
     }
 
     @Override
@@ -383,8 +416,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (getActivity() != null && user != null) {
                     new UpdateGymFavourites(getActivity(), user.getUid(), selectedGymUid, heart.isChecked(), success -> {
-                        if (success) Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Saved to favourites!" : "Removed from favourites!", Snackbar.LENGTH_LONG).show();
-                        else Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Failed to save to favourites. Try again later" : "Failed to remove from favourites. Try again later", Snackbar.LENGTH_LONG).show();
+                        if (success) Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Saved to favourites!" : "Removed from favourites!", Snackbar.LENGTH_SHORT).show();
+                        else Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Failed to save to favourites. Try again later" : "Failed to remove from favourites. Try again later", Snackbar.LENGTH_SHORT).show();
                     }).execute();
                 }
             }
