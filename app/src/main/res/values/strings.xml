@@ -69,4 +69,5 @@
     <string name="gym_reviews">Gym Reviews</string>
     <string name="rate_review_btn">Rate and Review Gym</string>
     <string name="gym_details_fav_icon_content_desc">A heart</string>
+    <string name="fav_list_header">Favourite Gyms</string>
 </resources>

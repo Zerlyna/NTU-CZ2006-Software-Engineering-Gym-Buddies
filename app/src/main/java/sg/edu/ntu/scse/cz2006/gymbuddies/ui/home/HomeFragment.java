@@ -123,8 +123,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         favBottomSheet = root.findViewById(R.id.bottom_sheet);
         favBottomSheetBehavior = BottomSheetBehavior.from(favBottomSheet);
-        favBottomSheetBehavior.setPeekHeight(200);
-        favBottomSheetBehavior.setHideable(false);
         favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         favBottomSheet.setOnTouchListener((view, motionEvent) -> {
             view.performClick();

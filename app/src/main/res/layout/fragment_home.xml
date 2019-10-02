@@ -24,37 +24,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
+        android:orientation="vertical"
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="450dp"
         android:background="@android:color/white"
+        app:behavior_peekHeight="80dp"
+        app:behavior_hideable="false"
         android:clipToPadding="true"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/text"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_margin="25dp"
+            android:gravity="center"
+            app:fontFamily="@font/google_product_sans"
+            android:text="@string/fav_list_header"
+            android:textAppearance="?android:textAppearanceLarge" />
 
-            <TextView
-                android:id="@+id/text"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_margin="25dp"
-                android:layout_weight="3"
-                android:gravity="center"
-                app:fontFamily="@font/google_product_sans"
-                android:text="Favourite Gyms"
-                android:textAppearance="?android:textAppearanceLarge" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/favourite_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/favourite_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
     <include layout="@layout/fragment_gym_details" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
