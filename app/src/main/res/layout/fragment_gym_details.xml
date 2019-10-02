@@ -32,7 +32,7 @@
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="0.65" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -60,89 +60,72 @@
                     style="@style/Base.Widget.AppCompat.RatingBar.Small"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:numStars="5"
                     android:rating="1" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:layout_marginStart="4dp"
                     android:text="@string/gym_detail_rating_placeholder" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
                     android:text="@string/number_placeholder" />
 
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.6dp"
-                android:paddingTop="?attr/dialogPreferredPadding"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="2dp"
-                android:background="#5d5d5d" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/gym_details_fav"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="10dp"
-                android:background="?android:attr/selectableItemBackground"
-                android:orientation="horizontal">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/gym_details_fav_icon_content_desc"
-                    android:tintMode="src_atop"
-                    android:id="@+id/gym_details_fav_icon"
-                    android:tint="#FF0000"
-                    app:srcCompat="@drawable/selector_heart" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    app:fontFamily="@font/google_product_sans"
-                    android:text="@string/favourite"
-                    android:textColor="#FF0000" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/number_placeholder" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.6dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="2dp"
-                android:background="#5d5d5d" />
         </LinearLayout>
     </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="8dp"
-        android:gravity="center_vertical"
-        app:fontFamily="@font/google_product_sans"
-        android:id="@+id/gym_details_description"
-        android:text="@string/gym_desc_placeholder_rant" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="0.6dp"
         android:paddingTop="?attr/dialogPreferredPadding"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="12dp"
+        android:background="#5d5d5d" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/gym_details_fav"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:padding="10dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:orientation="horizontal">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/gym_details_fav_icon_content_desc"
+            android:tintMode="src_atop"
+            android:id="@+id/gym_details_fav_icon"
+            android:tint="#FF0000"
+            app:srcCompat="@drawable/selector_heart" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            app:fontFamily="@font/google_product_sans"
+            android:text="@string/favourite"
+            android:textColor="#FF0000" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/number_placeholder" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.6dp"
+        android:layout_marginBottom="2dp"
         android:background="#5d5d5d" />
 
     <TextView
@@ -160,6 +143,26 @@
         android:background="?android:attr/selectableItemBackground"
         android:id="@+id/gym_details_location"
         android:text="@string/gym_details_loc_placeholder" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.6dp"
+        android:paddingTop="?attr/dialogPreferredPadding"
+        android:layout_marginTop="2dp"
+        android:background="#5d5d5d" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp"
+        android:gravity="center_vertical"
+        app:fontFamily="@font/google_product_sans"
+        android:id="@+id/gym_details_description"
+        android:text="@string/gym_desc_placeholder_rant" />
 
     <View
         android:layout_width="match_parent"
