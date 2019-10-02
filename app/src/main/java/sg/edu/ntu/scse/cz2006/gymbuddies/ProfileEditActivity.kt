@@ -31,14 +31,6 @@ import kotlin.collections.ArrayList
 
 /**
  * The activity that is used to handle profile view/edit for a logged in user
- * There are a couple of flags that are used here:
- * - [firstRun] denotes if the user is a new user and has not setup the application yet
- * - [editMode] denotes if the user is in a view-only mode or edit mode
- *
- * There are a couple more properties
- * - [uid] is the unique ID of the user
- * - [profileImage] and [profileUri] both defines the current user's profile picture if any
- *
  * For sg.edu.ntu.scse.cz2006.gymbuddies in Gym Buddies!
  *
  * @author Kenneth Soh
@@ -290,7 +282,7 @@ class ProfileEditActivity : AppCompatActivity() {
 
     /**
      * This is used to handle results from any provider based profile pic such as from the Google Authentication
-     * @param requestCode Int Intent Request Code such as [REQUEST_PROFILE_PIC]
+     * @param requestCode Int Intent Request Code such as REQUEST_PROFILE_PIC
      * @param resultCode Int Intent Result code. Can be [Activity.RESULT_OK] or [Activity.RESULT_CANCELED]
      * @param data Intent? Any profile picture data
      */

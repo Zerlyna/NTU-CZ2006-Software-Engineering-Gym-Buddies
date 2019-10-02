@@ -30,7 +30,7 @@ class ParseGymDataFile(activity: Activity, private val callback: Callback) : Asy
     interface Callback {
         /**
          * Callback function executed when the task completes with the corresponding [results]
-         * @param results HashMap<MarkerOptions, GymShell>? Result in the form of a hashmap of Google Maps [MarkerOptions] and the list of all gyms
+         * @param results HashMap<MarkerOptions, GymShell>? Result in the form of a hashmap of Google Maps MarkerOptions and the list of all gyms
          */
         fun onComplete(results: HashMap<MarkerOptions, GymList.GymShell>?)
     }

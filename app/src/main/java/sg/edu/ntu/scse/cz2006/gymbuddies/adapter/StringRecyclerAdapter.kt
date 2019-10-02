@@ -15,11 +15,17 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R
  * @author Kenneth Soh
  * @since 2019-09-17
  * @property announce Boolean Whether to display a toast message in onClick or not
- * @property stringList List<String>The list of all strings to display
+ * @property stringList List<String> The list of all strings to display
  * @property onClickListener OnClickListener? Set this to override the default onClick listener defined in [StringRecyclerAdapter.StringViewHolder.onClick]
  * @constructor Creates a adapter for the Gym Favourites List RecyclerView
  */
 class StringRecyclerAdapter(string: List<String>, private var announce: Boolean) : RecyclerView.Adapter<StringRecyclerAdapter.StringViewHolder>() {
+    /**
+     * Initializes the recycler adapter with just a list of string.
+     * We will presume that you are implicitly wanting announcement when [StringRecyclerAdapter.StringViewHolder.onClick] is called
+     * @param string List<String> The list of all strings to display
+     * @constructor Creates a adapter for the Gym Favourites List RecyclerView
+     */
     constructor(string: List<String>) : this(string, true)
 
     private var stringList: List<String> = ArrayList()
