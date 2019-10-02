@@ -79,7 +79,7 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="0.5dp"
+                android:layout_height="0.6dp"
                 android:paddingTop="?attr/dialogPreferredPadding"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="2dp"
@@ -117,18 +117,36 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="0.5dp"
+                android:layout_height="0.6dp"
                 android:layout_marginTop="2dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="2dp"
                 android:background="#5d5d5d" />
-
         </LinearLayout>
-
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp"
+        android:id="@+id/gym_details_description"
+        android:text="@string/gym_desc_placeholder_rant" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.6dp"
+        android:paddingTop="?attr/dialogPreferredPadding"
+        android:layout_marginTop="2dp"
+        android:background="#5d5d5d" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
         android:padding="8dp"
         android:drawableStart="@drawable/ic_location"
         android:drawablePadding="16dp"
@@ -138,26 +156,24 @@
         android:id="@+id/gym_details_location"
         android:text="@string/gym_details_loc_placeholder" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:drawableStart="@drawable/ic_description"
-        android:id="@+id/gym_details_description"
-        android:drawablePadding="16dp"
-        android:text="@string/gym_desc_placeholder_rant" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.6dp"
+        android:paddingTop="?attr/dialogPreferredPadding"
+        android:layout_marginBottom="2dp"
+        android:background="#5d5d5d" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="2dp"
         android:theme="@style/ColourButtonAccent"
         android:text="@string/view_nearby_carparks"
         android:id="@+id/gym_details_nearby_carparks_btn" />
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:theme="@style/ColourButtonAccent"
         android:text="@string/rate_review_btn"
         android:id="@+id/gym_details_rate_btn" />
