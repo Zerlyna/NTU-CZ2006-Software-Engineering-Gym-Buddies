@@ -45,6 +45,7 @@
                 android:layout_margin="25dp"
                 android:layout_weight="3"
                 android:gravity="center"
+                app:fontFamily="@font/google_product_sans"
                 android:text="Favourite Gyms"
                 android:textAppearance="?android:textAppearanceLarge" />
 

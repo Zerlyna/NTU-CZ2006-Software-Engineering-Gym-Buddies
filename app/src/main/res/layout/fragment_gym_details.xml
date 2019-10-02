@@ -44,11 +44,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/gym_detail_title_placeholder"
+                app:fontFamily="@font/google_product_sans"
                 android:ellipsize="end"
                 android:id="@+id/gym_details_title"
                 android:textColor="#000000"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:textSize="24sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -106,6 +106,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
+                    app:fontFamily="@font/google_product_sans"
                     android:text="@string/favourite"
                     android:textColor="#FF0000" />
                 <TextView
@@ -132,6 +133,8 @@
         android:paddingEnd="12dp"
         android:paddingTop="4dp"
         android:paddingBottom="8dp"
+        android:gravity="center_vertical"
+        app:fontFamily="@font/google_product_sans"
         android:id="@+id/gym_details_description"
         android:text="@string/gym_desc_placeholder_rant" />
 
@@ -150,8 +153,10 @@
         android:padding="8dp"
         android:drawableStart="@drawable/ic_location"
         android:drawablePadding="16dp"
+        android:gravity="center_vertical"
         android:clickable="true"
         android:focusable="true"
+        app:fontFamily="@font/google_product_sans"
         android:background="?android:attr/selectableItemBackground"
         android:id="@+id/gym_details_location"
         android:text="@string/gym_details_loc_placeholder" />
@@ -167,6 +172,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        app:fontFamily="@font/google_product_sans"
         android:theme="@style/ColourButtonAccent"
         android:text="@string/view_nearby_carparks"
         android:id="@+id/gym_details_nearby_carparks_btn" />
@@ -174,6 +180,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        app:fontFamily="@font/google_product_sans"
         android:theme="@style/ColourButtonAccent"
         android:text="@string/rate_review_btn"
         android:id="@+id/gym_details_rate_btn" />
@@ -188,6 +195,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            app:fontFamily="@font/google_product_sans"
             android:text="@string/gym_reviews"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         <TextView
@@ -201,6 +209,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:fontFamily="@font/google_product_sans"
         android:layout_marginStart="8dp"
         android:id="@+id/review_recycler" />
 
