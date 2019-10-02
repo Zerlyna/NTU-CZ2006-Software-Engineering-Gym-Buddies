@@ -3,11 +3,20 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.util
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
 
 /**
- * Created by Kenneth on 1/10/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.util in Gym Buddies!
+ * Gym Helper Class Object
+ *
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.util in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-01
  */
 object GymHelper {
 
+    /**
+     * Generates the gym address based on the gym properties [prop] that you have passed in
+     * @param prop GymProperties The Gym's Properties object
+     * @return String Full Address of the gym
+     */
     @JvmStatic
     fun generateAddress(prop: GymList.GymProperties): String {
         val sb = StringBuilder()
@@ -19,5 +28,8 @@ object GymHelper {
         return sb.toString()
     }
 
+    /**
+     * A constant for the gym collection in Firebase Firestore DB
+     */
     const val GYM_COLLECTION = "favgym"
 }

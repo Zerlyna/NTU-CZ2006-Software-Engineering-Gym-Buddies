@@ -12,14 +12,39 @@ import java.lang.ref.WeakReference
  * Created by Kenneth on 2/10/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
  */
+/**
+ * Task to handle updating gym favourites when the favourites button is clicked
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-02
+ * @property userid String User ID of the user who clicked the button
+ * @property gymId String? The gym being favourited or unfavourited
+ * @property favStatus Boolean The toggle state (true if we are favouriting, false if you are unfavouriting)
+ * @property callback Callback Callback to call when task completes
+ * @property actRef WeakReference<(android.app.Activity..android.app.Activity?)> A weak reference to the activity
+ * @constructor Initializees the task to execute
+ */
 class UpdateGymFavourites(activity: Activity, private val userid: String, private val gymId: String?, private val favStatus: Boolean, private val callback: Callback) : AsyncTask<Void, Void, Void>() {
 
     private val actRef = WeakReference(activity)
 
+    /**
+     * Internal interface to handle callbacks
+     */
     interface Callback {
+        /**
+         * Callback function called when the task completes with its [success] value
+         * @param success Boolean true if successful, false otherwise
+         */
         fun onComplete(success: Boolean)
     }
 
+    /**
+     * Internal task to execute in the background on a seperate thread
+     * @param p0 Array<out Void?> No arguements
+     * @return Void? No return value
+     */
     override fun doInBackground(vararg params: Void?): Void? {
         val activity = actRef.get() ?: return null
         if (gymId == null) {
@@ -50,6 +75,9 @@ class UpdateGymFavourites(activity: Activity, private val userid: String, privat
     }
 
     companion object {
+        /**
+         * Activity Tag for logs
+         */
         private const val TAG = "UpdateGymFavourites"
     }
 

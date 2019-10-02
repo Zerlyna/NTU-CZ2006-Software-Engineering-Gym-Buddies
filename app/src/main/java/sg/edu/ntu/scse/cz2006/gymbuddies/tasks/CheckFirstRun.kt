@@ -8,18 +8,40 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
 import java.lang.ref.WeakReference
 
 /**
- * Created by Kenneth on 16/9/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ * Task to run the first run check in the background
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-09-16
+ * @property callback Callback Callback to call when task completes
+ * @property actRef WeakReference<(android.app.Activity..android.app.Activity?)> A weak reference to the activity
+ * @constructor Initializees the task to execute
  */
 class CheckFirstRun(activity: Activity, private val callback: Callback) : AsyncTask<String, Void, Void>() {
 
     private val actRef = WeakReference(activity)
 
+    /**
+     * Internal interface to handle callbacks
+     */
     interface Callback {
+        /**
+         * Callback function called when returning results
+         * @param success Boolean true if user does not have a profile, false otherwise
+         */
         fun isFirstRun(success: Boolean)
+
+        /**
+         * Function called when an error occurs
+         */
         fun isError()
     }
 
+    /**
+     * Internal task to execute in the background on a seperate thread
+     * @param p0 Array<out String?> User ID
+     * @return Void? No return value
+     */
     override fun doInBackground(vararg p0: String?): Void? {
         val activity = actRef.get() ?: return null
         if (p0.isEmpty()) {
@@ -52,12 +74,20 @@ class CheckFirstRun(activity: Activity, private val callback: Callback) : AsyncT
         return null
     }
 
+    /**
+     * Sends a callback back to the calling [activity]
+     * @param success Boolean true if user does not have a profile, false otherwise
+     * @param activity Activity The calling activity
+     */
     private fun doCallback(success: Boolean, activity: Activity) {
         Log.d(TAG, "callback:$success")
         activity.runOnUiThread { callback.isFirstRun(success) }
     }
 
     companion object {
+        /**
+         * Activity Tag for logs
+         */
         private const val TAG = "CheckFirstRun"
     }
 

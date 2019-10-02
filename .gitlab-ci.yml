@@ -80,6 +80,8 @@ Generate Javadocs Documentation:
   artifacts:
     paths:
       - javadoc/
+  only:
+    - master
 
 Update Javadocs:
   stage: Deployment

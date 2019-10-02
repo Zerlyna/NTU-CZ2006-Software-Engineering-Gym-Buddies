@@ -9,11 +9,20 @@ import java.net.URL
 
 
 /**
- * Created by Kenneth on 9/9/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.util in Gym Buddies!
+ * Helper class for handling profile pictures in the application
+ *
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.util in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-09-09
  */
 object ProfilePicHelper {
 
+    /**
+     * Generates a bitmap given a [url] to the image to download and generate
+     * @param url String URL of the image to download and generate a bitmap of
+     * @return Bitmap? The bitmap of the image you are downloading
+     */
     @JvmStatic
     fun getImageBitmap(url: String): Bitmap? {
         var bm: Bitmap? = null
