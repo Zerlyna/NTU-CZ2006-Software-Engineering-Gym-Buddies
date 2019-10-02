@@ -219,11 +219,18 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     else {
                         currentUserObj = userTmp;
                         ArrayList<String> favGymIds = userTmp.getGymFavourites();
-                        // TODO: Get Gym details to display with custom adapter
                         if (favGymIds.size() == 0) emptyFavourites();
                         else {
-                            favGymIds.add("This feature is a WIP and WILL change");
-                            StringRecyclerAdapter adapter = new StringRecyclerAdapter(favGymIds);
+                            // TODO: Display with custom adapter and all general gym information with unfavourite icon (or swipe to unfavourite)
+                            ArrayList<String> finalList = new ArrayList<>();
+                            HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
+                            for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
+                            for (String id : favGymIds) {
+                                if (gymDetailsList.containsKey(id)) finalList.add(gymDetailsList.get(id).getProperties().getName());
+                                else finalList.add("UNKNOWN GYM (" + id + ")");
+                            }
+                            finalList.add("This feature is a WIP and WILL change");
+                            StringRecyclerAdapter adapter = new StringRecyclerAdapter(finalList);
                             favouritesList.setAdapter(adapter);
                         }
                     }
