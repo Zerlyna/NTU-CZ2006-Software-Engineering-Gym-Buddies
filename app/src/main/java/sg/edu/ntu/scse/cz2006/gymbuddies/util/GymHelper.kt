@@ -18,4 +18,6 @@ object GymHelper {
         prop.ADDRESSPOSTALCODE.let { sb.append("S($it)")}
         return sb.toString()
     }
+
+    const val GYM_COLLECTION = "favgym"
 }

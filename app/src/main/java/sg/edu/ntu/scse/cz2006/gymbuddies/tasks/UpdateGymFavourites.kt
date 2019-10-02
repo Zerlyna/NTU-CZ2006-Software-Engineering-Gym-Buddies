@@ -4,7 +4,8 @@ import android.app.Activity
 import android.os.AsyncTask
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymFirestore
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper.GYM_COLLECTION
 import java.lang.ref.WeakReference
 
 /**
@@ -26,20 +27,24 @@ class UpdateGymFavourites(activity: Activity, private val userid: String, privat
             return null
         }
         val firebaseDb = FirebaseFirestore.getInstance()
-        firebaseDb.collection("users").document(userid).get().addOnSuccessListener { snapshot ->
-            Log.i(TAG, "User object retrieved, checking existance")
-            if (snapshot.exists()) {
-                Log.i(TAG, "User exists, updating favourites")
-                val user = snapshot.toObject(User::class.java)
-                user?.let {
-                    val favArray = it.gymFavourites
-                    if (favStatus) {if (!favArray.contains(gymId)) favArray.add(gymId) } // Favourite if not inside already
-                    else favArray.remove(gymId) // Unfavourite
-                    Log.i(TAG, "Saving new favourites list. State: ${if (favStatus) "Added" else "Removed"}, Size: ${favArray.size}")
-                    firebaseDb.collection("users").document(userid).set(it).addOnSuccessListener { activity.runOnUiThread { callback.onComplete(true) } }
-                        .addOnFailureListener { activity.runOnUiThread { callback.onComplete(false) } }
-                }
-            } else activity.runOnUiThread { callback.onComplete(false) }
+        firebaseDb.collection(GYM_COLLECTION).document(gymId).get().addOnSuccessListener { snapshot ->
+            Log.i(TAG, "Favourite Gym object retrieved, checking existance")
+            val favGym: FavGymFirestore? = if (snapshot.exists()) {
+                Log.i(TAG, "Favourite gym exists, updating favourites")
+                snapshot.toObject(FavGymFirestore::class.java)
+            } else {
+                Log.i(TAG, "Gym was never favourited, creating new object")
+                FavGymFirestore()
+            }
+            favGym?.let {
+                val userList = it.userIds
+                if (favStatus) {if (!userList.contains(userid)) userList.add(userid) } // Favourite if not inside already
+                else userList.remove(userid) // Unfavourite
+                it.count = userList.size
+                Log.i(TAG, "Updating gym object. State: ${if (favStatus) "Added" else "Removed"}, Size: ${it.count}")
+                firebaseDb.collection(GYM_COLLECTION).document(gymId).set(it).addOnSuccessListener { activity.runOnUiThread { callback.onComplete(true) } }
+                    .addOnFailureListener { activity.runOnUiThread { callback.onComplete(false) } }
+            } ?: activity.runOnUiThread { callback.onComplete(false) }
         }.addOnFailureListener { Log.e(TAG, "Error getting Firebase Collection", it); activity.runOnUiThread { callback.onComplete(false) } } // Error, Log it
         return null
     }

@@ -7,7 +7,7 @@ import com.google.firebase.firestore.Exclude
  * for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
  */
 data class User(var name: String = "", var prefLocation: String = "West", var gender: String = "Male", var prefTime: String = "AM",
-                var prefDay: PrefDays = PrefDays(), var profilePicUri: String = "", var flags: Flags = Flags(), var gymFavourites: ArrayList<String> = ArrayList()) {
+                var prefDay: PrefDays = PrefDays(), var profilePicUri: String = "", var flags: Flags = Flags()) {
     data class Flags(var firstRun: Boolean = true)
     data class PrefDays(var monday: Boolean = false, var tuesday: Boolean = false, var wednesday: Boolean = false,
                         var thursday: Boolean = false, var friday: Boolean = false, var saturday: Boolean = false, var sunday: Boolean = false) {
