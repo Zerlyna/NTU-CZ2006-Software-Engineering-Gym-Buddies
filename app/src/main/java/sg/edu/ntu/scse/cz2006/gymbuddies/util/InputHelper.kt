@@ -5,11 +5,19 @@ import android.view.inputmethod.InputMethodManager
 
 
 /**
- * Created by Kenneth on 16/9/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.util in Gym Buddies!
+ * Helper class for handling input related tasks
+ *
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.util in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-09-16
  */
 object InputHelper {
 
+    /**
+     * Helper function to hide the Android IME Soft Keyboard for a given [activity]
+     * @param activity Activity The activity to close the keyboard for
+     */
     @JvmStatic
     fun hideSoftKeyboard(activity: Activity) {
         val inputMethodManager = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager

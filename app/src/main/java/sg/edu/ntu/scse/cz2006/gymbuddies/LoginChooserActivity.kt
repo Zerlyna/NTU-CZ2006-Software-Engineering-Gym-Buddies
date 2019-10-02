@@ -18,7 +18,21 @@ import com.google.firebase.auth.FirebaseUser
 import io.fabric.sdk.android.Fabric
 import java.util.*
 
-
+/**
+ * This is the main launcher activity that shows up to handle the login page of the application
+ * There are some flags in this activity
+ * - [signInFlow] denotes if we are currently in the sign in process
+ * - [checkingFurther] denotes if we are currently handling further checks to authentication
+ *
+ * On top of that we have a listener [mAuthStateListener] that handles the state changes during authentication
+ * For sg.edu.ntu.scse.cz2006.gymbuddies in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-09-03
+ * @property mAuthStateListener AuthStateListener Auuthentication State Change Listener for Firebase Authentication
+ * @property checkingFurther Boolean Flag that is toggled when we are currently handling further authentication checks
+ * @property signInFlow Boolean Flag that is toggled when we are running the FirebaseUI Sign In Flow
+ */
 class LoginChooserActivity : AppCompatActivity() {
 
     private val mAuthStateListener = FirebaseAuth.AuthStateListener { auth ->
@@ -31,6 +45,10 @@ class LoginChooserActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Function that is called when an activity is created
+     * @param savedInstanceState Bundle? The Android saved instance state
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_chooser)
@@ -44,6 +62,10 @@ class LoginChooserActivity : AppCompatActivity() {
         if (isLogout) logout() else autoLogin(firebaseUser)
     }
 
+    /**
+     * Handling auto logging in of previously logged in user if any
+     * @param fbUser FirebaseUser? The FirebaseAuth user object
+     */
     private fun autoLogin(fbUser: FirebaseUser?) {
         if (checkingFurther) return
         Log.d("LoginChk", "al:check")
@@ -62,6 +84,12 @@ class LoginChooserActivity : AppCompatActivity() {
     private var checkingFurther = false
     private var signInFlow = false
 
+    /**
+     * Any further checks with the authentication [provider]
+     * This is mainly used to handle further authentication check for email login such as handling if you completed email authentication
+     * @param provider String Provider name
+     * @param userObj FirebaseUser? FirebaseAuth user object
+     */
     private fun furtherChecks(provider: String, userObj: FirebaseUser?) {
         checkingFurther = true
         FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
@@ -115,8 +143,10 @@ class LoginChooserActivity : AppCompatActivity() {
         checkingFurther = false
     }
 
+    /**
+     * Login method that invokes FirebaseUI's Login Flow
+     */
     private fun login() {
-        // Testing authentication
         if (signInFlow) return
         signInFlow = true
         FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
@@ -125,6 +155,10 @@ class LoginChooserActivity : AppCompatActivity() {
             .setIsSmartLockEnabled(false).setAvailableProviders(providers).build(), RC_SIGN_IN)
     }
 
+    /**
+     * Logs a user out. If you wish for no Toast messages to appear, set [silent] to true
+     * @param silent Boolean If a toast should appear informing you that you have logged out successfully
+     */
     private fun logout(silent: Boolean = false) {
         Log.d("LoginChk", "logout")
         FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
@@ -137,6 +171,12 @@ class LoginChooserActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * This handles the result of the FirebaseUI Login flow
+     * @param requestCode Int Intent Request Code passed into the login flow such as [RC_SIGN_IN]
+     * @param resultCode Int Result of the login flow. Can be [Activity.RESULT_OK] or [Activity.RESULT_CANCELED]
+     * @param data Intent? Any additional data
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == RC_SIGN_IN) {
             signInFlow = false
@@ -168,6 +208,9 @@ class LoginChooserActivity : AppCompatActivity() {
     }
 
     companion object {
+        /**
+         * Intent to request to enter Sign In Flow for Firebase UI
+         */
         const val RC_SIGN_IN = 1
     }
 }

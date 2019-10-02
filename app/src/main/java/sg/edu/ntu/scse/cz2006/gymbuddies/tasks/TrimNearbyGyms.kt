@@ -7,17 +7,43 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
 /**
- * Created by Kenneth on 25/9/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ * Task to execute to cut down the number of markers displayed on the map for gyms
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-09-25
+ * @property count Int Number of markers to display only
+ * @property location LatLng Current location of the user
+ * @property markers Set<MarkerOptions> List of all markers to trim
+ * @property callback Callback Callback to call when task completes
+ * @constructor Initializees the task to execute
  */
 class TrimNearbyGyms(private var count: Int, private val location: LatLng, private val markers: Set<MarkerOptions>, private val callback: Callback) : AsyncTask<Void, Void, ArrayList<MarkerOptions>>() {
 
+    /**
+     * Internal interface to handle callbacks
+     */
     interface Callback {
+        /**
+         * Callback function called when the task completed with the list of [results] on trimmed markers
+         * @param results ArrayList<MarkerOptions> The trimmed down Google Maps markers
+         */
         fun onComplete(results: ArrayList<MarkerOptions>)
     }
 
+    /**
+     * Internal data class for storing [distance] of a [marker] from the current user
+     * @property distance Float Distance of the marker from the current user
+     * @property marker MarkerOptions? The marker in which the distance relates to
+     * @constructor Creates an object of the [distance] of the [marker] to the user's current location
+     */
     private data class Distance(var distance: Float = 0f, var marker: MarkerOptions? = null)
 
+    /**
+     * Internal task to execute in the background on a seperate thread
+     * @param p0 Array<out Void?> No arguements
+     * @return ArrayList<MarkerOptions> List of trimmed Google Maps markers
+     */
     override fun doInBackground(vararg p0: Void?): ArrayList<MarkerOptions> {
         val distances = ArrayList<Distance>()
 
@@ -48,12 +74,19 @@ class TrimNearbyGyms(private var count: Int, private val location: LatLng, priva
         return result
     }
 
+    /**
+     * Function ran when the task completes
+     * @param result ArrayList<MarkerOptions> List of all trimmed Google Maps markers
+     */
     override fun onPostExecute(result: ArrayList<MarkerOptions>) {
         super.onPostExecute(result)
         callback.onComplete(result)
     }
 
     companion object {
+        /**
+         * Activity Tag for logs
+         */
         private const val TAG = "TrimNearbyGyms"
     }
 }

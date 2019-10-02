@@ -29,6 +29,26 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.InputHelper
 import java.util.*
 import kotlin.collections.ArrayList
 
+/**
+ * The activity that is used to handle profile view/edit for a logged in user
+ * There are a couple of flags that are used here:
+ * - [firstRun] denotes if the user is a new user and has not setup the application yet
+ * - [editMode] denotes if the user is in a view-only mode or edit mode
+ *
+ * There are a couple more properties
+ * - [uid] is the unique ID of the user
+ * - [profileImage] and [profileUri] both defines the current user's profile picture if any
+ * For sg.edu.ntu.scse.cz2006.gymbuddies in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-09-16
+ * @property firstRun Boolean If this is the user's first logon to the app
+ * @property profileImage Bitmap? The profile image if any of the user
+ * @property profileUri Uri? The url to the profile image of the user if any
+ * @property uid String The Unique ID of the user
+ * @property editMode Boolean If the user is currently allowed to edit the profile
+ * @property editUser User? The user in which this profile is editing
+ */
 class ProfileEditActivity : AppCompatActivity() {
 
     private var firstRun = false
@@ -36,6 +56,10 @@ class ProfileEditActivity : AppCompatActivity() {
     private var profileUri: Uri? = null
     private lateinit var uid: String
 
+    /**
+     * Function that is called when an activity is created
+     * @param savedInstanceState Bundle? The Android saved instance state
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile_edit)
@@ -103,6 +127,9 @@ class ProfileEditActivity : AppCompatActivity() {
     private var editMode: Boolean = true
     private var editUser: User? = null
 
+    /**
+     * This is an internal function of code to execute to enter view-only mode
+     */
     private fun enterViewOnlyMode() {
         // Disables FAB and basically everything else
         Log.i(TAG, "Entering View Only Mode for Profile")
@@ -126,6 +153,9 @@ class ProfileEditActivity : AppCompatActivity() {
         editMode = false
     }
 
+    /**
+     * This is an internal function handling code to execute when exiting view-only mode and entering edit mode
+     */
     private fun exitViewOnlyMode() {
         // Enter edit mode
         profile_pic.isClickable = true
@@ -149,6 +179,10 @@ class ProfileEditActivity : AppCompatActivity() {
         editMode = true
     }
 
+    /**
+     * This is a function to handle updating a [user]'s data
+     * @param user User The user to update data of
+     */
     private fun updateData(user: User) {
         etName.setText(user.name)
         profileUri = Uri.parse(user.profilePicUri)
@@ -174,6 +208,10 @@ class ProfileEditActivity : AppCompatActivity() {
         cb_day7.isChecked = user.prefDay.sunday
     }
 
+    /**
+     * This is used to validate if all input requirements have been met
+     * @return Boolean true if validated, false otherwise
+     */
     private fun validate(): Boolean {
         // Check all fields set up and filled
         til_etName.isErrorEnabled = false
@@ -195,6 +233,9 @@ class ProfileEditActivity : AppCompatActivity() {
         return true
     }
 
+    /**
+     * Internal function to handling the creation or update of user profile
+     */
     private fun addOrUpdate() {
         Log.i(TAG, "Doing add/update of profile")
         val name = etName.text.toString()
@@ -229,6 +270,10 @@ class ProfileEditActivity : AppCompatActivity() {
         } ).execute()
     }
 
+    /**
+     * Internal function to obtain a list of preferred days that have been selected
+     * @return ArrayList<Int> List of preferred days that are selected
+     */
     private fun getSelectedDays(): ArrayList<Int> {
         val list = ArrayList<Int>()
         // Add accordingly (1 - Mon, 2 - Tues ... 7 - Sun
@@ -242,6 +287,12 @@ class ProfileEditActivity : AppCompatActivity() {
         return list
     }
 
+    /**
+     * This is used to handle results from any provider based profile pic such as from the Google Authentication
+     * @param requestCode Int Intent Request Code such as [REQUEST_PROFILE_PIC]
+     * @param resultCode Int Intent Result code. Can be [Activity.RESULT_OK] or [Activity.RESULT_CANCELED]
+     * @param data Intent? Any profile picture data
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -267,6 +318,9 @@ class ProfileEditActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * This function overrides the back functionality of the activity
+     */
     override fun onBackPressed() {
         if (firstRun) {
             // Log user out
@@ -278,6 +332,11 @@ class ProfileEditActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * This function handles the selected menu [item]
+     * @param item MenuItem The item that has been selected
+     * @return Boolean true if completed, false otherwise
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             onBackPressed()
@@ -287,7 +346,13 @@ class ProfileEditActivity : AppCompatActivity() {
     }
 
     companion object {
+        /**
+         * Activity Tag for logs
+         */
         private const val TAG = "ProfileEdit"
+        /**
+         * Intent to request for profile pictures
+         */
         private const val REQUEST_PROFILE_PIC = 1
     }
 
