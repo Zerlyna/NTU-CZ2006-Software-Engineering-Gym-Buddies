@@ -47,6 +47,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 
@@ -56,6 +58,7 @@ import java.util.HashMap;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
@@ -164,11 +167,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             favouritesList.setLayoutManager(llm);
             favouritesList.setItemAnimator(new DefaultItemAnimator());
         }
-
-
-        // TODO: Remove default 0 hahaha
         emptyFavourites();
-
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
 
         return root;
@@ -192,7 +191,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void emptyFavourites() {
-        String[] toremove = {"No Favourites Saved"};
+        String[] toremove = {"No Favourited Gyms Saved"};
         StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
         favouritesList.setAdapter(adapter);
     }
@@ -205,38 +204,47 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         super.onResume();
         mapView.onResume();
 
-        if (!firstMarkerLoad) {
-            new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
+        if (!firstMarkerLoad) new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
+        registerFavList();
+    }
+
+    private boolean favListRegistered = false;
+    private void registerFavList() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && favListener == null) {
-            favListener = FirebaseFirestore.getInstance().collection("users").document(user.getUid()).addSnapshotListener((documentSnapshot, e) -> {
-                // Update favourites
-                if (documentSnapshot != null && documentSnapshot.exists()) {
-                    User userTmp = documentSnapshot.toObject(User.class);
-                    if (userTmp == null) emptyFavourites();
-                    else {
-                        currentUserObj = userTmp;
-                        ArrayList<String> favGymIds = userTmp.getGymFavourites();
-                        if (favGymIds.size() == 0) emptyFavourites();
-                        else {
-                            // TODO: Display with custom adapter and all general gym information with unfavourite icon (or swipe to unfavourite)
-                            ArrayList<String> finalList = new ArrayList<>();
-                            HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
-                            for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
-                            for (String id : favGymIds) {
-                                if (gymDetailsList.containsKey(id)) finalList.add(gymDetailsList.get(id).getProperties().getName());
-                                else finalList.add("UNKNOWN GYM (" + id + ")");
-                            }
-                            finalList.add("This feature is a WIP and WILL change");
-                            StringRecyclerAdapter adapter = new StringRecyclerAdapter(finalList);
-                            favouritesList.setAdapter(adapter);
-                        }
-                    }
-                } else emptyFavourites();
-            });
+        favListRegistered = false;
+        if (user != null && favListener == null && markerList.size() > 0) {
+            favListRegistered = true;
+            DocumentReference userDoc = FirebaseFirestore.getInstance().collection("users").document(user.getUid());
+            userDoc.get().addOnSuccessListener(this::processFavListUpdates);
+            favListener = userDoc.addSnapshotListener((documentSnapshot, e) -> processFavListUpdates(documentSnapshot));
         }
+    }
+
+    private void processFavListUpdates(DocumentSnapshot documentSnapshot) {
+        Log.d(TAG, "processFavListUpdates()");
+        // Update favourites
+        if (documentSnapshot != null && documentSnapshot.exists()) {
+            User userTmp = documentSnapshot.toObject(User.class);
+            if (userTmp == null) emptyFavourites();
+            else {
+                currentUserObj = userTmp;
+                ArrayList<String> favGymIds = userTmp.getGymFavourites();
+                if (favGymIds.size() == 0) emptyFavourites();
+                else {
+                    // TODO: Allow a way to unfavourite (maybe by swiping)
+                    ArrayList<GymList.GymShell> finalList = new ArrayList<>();
+                    HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
+                    for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
+                    for (String id : favGymIds) {
+                        if (gymDetailsList.containsKey(id)) finalList.add(gymDetailsList.get(id));
+                        else Log.e(TAG, "Unknown Gym (" + id + ")");
+                    }
+                    FavGymAdapter adapter = new FavGymAdapter(finalList);
+                    favouritesList.setAdapter(adapter);
+                }
+            }
+        } else emptyFavourites();
     }
 
     @Override
@@ -284,6 +292,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             new ParseGymDataFile(getActivity(), (markers) -> {
                 if (markers == null) return;
                 markerList = markers;
+                if (!favListRegistered) registerFavList();
 
                 if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers.keySet()) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
                 else {
