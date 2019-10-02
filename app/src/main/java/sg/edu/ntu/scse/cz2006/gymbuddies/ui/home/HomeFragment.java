@@ -47,6 +47,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -56,12 +57,15 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
@@ -196,7 +200,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private ListenerRegistration favListener;
-    private ArrayList<String> currentUserFavList = new ArrayList<>();
+    private HashMap<String, Integer> currentUserFavList = new HashMap<>();
 
     @Override
     public void onResume() {
@@ -228,17 +232,17 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             List<DocumentSnapshot> gyms = querySnapshot.getDocuments();
             currentUserFavList.clear();
             for (DocumentSnapshot docs : gyms) {
-                currentUserFavList.add(docs.getId());
+                currentUserFavList.put(docs.getId(), Integer.parseInt(Objects.requireNonNull(docs.get("count")).toString()));
             }
 
             if (currentUserFavList.size() == 0) emptyFavourites();
             else {
                 // TODO: Allow a way to unfavourite (maybe by swiping)
-                ArrayList<GymList.GymShell> finalList = new ArrayList<>();
+                ArrayList<FavGymObject> finalList = new ArrayList<>();
                 HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
                 for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
-                for (String id : currentUserFavList) {
-                    if (gymDetailsList.containsKey(id)) finalList.add(gymDetailsList.get(id));
+                for (String id : currentUserFavList.keySet()) {
+                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
                     else Log.e(TAG, "Unknown Gym (" + id + ")");
                 }
                 FavGymAdapter adapter = new FavGymAdapter(finalList);
@@ -286,6 +290,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 favBottomSheetBehavior.setHideable(false);
                 gymBottomSheetBehavior.setHideable(true);
                 gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                if (gymDetailFavListener != null) {
+                    gymDetailFavListener.remove();
+                    gymDetailFavListener = null;
+                }
             });
             mMap.setOnMarkerClickListener(marker -> {
                 // Hide and reshow gym
@@ -329,7 +337,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private FusedLocationProviderClient locationClient;
     private boolean hasLocationPermission = false;
-    private HashMap<MarkerOptions, GymList.GymShell> markerList = new HashMap<>();
+    private HashMap<MarkerOptions, GymList.GymShell> markerList = new LinkedHashMap<>();
     private LatLng lastLocation = null;
 
     private void zoomToMyLocation() {
@@ -399,8 +407,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private static final String TAG = "HomeFrag";
 
     // Gym Details
-    private TextView gymTitle, gymLocation, gymDesc;
-    private LinearLayout favourite;
+    private TextView gymTitle, gymLocation, gymDesc, favCount;
     private FavButtonView heartIcon;
     private Button carpark, rate;
     private RecyclerView reviews;
@@ -412,7 +419,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
         gymDesc = gymBottomSheet.findViewById(R.id.gym_details_description);
         gymLocation = gymBottomSheet.findViewById(R.id.gym_details_location);
-        favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
+        favCount = gymBottomSheet.findViewById(R.id.gym_details_fav_count);
+        LinearLayout favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
         heartIcon = gymBottomSheet.findViewById(R.id.gym_details_fav_icon);
         carpark = gymBottomSheet.findViewById(R.id.gym_details_nearby_carparks_btn);
         rate = gymBottomSheet.findViewById(R.id.gym_details_rate_btn);
@@ -452,6 +460,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
+    private ListenerRegistration gymDetailFavListener = null;
+
     private void updateGymDetails(@Nullable GymList.GymShell gym) {
         if (gym == null) return;
         gymTitle.setText(gym.getProperties().getName());
@@ -460,6 +470,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
         heartIcon.setChecked(false);
         selectedGymUid = gym.getProperties().getINC_CRC();
-        if (currentUserFavList.size() > 0 && currentUserFavList.contains(gym.getProperties().getINC_CRC())) heartIcon.setChecked(true);
+        // Initial update
+        DocumentReference gymRef = FirebaseFirestore.getInstance().collection(GymHelper.GYM_COLLECTION).document(gym.getProperties().getINC_CRC());
+        if (currentUserFavList.size() > 0 && currentUserFavList.containsKey(gym.getProperties().getINC_CRC())) {
+            heartIcon.setChecked(true);
+            Integer favCount = currentUserFavList.get(gym.getProperties().getINC_CRC());
+            this.favCount.setText("(" + favCount + ")");
+        } else
+            gymRef.get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) favCount.setText("(" + (Integer.parseInt(documentSnapshot.get("count").toString())) + ")");
+                else favCount.setText("(0)");
+            }).addOnFailureListener(e -> favCount.setText("(?)"));
+
+        // Register update
+        if (gymDetailFavListener != null) gymDetailFavListener.remove();
+        gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> {
+            if (documentSnapshot.exists()) favCount.setText("(" + (Integer.parseInt(documentSnapshot.get("count").toString())) + ")");
+            else favCount.setText("(0)");
+        });
     }
 }

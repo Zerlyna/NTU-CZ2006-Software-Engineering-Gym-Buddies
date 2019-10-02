@@ -8,15 +8,15 @@ import android.widget.Toast
 import androidx.appcompat.widget.AppCompatRatingBar
 import androidx.recyclerview.widget.RecyclerView
 import sg.edu.ntu.scse.cz2006.gymbuddies.R
-import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject
 
 /**
  * Created by Kenneth on 17/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.adapter in Gym Buddies!
  */
-class FavGymAdapter(gyms: List<GymList.GymShell>) : RecyclerView.Adapter<FavGymAdapter.FavViewHolder>() {
+class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapter.FavViewHolder>() {
 
-    private var gymList: List<GymList.GymShell> = ArrayList()
+    private var gymList: List<FavGymObject> = ArrayList()
     private var onClickListener: View.OnClickListener? = null
 
     init {
@@ -33,7 +33,8 @@ class FavGymAdapter(gyms: List<GymList.GymShell>) : RecyclerView.Adapter<FavGymA
 
     override fun onBindViewHolder(holder: FavViewHolder, position: Int) {
         val s = gymList[position]
-        holder.title.text = s.properties.Name
+        holder.title.text = s.gym.properties.Name
+        holder.favCount.text = "{${s.favCount})"
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavViewHolder {
