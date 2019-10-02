@@ -20,6 +20,11 @@ import java.util.*
 
 /**
  * This is the main launcher activity that shows up to handle the login page of the application
+ * There are some flags in this activity
+ * - [signInFlow] denotes if we are currently in the sign in process
+ * - [checkingFurther] denotes if we are currently handling further checks to authentication
+ *
+ * On top of that we have a listener [mAuthStateListener] that handles the state changes during authentication
  * For sg.edu.ntu.scse.cz2006.gymbuddies in Gym Buddies!
  *
  * @author Kenneth Soh
