@@ -12,7 +12,8 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R
  * Created by Kenneth on 17/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.adapter in Gym Buddies!
  */
-class StringRecyclerAdapter(string: List<String>) : RecyclerView.Adapter<StringRecyclerAdapter.StringViewHolder>() {
+class StringRecyclerAdapter(string: List<String>, private var announce: Boolean) : RecyclerView.Adapter<StringRecyclerAdapter.StringViewHolder>() {
+    constructor(string: List<String>) : this(string, true)
 
     private var stringList: List<String> = ArrayList()
     private var onClickListener: View.OnClickListener? = null
@@ -48,7 +49,7 @@ class StringRecyclerAdapter(string: List<String>) : RecyclerView.Adapter<StringR
         }
 
         override fun onClick(p0: View?) {
-            p0?.let { Toast.makeText(it.context, title.text, Toast.LENGTH_SHORT).show() }
+            if (announce) p0?.let { Toast.makeText(it.context, title.text, Toast.LENGTH_SHORT).show() }
         }
 
     }

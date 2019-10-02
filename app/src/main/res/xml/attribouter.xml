@@ -116,6 +116,12 @@
             licenseUrl="https://android.googlesource.com/platform/frameworks/support/+/androidx-master-dev/LICENSE.txt"
             license="apache-2.0" />
 
+        <!-- Like Animation (Adaptation) -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Twitter Like Animation"
+            repo="frogermcs/LikeAnimation"
+            license="apache-2.0" />
+
         <!-- FirebaseUI -->
         <me.jfenn.attribouter.wedges.LicenseWedge
             title="Firebase UI for Android"

@@ -16,7 +16,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -46,18 +45,33 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
+import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
@@ -82,7 +96,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
         coordinatorLayout = root.findViewById(R.id.coordinator);
-        homeViewModel.getText().observe(this, s -> textView.setText(s));
+        homeViewModel.getText().observe(this, textView::setText);
 
         sp = PreferenceManager.getDefaultSharedPreferences(root.getContext());
 
@@ -114,8 +128,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         favBottomSheet = root.findViewById(R.id.bottom_sheet);
         favBottomSheetBehavior = BottomSheetBehavior.from(favBottomSheet);
-        favBottomSheetBehavior.setPeekHeight(200);
-        favBottomSheetBehavior.setHideable(false);
         favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         favBottomSheet.setOnTouchListener((view, motionEvent) -> {
             view.performClick();
@@ -132,7 +144,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 Log.d("GymDetailsSheet", "State Changed: " + newState);
                 bottomSheet.findViewById(R.id.drag_bar).setVisibility((newState == BottomSheetBehavior.STATE_EXPANDED) ? View.INVISIBLE : View.VISIBLE);
-                backStack.setEnabled(newState == BottomSheetBehavior.STATE_EXPANDED);
+                backStack.setEnabled(newState == BottomSheetBehavior.STATE_EXPANDED || newState == BottomSheetBehavior.STATE_COLLAPSED);
                 if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
                     if (newState == BottomSheetBehavior.STATE_EXPANDED)
                         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("View Gym Detail");
@@ -140,6 +152,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.menu_home);
                 }
                 gymTitle.setSingleLine(newState == BottomSheetBehavior.STATE_COLLAPSED);
+                if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
+                    autoExpandFlag = false;
+                    gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                }
             }
 
             @Override
@@ -158,23 +174,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             favouritesList.setLayoutManager(llm);
             favouritesList.setItemAnimator(new DefaultItemAnimator());
         }
-
-        // TODO: Get favourites list from firebase based on the key
-        // TODO: Remove default 0 hahaha
-        String[] toremove = {"No Favourites Found", "This feature is currently a WIP"};
-        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
-        favouritesList.setAdapter(adapter);
-
+        emptyFavourites();
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
 
         return root;
     }
 
+
     private OnBackPressedCallback backStack = new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
             if (gymBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
-                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED); // Collapse gym details
+            } else if (gymBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+                unselectGymDetails();
             }
         }
     };
@@ -186,20 +199,107 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mapView.getMapAsync(this);
     }
 
+    private void emptyFavourites() {
+        String[] toremove = {"No Favourited Gyms Saved"};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
+        favouritesList.setAdapter(adapter);
+    }
+
+    private ListenerRegistration favListener;
+    private HashMap<String, Integer> currentUserFavList = new HashMap<>();
+
     @Override
     public void onResume() {
         super.onResume();
         mapView.onResume();
 
-        if (!firstMarkerLoad) {
-            new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        if (!firstMarkerLoad) new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+        registerFavList();
+    }
+
+    private boolean favListRegistered = false;
+    private void registerFavList() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        favListRegistered = false;
+        if (user != null && favListener == null && markerList.size() > 0) {
+            favListRegistered = true;
+            Query userFavGymQuery = FirebaseFirestore.getInstance().collection(GymHelper.GYM_COLLECTION).whereArrayContains("userIds", user.getUid());
+
+            userFavGymQuery.get().addOnSuccessListener(this::processFavListUpdates);
+            favListener = userFavGymQuery.addSnapshotListener((querySnapshot, e) -> processFavListUpdates(querySnapshot));
         }
     }
+
+    private void processFavListUpdates(QuerySnapshot querySnapshot) {
+        Log.d(TAG, "processFavListUpdates()");
+        // Update favourites
+        if (querySnapshot != null && querySnapshot.size() > 0) {
+            List<DocumentSnapshot> gyms = querySnapshot.getDocuments();
+            currentUserFavList.clear();
+            for (DocumentSnapshot docs : gyms) {
+                currentUserFavList.put(docs.getId(), Integer.parseInt(Objects.requireNonNull(docs.get("count")).toString()));
+            }
+
+            if (currentUserFavList.size() == 0) emptyFavourites();
+            else {
+                // TODO: Allow a way to unfavourite (maybe by swiping)
+                ArrayList<FavGymObject> finalList = new ArrayList<>();
+                HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
+                for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
+                for (String id : currentUserFavList.keySet()) {
+                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
+                    else Log.e(TAG, "Unknown Gym (" + id + ")");
+                }
+                FavGymAdapter adapter = new FavGymAdapter(finalList);
+                adapter.setOnClickListener(v -> {
+                    if (v.getTag() instanceof FavGymAdapter.FavViewHolder) {
+                        showGymDetails();
+                        updateGymDetails(((FavGymAdapter.FavViewHolder) v.getTag()).getGymObj());
+                        autoExpandFlag = true;
+                    }
+                });
+                favouritesList.setAdapter(adapter);
+                final float scale = getResources().getDisplayMetrics().density;
+                int maxHeight = (int) (450 * scale + 0.5f);
+                favBottomSheet.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                int layoutHeight = favBottomSheet.getMeasuredHeight();
+                Log.d(TAG, "FavListHeight: " + layoutHeight + " | Max Height Limit: " + maxHeight);
+                ViewGroup.LayoutParams params = favBottomSheet.getLayoutParams();
+                if (layoutHeight > maxHeight) params.height = maxHeight;
+                else params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                favBottomSheet.setLayoutParams(params);
+                favBottomSheet.requestLayout();
+            }
+        } else emptyFavourites();
+    }
+
+    private boolean autoExpandFlag = false;
 
     @Override
     public void onPause() {
         super.onPause();
         mapView.onPause();
+        favListener.remove();
+        favListener = null;
+    }
+
+    private void unselectGymDetails() {
+        favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        favBottomSheetBehavior.setHideable(false);
+        gymBottomSheetBehavior.setHideable(true);
+        gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        if (gymDetailFavListener != null) {
+            gymDetailFavListener.remove();
+            gymDetailFavListener = null;
+        }
+    }
+
+    private void showGymDetails() {
+        gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        gymBottomSheetBehavior.setHideable(false);
+        favBottomSheetBehavior.setHideable(true);
+        favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
     @Override
@@ -219,18 +319,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             mMap.setOnInfoWindowClickListener(marker -> gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
             mMap.setOnMapClickListener(latLng -> {
                 Log.d("mMap", "mapClicked()");
-                favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                favBottomSheetBehavior.setHideable(false);
-                gymBottomSheetBehavior.setHideable(true);
-                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                unselectGymDetails();
             });
             mMap.setOnMarkerClickListener(marker -> {
                 // Hide and reshow gym
                 Log.d("mMap", "markerClicked()");
-                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                gymBottomSheetBehavior.setHideable(false);
-                favBottomSheetBehavior.setHideable(true);
-                favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                showGymDetails();
                 if (marker.getTag() instanceof GymList.GymShell) updateGymDetails((GymList.GymShell) marker.getTag());
                 return false; // We still want to show the info window right now
         });
@@ -239,6 +333,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             new ParseGymDataFile(getActivity(), (markers) -> {
                 if (markers == null) return;
                 markerList = markers;
+                if (!favListRegistered) registerFavList();
 
                 if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers.keySet()) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
                 else {
@@ -265,7 +360,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private FusedLocationProviderClient locationClient;
     private boolean hasLocationPermission = false;
-    private HashMap<MarkerOptions, GymList.GymShell> markerList = new HashMap<>();
+    private HashMap<MarkerOptions, GymList.GymShell> markerList = new LinkedHashMap<>();
     private LatLng lastLocation = null;
 
     private void zoomToMyLocation() {
@@ -327,7 +422,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_main, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -335,19 +430,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private static final String TAG = "HomeFrag";
 
     // Gym Details
-    private TextView gymTitle, gymLocation, gymDesc;
-    private LinearLayout favourite;
-    private ImageView heartIcon;
+    private TextView gymTitle, gymLocation, gymDesc, favCount;
+    private FavButtonView heartIcon;
     private Button carpark, rate;
     private RecyclerView reviews;
     private LatLng coordinates = null;
+    private String selectedGymUid = null;
 
     private void setupGymDetailsControls() {
         // Init Elements
         gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
         gymDesc = gymBottomSheet.findViewById(R.id.gym_details_description);
         gymLocation = gymBottomSheet.findViewById(R.id.gym_details_location);
-        favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
+        favCount = gymBottomSheet.findViewById(R.id.gym_details_fav_count);
+        LinearLayout favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
         heartIcon = gymBottomSheet.findViewById(R.id.gym_details_fav_icon);
         carpark = gymBottomSheet.findViewById(R.id.gym_details_nearby_carparks_btn);
         rate = gymBottomSheet.findViewById(R.id.gym_details_rate_btn);
@@ -371,7 +467,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         // On Click
         carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         rate.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
+        favourite.setOnClickListener(v -> heartIcon.callOnClick());
+        heartIcon.setOnClickListener(v -> {
+            if (v instanceof FavButtonView) {
+                FavButtonView heart = (FavButtonView) v;
+                heart.onClick(v); // Execute existing view onclick listener
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (getActivity() != null && user != null) {
+                    new UpdateGymFavourites(getActivity(), user.getUid(), selectedGymUid, heart.isChecked(), success -> {
+                        if (success) Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Saved to favourites!" : "Removed from favourites!", Snackbar.LENGTH_SHORT).show();
+                        else Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Failed to save to favourites. Try again later" : "Failed to remove from favourites. Try again later", Snackbar.LENGTH_SHORT).show();
+                    }).execute();
+                }
+            }
+        });
     }
+
+    private ListenerRegistration gymDetailFavListener = null;
 
     private void updateGymDetails(@Nullable GymList.GymShell gym) {
         if (gym == null) return;
@@ -379,5 +491,25 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         gymDesc.setText(gym.getProperties().getDescription());
         gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
+        heartIcon.setChecked(false);
+        selectedGymUid = gym.getProperties().getINC_CRC();
+        // Initial update
+        DocumentReference gymRef = FirebaseFirestore.getInstance().collection(GymHelper.GYM_COLLECTION).document(gym.getProperties().getINC_CRC());
+        if (currentUserFavList.size() > 0 && currentUserFavList.containsKey(gym.getProperties().getINC_CRC())) {
+            heartIcon.setChecked(true);
+            Integer favCount = currentUserFavList.get(gym.getProperties().getINC_CRC());
+            this.favCount.setText(getResources().getString(R.string.number_counter, favCount));
+        } else
+            gymRef.get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
+                else favCount.setText("(0)");
+            }).addOnFailureListener(e -> favCount.setText("(?)"));
+
+        // Register update
+        if (gymDetailFavListener != null) gymDetailFavListener.remove();
+        gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> {
+            if (documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
+            else favCount.setText("(0)");
+        });
     }
 }

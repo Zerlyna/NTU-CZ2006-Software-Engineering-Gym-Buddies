@@ -77,7 +77,6 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
                     android:text="@string/number_placeholder" />
-
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -100,14 +99,10 @@
         android:padding="10dp"
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal">
-        <ImageView
+        <sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/gym_details_fav_icon_content_desc"
-            android:tintMode="src_atop"
-            android:id="@+id/gym_details_fav_icon"
-            android:tint="#FF0000"
-            app:srcCompat="@drawable/selector_heart" />
+            android:id="@+id/gym_details_fav_icon" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -116,6 +111,7 @@
             android:text="@string/favourite"
             android:textColor="#FF0000" />
         <TextView
+            android:id="@+id/gym_details_fav_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
