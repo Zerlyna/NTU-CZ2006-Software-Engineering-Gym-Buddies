@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -46,6 +45,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
@@ -342,6 +344,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private Button carpark, rate;
     private RecyclerView reviews;
     private LatLng coordinates = null;
+    private String selectedGymUid = null;
 
     private void setupGymDetailsControls() {
         // Init Elements
@@ -377,7 +380,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             if (v instanceof FavButtonView) {
                 FavButtonView heart = (FavButtonView) v;
                 heart.onClick(v); // Execute existing view onclick listener
-                Toast.makeText(v.getContext(), (heart.isChecked()) ? "[DEBUG] Favourited" : "[DEBUG] Unfavourited", Toast.LENGTH_SHORT).show();
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (getActivity() != null && user != null) {
+                    new UpdateGymFavourites(getActivity(), user.getUid(), selectedGymUid, heart.isChecked(), success -> {
+                        if (success) Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Saved to favourites!" : "Removed from favourites!", Snackbar.LENGTH_LONG).show();
+                        else Snackbar.make(coordinatorLayout, (heart.isChecked()) ? "Failed to save to favourites. Try again later" : "Failed to remove from favourites. Try again later", Snackbar.LENGTH_LONG).show();
+                    }).execute();
+                }
             }
         });
     }
@@ -389,6 +398,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
         heartIcon.setChecked(false);
+        selectedGymUid = gym.getProperties().getINC_CRC();
         // TODO: Update heart icon according to if the gym is favourited or not
     }
 }
