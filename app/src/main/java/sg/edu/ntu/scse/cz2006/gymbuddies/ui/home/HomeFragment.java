@@ -96,7 +96,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
         coordinatorLayout = root.findViewById(R.id.coordinator);
-        homeViewModel.getText().observe(this, s -> textView.setText(s));
+        homeViewModel.getText().observe(this, textView::setText);
 
         sp = PreferenceManager.getDefaultSharedPreferences(root.getContext());
 
@@ -260,7 +260,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     }
                 });
                 favouritesList.setAdapter(adapter);
-                final float scale = getContext().getResources().getDisplayMetrics().density;
+                final float scale = getResources().getDisplayMetrics().density;
                 int maxHeight = (int) (450 * scale + 0.5f);
                 favBottomSheet.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 int layoutHeight = favBottomSheet.getMeasuredHeight();
@@ -422,7 +422,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_main, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -498,17 +498,17 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (currentUserFavList.size() > 0 && currentUserFavList.containsKey(gym.getProperties().getINC_CRC())) {
             heartIcon.setChecked(true);
             Integer favCount = currentUserFavList.get(gym.getProperties().getINC_CRC());
-            this.favCount.setText("(" + favCount + ")");
+            this.favCount.setText(getResources().getString(R.string.number_counter, favCount));
         } else
             gymRef.get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) favCount.setText("(" + (Integer.parseInt(documentSnapshot.get("count").toString())) + ")");
+                if (documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
                 else favCount.setText("(0)");
             }).addOnFailureListener(e -> favCount.setText("(?)"));
 
         // Register update
         if (gymDetailFavListener != null) gymDetailFavListener.remove();
         gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> {
-            if (documentSnapshot.exists()) favCount.setText("(" + (Integer.parseInt(documentSnapshot.get("count").toString())) + ")");
+            if (documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
             else favCount.setText("(0)");
         });
     }
