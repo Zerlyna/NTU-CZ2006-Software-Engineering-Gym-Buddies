@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
+    <group android:id="@+id/nav_group_menus" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_home"
@@ -29,7 +29,13 @@
             android:id="@+id/nav_forum"
             android:icon="@drawable/ic_forum"
             android:title="@string/menu_forum" />
+    </group>
 
+    <group android:id="@+id/nav_group_system_tools" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/action_settings" />
         <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_logout"

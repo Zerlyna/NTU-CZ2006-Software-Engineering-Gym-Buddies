@@ -10,7 +10,7 @@ import com.google.android.gms.maps.model.MarkerOptions
  * Created by Kenneth on 25/9/2019.
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
  */
-class TrimNearbyGyms(private var count: Int, private val location: LatLng, private val markers: ArrayList<MarkerOptions>, private val callback: Callback) : AsyncTask<Void, Void, ArrayList<MarkerOptions>>() {
+class TrimNearbyGyms(private var count: Int, private val location: LatLng, private val markers: Set<MarkerOptions>, private val callback: Callback) : AsyncTask<Void, Void, ArrayList<MarkerOptions>>() {
 
     interface Callback {
         fun onComplete(results: ArrayList<MarkerOptions>)

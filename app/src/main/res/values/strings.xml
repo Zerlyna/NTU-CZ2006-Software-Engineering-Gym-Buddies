@@ -57,4 +57,16 @@
     <string name="crash_test_desc">Forces a crash of the application</string>
     <string name="nearby_gym_count_title">Nearby Gyms Count</string>
     <string name="value_placeholder">%s</string>
+    <string name="gym_desc_placeholder_rant">This gym has no features and is extremely horrible and why in the world did they even make a hall gym the main gym in NTU ._.</string>
+    <string name="gym_details_loc_placeholder">60 Nanyang Crescent, Level 3, 19A Binjal Hall of Residence, Nanyang Technological University, SG</string>
+    <string name="view_nearby_carparks">View Carparks nearby</string>
+    <string name="favourite">Favourite</string>
+    <string name="number_placeholder">(1)</string>
+    <string name="gym_detail_title_placeholder">North Hill Gym</string>
+    <string name="gym_detail_rating_placeholder">1.0</string>
+    <string name="drag_bar_content_desc">Drag Bar</string>
+    <string name="coming_soon_feature">(WIP) Feature is coming soon!</string>
+    <string name="gym_reviews">Gym Reviews</string>
+    <string name="rate_review_btn">Rate and Review Gym</string>
+    <string name="gym_details_fav_icon_content_desc">A heart</string>
 </resources>

@@ -102,6 +102,20 @@
     <me.jfenn.attribouter.wedges.LicensesWedge
         showDefaults="false">
 
+        <!-- VNT Number Picker Preference -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="VNT Number Picker Preference"
+            repo="vanniktech/VNTNumberPickerPreference"
+            license="apache-2.0" />
+
+        <!-- Android Room -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Room Persistence Library"
+            description="The Room persistence library provides an abstraction layer over SQLite to allow for more robust database access while harnessing the full power of SQLite."
+            website="https://developer.android.com/topic/libraries/architecture/room"
+            licenseUrl="https://android.googlesource.com/platform/frameworks/support/+/androidx-master-dev/LICENSE.txt"
+            license="apache-2.0" />
+
         <!-- FirebaseUI -->
         <me.jfenn.attribouter.wedges.LicenseWedge
             title="Firebase UI for Android"
