@@ -152,6 +152,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.menu_home);
                 }
                 gymTitle.setSingleLine(newState == BottomSheetBehavior.STATE_COLLAPSED);
+                if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
+                    autoExpandFlag = false;
+                    gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                }
             }
 
             @Override
@@ -249,7 +253,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 }
                 FavGymAdapter adapter = new FavGymAdapter(finalList);
                 adapter.setOnClickListener(v -> {
-                   // TODO: Display gym details
+                    if (v.getTag() instanceof FavGymAdapter.FavViewHolder) {
+                        showGymDetails();
+                        updateGymDetails(((FavGymAdapter.FavViewHolder) v.getTag()).getGymObj());
+                        autoExpandFlag = true;
+                    }
                 });
                 favouritesList.setAdapter(adapter);
                 final float scale = getContext().getResources().getDisplayMetrics().density;
@@ -265,6 +273,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             }
         } else emptyFavourites();
     }
+
+    private boolean autoExpandFlag = false;
 
     @Override
     public void onPause() {
@@ -283,6 +293,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             gymDetailFavListener.remove();
             gymDetailFavListener = null;
         }
+    }
+
+    private void showGymDetails() {
+        gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        gymBottomSheetBehavior.setHideable(false);
+        favBottomSheetBehavior.setHideable(true);
+        favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
     @Override
@@ -307,10 +324,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             mMap.setOnMarkerClickListener(marker -> {
                 // Hide and reshow gym
                 Log.d("mMap", "markerClicked()");
-                gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                gymBottomSheetBehavior.setHideable(false);
-                favBottomSheetBehavior.setHideable(true);
-                favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                showGymDetails();
                 if (marker.getTag() instanceof GymList.GymShell) updateGymDetails((GymList.GymShell) marker.getTag());
                 return false; // We still want to show the info window right now
         });

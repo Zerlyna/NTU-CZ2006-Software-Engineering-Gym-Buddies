@@ -9,6 +9,7 @@ import androidx.appcompat.widget.AppCompatRatingBar
 import androidx.recyclerview.widget.RecyclerView
 import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
 
 /**
  * Created by Kenneth on 17/9/2019.
@@ -35,6 +36,7 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
         val s = gymList[position]
         holder.title.text = s.gym.properties.Name
         holder.favCount.text = "{${s.favCount})"
+        holder.gymObj = s.gym
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavViewHolder {
@@ -48,6 +50,7 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
         var ratingCount: TextView = v.findViewById(R.id.fav_list_rating_count)
         var ratingAvg: TextView = v.findViewById(R.id.fav_list_rating_avg)
         var favCount: TextView = v.findViewById(R.id.fav_list_favourites)
+        var gymObj: GymList.GymShell? = null
 
         init {
             v.setOnClickListener(listener ?: this)
