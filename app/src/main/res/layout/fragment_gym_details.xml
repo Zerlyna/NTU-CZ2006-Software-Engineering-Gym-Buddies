@@ -8,7 +8,7 @@
     android:background="@android:color/white"
     android:paddingTop="4dp"
     app:behavior_hideable="true"
-    app:behavior_peekHeight="90dp"
+    app:behavior_peekHeight="84dp"
     android:clipToPadding="true"
     android:clickable="true"
     android:focusable="true"
