@@ -201,7 +201,8 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
 
                 // Register update
                 if (gymDetailFavListener != null) gymDetailFavListener.remove();
-                gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> gymListViewModel.updateFavCount((documentSnapshot.exists()) ? Integer.parseInt(documentSnapshot.get("count").toString()) : 0));
+                gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> gymListViewModel.updateFavCount((documentSnapshot != null && documentSnapshot.exists()) ?
+                        Integer.parseInt(documentSnapshot.get("count").toString()) : 0));
                 detailsInit = true;
             }
         });
