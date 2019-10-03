@@ -373,7 +373,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
     public void onPause() {
         super.onPause();
         mapView.onPause();
-        favListener.remove();
+        if (favListener != null) favListener.remove();
         favListener = null;
     }
 

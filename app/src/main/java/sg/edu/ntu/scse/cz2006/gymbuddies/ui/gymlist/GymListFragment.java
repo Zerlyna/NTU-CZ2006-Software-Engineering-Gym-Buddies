@@ -268,7 +268,7 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
     @Override
     public void onPause() {
         super.onPause();
-        favListener.remove();
+        if (favListener != null) favListener.remove();
         favListener = null;
     }
 
