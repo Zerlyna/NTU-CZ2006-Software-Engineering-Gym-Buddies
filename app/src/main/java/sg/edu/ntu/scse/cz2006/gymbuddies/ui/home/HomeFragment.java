@@ -30,6 +30,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -71,9 +72,10 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.SwipeDeleteCallback;
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
-public class HomeFragment extends Fragment implements OnMapReadyCallback {
+public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeDeleteCallback.ISwipeCallback {
 
     private HomeViewModel homeViewModel;
     private MapView mapView;
@@ -173,6 +175,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             llm.setOrientation(LinearLayoutManager.VERTICAL);
             favouritesList.setLayoutManager(llm);
             favouritesList.setItemAnimator(new DefaultItemAnimator());
+
+            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeDeleteCallback(this, favBottomSheet.getContext(), ItemTouchHelper.LEFT, R.drawable.ic_heart_off));
+            itemTouchHelper.attachToRecyclerView(favouritesList);
         }
         emptyFavourites();
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
@@ -203,6 +208,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         String[] toremove = {"No Favourited Gyms Saved"};
         StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
         favouritesList.setAdapter(adapter);
+        favAdapter = null;
     }
 
     private ListenerRegistration favListener;
@@ -251,15 +257,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
                     else Log.e(TAG, "Unknown Gym (" + id + ")");
                 }
-                FavGymAdapter adapter = new FavGymAdapter(finalList);
-                adapter.setOnClickListener(v -> {
+                favAdapter = new FavGymAdapter(finalList);
+                favAdapter.setOnClickListener(v -> {
                     if (v.getTag() instanceof FavGymAdapter.FavViewHolder) {
                         showGymDetails();
                         updateGymDetails(((FavGymAdapter.FavViewHolder) v.getTag()).getGymObj());
                         autoExpandFlag = true;
                     }
                 });
-                favouritesList.setAdapter(adapter);
+                favouritesList.setAdapter(favAdapter);
                 final float scale = getResources().getDisplayMetrics().density;
                 int maxHeight = (int) (450 * scale + 0.5f);
                 favBottomSheet.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -275,6 +281,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private boolean autoExpandFlag = false;
+    private FavGymAdapter favAdapter = null;
 
     @Override
     public void onPause() {
@@ -419,6 +426,33 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         startActivity(permIntent);
                     }).show();
         }
+    }
+
+    /**
+     * When a gym in the favourites list has been swiped to unfavourite
+     * @param position The position of the item being unfavourited
+     * @return false if no errors
+     */
+    @Override
+    public boolean delete(@Nullable Integer position) {
+        // Unfavourite selected listener
+        if (favAdapter == null || position == null) return false;
+        String gymId = favAdapter.getList().get(position).getGym().getProperties().getINC_CRC();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (getActivity() != null && user != null) {
+            new UpdateGymFavourites(getActivity(), user.getUid(), gymId, false, success -> {
+                if (success) Snackbar.make(coordinatorLayout, "Removed from favourites!", Snackbar.LENGTH_SHORT).setAction("UNDO", v -> {
+                    // Restore from favourites
+                    new UpdateGymFavourites(getActivity(), user.getUid(), gymId, true, success1 -> {
+                        if (success1) Snackbar.make(coordinatorLayout, "Removal from favourites undone", Snackbar.LENGTH_SHORT).show();
+                        else Snackbar.make(coordinatorLayout, "Failed to undo favourites removal. Please refavourite the gym manually", Snackbar.LENGTH_SHORT).show();
+                    }).execute(); }).show();
+                else {
+                    Snackbar.make(coordinatorLayout, "Failed to remove from favourites. Try again later", Snackbar.LENGTH_SHORT).show();
+                }
+            }).execute();
+        }
+        return false;
     }
 
     @Override

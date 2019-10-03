@@ -47,6 +47,12 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
     }
 
     /**
+     * Gets the gym list stored in this adapter
+     * @return List<FavGymObject> Gym List object
+     */
+    fun getList(): List<FavGymObject> { return gymList }
+
+    /**
      * Internal function to bind the view [holder] at the current RecyclerView [position] to a specific data
      * @param holder FavViewHolder Holder to store the data
      * @param position Int Positing in the RecyclerView
