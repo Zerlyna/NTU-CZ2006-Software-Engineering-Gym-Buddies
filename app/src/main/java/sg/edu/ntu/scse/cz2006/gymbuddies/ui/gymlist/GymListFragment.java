@@ -53,10 +53,27 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.SwipeDeleteCallback;
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
+/**
+ * The fragment handling the viewing of just the favourited gyms of the user
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-03
+ */
 public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISwipeCallback {
 
+    /**
+     * The Fragment View Model as per MVVM architecture
+     */
     private GymListViewModel gymListViewModel;
+
+    /**
+     * The coordinates of the selected gym
+     */
     private LatLng coordinates = null;
+
+    /**
+     * Debug tag for logging purposes
+     */
     private static final String TAG = "GymListFrag";
 
     /**
@@ -85,8 +102,18 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
      */
     private ListenerRegistration gymDetailFavListener = null;
 
+    /**
+     * Flag to determine if we are initializing the details view when the gym details bottom sheet appears
+     */
     private boolean detailsInit = false;
 
+    /**
+     * Internal lifecycle fragment for creating the fragment view
+     * @param inflater Layout Inflater object
+     * @param container View Group Container object
+     * @param savedInstanceState Android Saved Instance State
+     * @return The created fragment view
+     */
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         gymListViewModel = ViewModelProviders.of(this).get(GymListViewModel.class);
         View root = inflater.inflate(R.layout.fragment_gym_list, container, false);
@@ -240,7 +267,13 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
         return root;
     }
 
+    /**
+     * Callback handler for Jetpack Navigation back override
+     */
     private OnBackPressedCallback backStack = new OnBackPressedCallback(false) {
+        /**
+         * Function to execute when back button pressed
+         */
         @Override
         public void handleOnBackPressed() {
             if (gymListViewModel.getSelectedGym().getValue() != null) gymListViewModel.setSelectedGym(null);
@@ -300,6 +333,11 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
         favAdapter = null;
     }
 
+    /**
+     * When a gym in the favourites list has been swiped to unfavourite
+     * @param position The position of the item being unfavourited
+     * @return false if no errors
+     */
     @Override
     public boolean delete(@Nullable Integer position) {
         // Unfavourite selected listener
