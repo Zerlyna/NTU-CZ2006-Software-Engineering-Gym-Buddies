@@ -698,6 +698,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         if (gym == null) return;
         gymTitle.setText(gym.getProperties().getName());
         gymDesc.setText(gym.getProperties().getDescription());
+        if (gymDesc.getText().toString().trim().isEmpty()) gymDesc.setText("No description available");
         gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
         heartIcon.setChecked(false);

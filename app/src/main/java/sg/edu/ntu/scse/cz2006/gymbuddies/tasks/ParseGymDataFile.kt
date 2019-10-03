@@ -4,11 +4,8 @@ import android.app.Activity
 import android.os.AsyncTask
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.gson.Gson
-import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
-import sg.edu.ntu.scse.cz2006.gymbuddies.util.JsonHelper
 import java.lang.ref.WeakReference
 
 /**
@@ -42,9 +39,7 @@ class ParseGymDataFile(activity: Activity, private val callback: Callback) : Asy
      */
     override fun doInBackground(vararg p0: Void?): Void? {
         val activity = actRef.get() ?: return null
-        val jsonString = JsonHelper.readFromRaw(activity, R.raw.gymlist)
-        val gson = Gson()
-        val gymlist = gson.fromJson(jsonString, GymList::class.java)
+        val gymlist = GymHelper.getGymList(activity)
         if (gymlist == null) {
             activity.runOnUiThread { callback.onComplete(null) }
             return null

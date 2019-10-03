@@ -1,5 +1,8 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.util
 
+import android.content.Context
+import com.google.gson.Gson
+import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
 
 /**
@@ -11,6 +14,17 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
  * @since 2019-10-01
  */
 object GymHelper {
+
+    @JvmStatic private var gymList: GymList? = null
+
+    @JvmStatic
+    fun getGymList(context: Context): GymList? {
+        if (gymList != null) return gymList
+        val json = JsonHelper.readFromRaw(context, R.raw.gymlist)
+        val gson = Gson()
+        gymList = gson.fromJson(json, GymList::class.java)
+        return gymList
+    }
 
     /**
      * Generates the gym address based on the gym properties [prop] that you have passed in

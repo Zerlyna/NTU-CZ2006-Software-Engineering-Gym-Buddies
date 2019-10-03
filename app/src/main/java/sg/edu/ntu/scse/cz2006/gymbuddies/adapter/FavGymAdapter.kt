@@ -60,7 +60,7 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
     override fun onBindViewHolder(holder: FavViewHolder, position: Int) {
         val s = gymList[position]
         holder.title.text = s.gym.properties.Name
-        holder.favCount.text = "{${s.favCount})"
+        holder.favCount.text = "(${s.favCount})"
         holder.gymObj = s.gym
     }
 
