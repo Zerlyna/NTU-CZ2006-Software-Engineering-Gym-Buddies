@@ -1,8 +1,17 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.util
 
+import android.annotation.TargetApi
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.VectorDrawable
+import android.os.Build
 import android.util.Log
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.net.URL
@@ -40,5 +49,60 @@ object ProfilePicHelper {
         }
 
         return bm
+    }
+
+    /**
+     * Internal method to generate a bitmap from a [vectorDrawable]
+     * @param vectorDrawable VectorDrawable Vector Drawable object
+     * @return Bitmap The generated bitmap
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    private fun getBitmap(vectorDrawable: VectorDrawable): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        vectorDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight())
+        vectorDrawable.draw(canvas)
+        return bitmap
+    }
+
+    /**
+     * Internal method to generate a bitmap from a [vectorDrawable]
+     * @param vectorDrawable VectorDrawableCompat Vector Drawable object that is compatible with AppCompat
+     * @return Bitmap The generated bitmap
+     */
+    @JvmStatic
+    private fun getBitmap(vectorDrawable: VectorDrawableCompat): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        vectorDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight())
+        vectorDrawable.draw(canvas)
+        return bitmap
+    }
+
+    /**
+     * Generates a bitmap from a [drawableResId] in the app drawable folder. Requires an application [context] to use
+     * @param context Context Application Context
+     * @param drawableResId Int Resource ID for the drawable to generate the bitmap of
+     * @return Bitmap The generated bitmap
+     */
+    @JvmStatic
+    fun getBitmap(context: Context, @DrawableRes drawableResId: Int): Bitmap {
+        val drawable = ContextCompat.getDrawable(context, drawableResId)
+        return if (drawable is BitmapDrawable) {
+            drawable.bitmap
+        } else if (drawable is VectorDrawableCompat) {
+            getBitmap((drawable as VectorDrawableCompat?)!!)
+        } else if (drawable is VectorDrawable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getBitmap((drawable as VectorDrawable?)!!)
+        } else {
+            throw IllegalArgumentException("Unsupported drawable type")
+        }
     }
 }

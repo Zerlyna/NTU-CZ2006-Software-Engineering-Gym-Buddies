@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,6 +29,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -71,26 +71,73 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.SwipeDeleteCallback;
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
-public class HomeFragment extends Fragment implements OnMapReadyCallback {
+/**
+ * Fragment being used to display the Home activity of the application. Including nearby gyms, gym details, favourited gyms etc
+ *
+ * @author Kenneth Soh, Chia Yu
+ * @since 2019-09-06
+ */
+public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeDeleteCallback.ISwipeCallback {
 
+    /**
+     * The View Model
+     */
     private HomeViewModel homeViewModel;
+    /**
+     * Google Maps View
+     */
     private MapView mapView;
+    /**
+     * Google Maps Instance
+     */
     private GoogleMap mMap;
+    /**
+     * The coordinator layout handling the fragment
+     */
     private CoordinatorLayout coordinatorLayout;
+    /**
+     * The favourites list recyclerview
+     */
     private RecyclerView favouritesList;
+    /**
+     * The application preference file
+     */
     private SharedPreferences sp;
 
     // Favourites
+    /**
+     * Handles the behavior of the favourites list bottom sheet
+     */
     private BottomSheetBehavior favBottomSheetBehavior;
+    /**
+     * The favourites list bottom sheet
+     */
     private View favBottomSheet;
 
+    /**
+     * Handles the behavior of the gym details bottom sheet
+     */
     private BottomSheetBehavior gymBottomSheetBehavior;
+    /**
+     * The gym details bottom sheet
+     */
     private View gymBottomSheet;
 
-    private static final int RC_LOC = 1001, RC_LOC_BTN = 1002;
+    /**
+     * The Request Code for Location Permission requests
+     */
+    private static final int RC_LOC = 1001;
 
+    /**
+     * Creates the fragment view
+     * @param inflater The Layout Inflater Object
+     * @param container The View Group
+     * @param savedInstanceState Android saved instance state
+     * @return The view of the fragment
+     */
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
@@ -173,6 +220,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             llm.setOrientation(LinearLayoutManager.VERTICAL);
             favouritesList.setLayoutManager(llm);
             favouritesList.setItemAnimator(new DefaultItemAnimator());
+
+            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeDeleteCallback(this, favBottomSheet.getContext(), ItemTouchHelper.LEFT, R.drawable.ic_heart_off));
+            itemTouchHelper.attachToRecyclerView(favouritesList);
         }
         emptyFavourites();
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
@@ -180,8 +230,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         return root;
     }
 
-
+    /**
+     * Custom backstack handler
+     */
     private OnBackPressedCallback backStack = new OnBackPressedCallback(false) {
+        /**
+         * Handles when the back button is pressed
+         */
         @Override
         public void handleOnBackPressed() {
             if (gymBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
@@ -192,6 +247,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     };
 
+    /**
+     * Method called when the view is created in the lifecycle
+     * @param view Fragment View
+     * @param savedInstanceState Android Saved Instance State
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -199,15 +259,28 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mapView.getMapAsync(this);
     }
 
+    /**
+     * Internal function to call when the user has no favourited gyms
+     */
     private void emptyFavourites() {
         String[] toremove = {"No Favourited Gyms Saved"};
         StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
         favouritesList.setAdapter(adapter);
+        favAdapter = null;
     }
 
+    /**
+     * Firebase Firestore Favourites List Real-time listener
+     */
     private ListenerRegistration favListener;
+    /**
+     * A hashmap containing the realtime favourites list of the logged in user
+     */
     private HashMap<String, Integer> currentUserFavList = new HashMap<>();
 
+    /**
+     * Method called when the activity is resumed from the lifecycle
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -218,7 +291,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         registerFavList();
     }
 
+    /**
+     * A flag to check if we have finished populating the favourites list
+     */
     private boolean favListRegistered = false;
+
+    /**
+     * Registers the favourites list real time listener with Firebase Firestore
+     */
     private void registerFavList() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         favListRegistered = false;
@@ -231,6 +311,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    /**
+     * Process real-time updates from Firebase Firestore
+     * @param querySnapshot The database document snapshot at that current point in time
+     */
     private void processFavListUpdates(QuerySnapshot querySnapshot) {
         Log.d(TAG, "processFavListUpdates()");
         // Update favourites
@@ -243,7 +327,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
             if (currentUserFavList.size() == 0) emptyFavourites();
             else {
-                // TODO: Allow a way to unfavourite (maybe by swiping)
                 ArrayList<FavGymObject> finalList = new ArrayList<>();
                 HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
                 for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
@@ -251,15 +334,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
                     else Log.e(TAG, "Unknown Gym (" + id + ")");
                 }
-                FavGymAdapter adapter = new FavGymAdapter(finalList);
-                adapter.setOnClickListener(v -> {
+                favAdapter = new FavGymAdapter(finalList);
+                favAdapter.setOnClickListener(v -> {
                     if (v.getTag() instanceof FavGymAdapter.FavViewHolder) {
                         showGymDetails();
                         updateGymDetails(((FavGymAdapter.FavViewHolder) v.getTag()).getGymObj());
                         autoExpandFlag = true;
                     }
                 });
-                favouritesList.setAdapter(adapter);
+                favouritesList.setAdapter(favAdapter);
                 final float scale = getResources().getDisplayMetrics().density;
                 int maxHeight = (int) (450 * scale + 0.5f);
                 favBottomSheet.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -274,16 +357,29 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         } else emptyFavourites();
     }
 
+    /**
+     * A flag to check if we should auto expand the gym details bottom sheet after it has settled
+     */
     private boolean autoExpandFlag = false;
+    /**
+     * An adapter to store the favourites list for the RecyclerView
+     */
+    private FavGymAdapter favAdapter = null;
 
+    /**
+     * Lifecycle event called when the activity is paused
+     */
     @Override
     public void onPause() {
         super.onPause();
         mapView.onPause();
-        favListener.remove();
+        if (favListener != null) favListener.remove();
         favListener = null;
     }
 
+    /**
+     * Internal function called to hide the gym details bottom sheet and redisplay the favourites list bottom sheet
+     */
     private void unselectGymDetails() {
         favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         favBottomSheetBehavior.setHideable(false);
@@ -295,6 +391,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    /**
+     * Internal function called to hide the favourites list bottom sheet and display the gym details bottom sheet
+     */
     private void showGymDetails() {
         gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         gymBottomSheetBehavior.setHideable(false);
@@ -302,6 +401,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
+    /**
+     * Internal method called when the Google Map instance has finished loading and is ready for interation
+     * @param googleMap Google Map instance
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.d(TAG, "Google Map Ready");
@@ -343,12 +446,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    /**
+     * Checks if the application has ACCESS_FINE_LOCATION permission
+     * @return true if present, false otherwise
+     */
     private boolean hasGpsPermission() {
         return hasGps(false);
     }
 
+    /**
+     * Flag to determine if this is the first time we are initializing the Google map markers for the gym
+     */
     private boolean firstMarkerLoad = true;
 
+    /**
+     * Internal function to update the markers near to the user's location. The number of markers is configurable in the app settings
+     * @param results List of markers near the user's location
+     */
     private void updateNearbyMarkers(ArrayList<MarkerOptions> results) {
         mMap.clear();
         for (MarkerOptions m : results) {
@@ -358,11 +472,26 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         firstMarkerLoad = false;
     }
 
+    /**
+     * The user current location provider client
+     */
     private FusedLocationProviderClient locationClient;
+    /**
+     * If the application has ACCESS_FINE_LOCATION permission flag
+     */
     private boolean hasLocationPermission = false;
+    /**
+     * A map of the markers and their corresponding gym objects
+     */
     private HashMap<MarkerOptions, GymList.GymShell> markerList = new LinkedHashMap<>();
+    /**
+     * Last known location of the user
+     */
     private LatLng lastLocation = null;
 
+    /**
+     * Internal method to zoom the map to the user's current location
+     */
     private void zoomToMyLocation() {
         if (getActivity() != null) {
             locationClient = LocationServices.getFusedLocationProviderClient(getActivity());
@@ -379,6 +508,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    /**
+     * Internal function to start the check for if the app has the ACCESS_FINE_LOCATION permission granted
+     * @param startCheck If it is the first time the permission is being asked. This is just used to enable location on the map and zoom the user to the location
+     * @return true if permission granted, false otherwise
+     */
     private boolean hasGps(boolean startCheck) {
         if (getContext() == null) return false;
         boolean permGranted = ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -390,9 +524,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         return permGranted;
     }
 
+    /**
+     * Internal function to handle permission request results
+     * @param requestCode Permission Request Code
+     * @param permissions Permissions requested by the app
+     * @param grantResults The grant results of the permissions requested
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode != RC_LOC && requestCode != RC_LOC_BTN) {
+        if (requestCode != RC_LOC) {
             Log.d(TAG, "Got unexpected permission result: " + requestCode);
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
             return;
@@ -408,35 +548,96 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
 
         Log.e(TAG, "Permission not granted: results len = " + grantResults.length + " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-
-        if (requestCode == RC_LOC_BTN && getActivity() != null) {
-            new AlertDialog.Builder(getActivity()).setTitle("Location Permission not granted")
-                    .setMessage("Unable to get location, permission not granted").setPositiveButton(android.R.string.ok, null)
-                    .setNeutralButton("App Settings", (dialog, which) -> {
-                        Intent permIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Uri packageURI = Uri.parse("package:" + getActivity().getPackageName());
-                        permIntent.setData(packageURI);
-                        startActivity(permIntent);
-                    }).show();
-        }
     }
 
+    /**
+     * When a gym in the favourites list has been swiped to unfavourite
+     * @param position The position of the item being unfavourited
+     * @return false if no errors
+     */
+    @Override
+    public boolean delete(@Nullable Integer position) {
+        // Unfavourite selected listener
+        if (favAdapter == null || position == null) return false;
+        String gymId = favAdapter.getList().get(position).getGym().getProperties().getINC_CRC();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (getActivity() != null && user != null) {
+            new UpdateGymFavourites(getActivity(), user.getUid(), gymId, false, success -> {
+                if (success) Snackbar.make(coordinatorLayout, "Removed from favourites!", Snackbar.LENGTH_SHORT).setAction("UNDO", v -> {
+                    // Restore from favourites
+                    new UpdateGymFavourites(getActivity(), user.getUid(), gymId, true, success1 -> {
+                        if (success1) Snackbar.make(coordinatorLayout, "Removal from favourites undone", Snackbar.LENGTH_SHORT).show();
+                        else Snackbar.make(coordinatorLayout, "Failed to undo favourites removal. Please refavourite the gym manually", Snackbar.LENGTH_SHORT).show();
+                    }).execute(); }).show();
+                else {
+                    Snackbar.make(coordinatorLayout, "Failed to remove from favourites. Try again later", Snackbar.LENGTH_SHORT).show();
+                }
+            }).execute();
+        }
+        return false;
+    }
+
+    /**
+     * Internal Android function to create the application options menu on the ActionBar
+     * @param menu The menu object instance
+     * @param inflater The menu inflater object instance
+     */
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_main, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+    /**
+     * Used for logging purposes for this activity
+     */
     private static final String TAG = "HomeFrag";
 
     // Gym Details
-    private TextView gymTitle, gymLocation, gymDesc, favCount;
+    /**
+     * Gym Title TextView
+     */
+    private TextView gymTitle;
+    /**
+     * Gym Location TextView
+     */
+    private TextView gymLocation;
+    /**
+     * Gym Description TextView
+     */
+    private TextView gymDesc;
+    /**
+     * Gym Favourites Count TextView
+     */
+    private TextView favCount;
+    /**
+     * Gym Favourites Icon
+     */
     private FavButtonView heartIcon;
-    private Button carpark, rate;
+    /**
+     * View Gym's Nearby Carparks button
+     */
+    private Button carpark;
+    /**
+     * Rate and review gym button
+     */
+    private Button rate;
+    /**
+     * Gym Reviews recyclerview
+     */
     private RecyclerView reviews;
+    /**
+     * The coordinates of the currently displayed gym
+     */
     private LatLng coordinates = null;
+    /**
+     * The Gym Unique ID
+     */
     private String selectedGymUid = null;
 
+    /**
+     * Initialize method for setting up the gym details bottom sheet
+     */
     private void setupGymDetailsControls() {
         // Init Elements
         gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
@@ -483,12 +684,21 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
+    /**
+     * The Firebase Firestore listener for favourites in the gym details bottom sheet
+     * This is used to handle real time updates to the favourites count of the gym
+     */
     private ListenerRegistration gymDetailFavListener = null;
 
+    /**
+     * Updates the data in the gym details bottom sheet
+     * @param gym The gym whose data we are updating the sheet with
+     */
     private void updateGymDetails(@Nullable GymList.GymShell gym) {
         if (gym == null) return;
         gymTitle.setText(gym.getProperties().getName());
         gymDesc.setText(gym.getProperties().getDescription());
+        if (gymDesc.getText().toString().trim().isEmpty()) gymDesc.setText("No description available");
         gymLocation.setText(GymHelper.generateAddress(gym.getProperties()));
         coordinates = new LatLng(gym.getGeometry().getLat(), gym.getGeometry().getLng());
         heartIcon.setChecked(false);
@@ -508,7 +718,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         // Register update
         if (gymDetailFavListener != null) gymDetailFavListener.remove();
         gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> {
-            if (documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
+            if (documentSnapshot != null && documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
             else favCount.setText("(0)");
         });
     }
