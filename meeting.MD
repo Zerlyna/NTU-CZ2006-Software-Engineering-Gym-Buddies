@@ -1,4 +1,4 @@
-Next Meeting: *Tuesday (8/10) from 1530hrs* @ Lounge/Arc (Lounge may be overly crowded)
+Next Meeting: *Tuesday (15/10) from 1530hrs* @ Lounge/Arc (Lounge may be overly crowded)
 
 _Useful Links_
 _Issue Tracking:_ https://jira.itachi1706.com:8123/browse/NTUSE
