@@ -61,6 +61,7 @@
     <string name="gym_details_loc_placeholder">60 Nanyang Crescent, Level 3, 19A Binjal Hall of Residence, Nanyang Technological University, SG</string>
     <string name="view_nearby_carparks">View Carparks nearby</string>
     <string name="favourite">Favourite</string>
+    <string name="nearby_carpark">Nearby Carparks</string>
     <string name="number_placeholder">(???)</string>
     <string name="number_counter">(%1$d)</string>
     <string name="gym_detail_title_placeholder">North Hill Gym</string>
@@ -70,5 +71,6 @@
     <string name="gym_reviews">Gym Reviews</string>
     <string name="rate_review_btn">Rate and Review Gym</string>
     <string name="gym_details_fav_icon_content_desc">A heart</string>
+    <string name="gym_details_car_icon_content_desc">Nearby Carpark</string>
     <string name="fav_list_header">Favourite Gyms</string>
 </resources>

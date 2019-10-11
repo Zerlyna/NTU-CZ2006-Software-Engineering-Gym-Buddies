@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseUser
 import io.fabric.sdk.android.Fabric
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper
 import java.util.*
 
 /**
@@ -161,6 +162,7 @@ class LoginChooserActivity : AppCompatActivity() {
      */
     private fun logout(silent: Boolean = false) {
         Log.d("LoginChk", "logout")
+        ProfilePicHelper.profilePic = null
         FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
         AuthUI.getInstance().signOut(this).addOnCompleteListener{
             if (it.isComplete && it.isSuccessful) {

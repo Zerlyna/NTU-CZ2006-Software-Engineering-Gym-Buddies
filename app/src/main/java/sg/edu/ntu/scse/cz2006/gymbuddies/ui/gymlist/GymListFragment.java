@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -146,8 +145,7 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
         TextView gymDesc = root.findViewById(R.id.gym_details_description);
         TextView favCount = root.findViewById(R.id.gym_details_fav_count);
         FavButtonView heartIcon = root.findViewById(R.id.gym_details_fav_icon);
-        Button carpark = root.findViewById(R.id.gym_details_nearby_carparks_btn);
-        Button rate = root.findViewById(R.id.gym_details_rate_btn);
+        LinearLayout carpark = root.findViewById(R.id.gym_details_nearby_carparks_btn);
         RecyclerView reviews = root.findViewById(R.id.review_recycler);
 
         View gymBottomSheet = root.findViewById(R.id.gym_details_sheet);
@@ -183,7 +181,6 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
         gymLocation.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" + ((coordinates == null) ?
                 gymLocation.getText().toString() : (coordinates.latitude + "," + coordinates.longitude))))));
         carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
-        rate.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         favourite.setOnClickListener(v -> heartIcon.callOnClick());
         heartIcon.setOnClickListener(v -> {
             if (v instanceof FavButtonView) {

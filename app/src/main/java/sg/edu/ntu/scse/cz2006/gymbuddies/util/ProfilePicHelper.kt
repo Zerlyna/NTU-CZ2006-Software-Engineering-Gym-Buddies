@@ -11,6 +11,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import java.io.BufferedInputStream
 import java.io.IOException
@@ -105,4 +106,35 @@ object ProfilePicHelper {
             throw IllegalArgumentException("Unsupported drawable type")
         }
     }
+
+    /**
+     * A global profile picture storeage area
+     */
+    @JvmStatic
+    var profilePic: RoundedBitmapDrawable? = null
+        set(value) { field = value; updateCall()}
+
+    /**
+     * Add to this list if you wish to receive an update when the profile pic updates
+     */
+    @JvmStatic
+    val profilePicUpdateListener: ArrayList<ProfilePicOneTimeListener> = ArrayList()
+
+    /**
+     * Internal method called after updating the profile pic
+     */
+    @JvmStatic
+    private fun updateCall() { profilePicUpdateListener.forEach { it.onUpdate(profilePic) }; profilePicUpdateListener.clear() }
+
+    /**
+     * Internal interface for Profile Picture One Time Listener
+     */
+    interface ProfilePicOneTimeListener {
+        /**
+         * Updates profile piture function
+         * @param drawable RoundedBitmapDrawable? Drawable to update with
+         */
+        fun onUpdate(drawable: RoundedBitmapDrawable?)
+    }
+
 }

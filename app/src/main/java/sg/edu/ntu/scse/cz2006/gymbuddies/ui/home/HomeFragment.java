@@ -1,6 +1,7 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.ui.home;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -14,7 +15,7 @@ import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -45,6 +46,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -61,16 +63,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
+import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FirestoreRating;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.SwipeDeleteCallback;
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
@@ -617,11 +622,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
     /**
      * View Gym's Nearby Carparks button
      */
-    private Button carpark;
-    /**
-     * Rate and review gym button
-     */
-    private Button rate;
+    private LinearLayout carpark;
     /**
      * Gym Reviews recyclerview
      */
@@ -636,8 +637,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
     private String selectedGymUid = null;
 
     /**
+     * If the user is currently reviewing a gym
+     */
+    private boolean flagReviewing = false;
+
+    /**
      * Initialize method for setting up the gym details bottom sheet
      */
+    @SuppressLint("InflateParams")
     private void setupGymDetailsControls() {
         // Init Elements
         gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
@@ -647,10 +654,46 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         LinearLayout favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
         heartIcon = gymBottomSheet.findViewById(R.id.gym_details_fav_icon);
         carpark = gymBottomSheet.findViewById(R.id.gym_details_nearby_carparks_btn);
-        rate = gymBottomSheet.findViewById(R.id.gym_details_rate_btn);
         reviews = gymBottomSheet.findViewById(R.id.review_recycler);
         gymLocation.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" + ((coordinates == null) ?
                 gymLocation.getText().toString() : (coordinates.latitude + "," + coordinates.longitude))))));
+
+        // Rating Stuff
+        MaterialRatingBar editRatingBar = gymBottomSheet.findViewById(R.id.gym_details_rate_write);
+        ImageView profilePic = gymBottomSheet.findViewById(R.id.profile_pic);
+        if (ProfilePicHelper.getProfilePic() != null) profilePic.setImageDrawable(ProfilePicHelper.getProfilePic());
+        else ProfilePicHelper.getProfilePicUpdateListener().add(profilePic::setImageDrawable);
+
+        editRatingBar.setOnRatingChangeListener((ratingBar, rating) -> {
+            if (flagReviewing) { flagReviewing = false; return; }
+            View review = getLayoutInflater().inflate(R.layout.dialog_review, null);
+            MaterialRatingBar bar = review.findViewById(R.id.gym_details_rate_write);
+            bar.setRating(rating);
+            TextInputEditText reviewMessage = review.findViewById(R.id.gym_details_review);
+            ImageView profilePics = review.findViewById(R.id.profile_pic);
+            if (ProfilePicHelper.getProfilePic() != null) profilePics.setImageDrawable(ProfilePicHelper.getProfilePic());
+            else ProfilePicHelper.getProfilePicUpdateListener().add(profilePics::setImageDrawable);
+            new AlertDialog.Builder(gymBottomSheet.getContext()).setTitle("Feedback about Gym").setCancelable(false)
+                    .setView(review).setPositiveButton("Submit", (dialog, which) -> {
+                        float rateValue = bar.getRating();
+                        String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString();
+                        // Attempt to detect any error messsages
+                        String error = (reviewValue.length() > 512) ? "Review message is too long" : null;
+                        FirestoreRating frate = new FirestoreRating(rateValue, reviewValue);
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if (user == null) { Snackbar.make(gymBottomSheet, "Error submitting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+                        DocumentReference ref = db.collection("gymreviews").document(selectedGymUid).collection("users").document(user.getUid());
+                        ref.set(frate).addOnSuccessListener(aVoid -> Snackbar.make(gymBottomSheet, "Review submitted successfully!", Snackbar.LENGTH_LONG).show())
+                                .addOnFailureListener(e -> {
+                                    Snackbar.make(gymBottomSheet, "Failed to submit review (" + ((error == null) ? e.getLocalizedMessage() : error) + ")", Snackbar.LENGTH_LONG).show();
+                                    Log.e(TAG, "Failed to submit review (" + e.getLocalizedMessage() + ")");
+                                });
+                    }).setNeutralButton(android.R.string.cancel, (dialog, which) -> {
+                        flagReviewing = true;
+                        ratingBar.setRating(0);
+                    }).show();
+        });
 
         if (reviews != null) {
             reviews.setHasFixedSize(true);
@@ -667,7 +710,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
 
         // On Click
         carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
-        rate.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         favourite.setOnClickListener(v -> heartIcon.callOnClick());
         heartIcon.setOnClickListener(v -> {
             if (v instanceof FavButtonView) {
