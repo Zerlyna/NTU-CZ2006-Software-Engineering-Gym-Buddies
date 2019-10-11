@@ -37,7 +37,14 @@ object GymHelper {
         prop.ADDRESSBLOCKHOUSENUMBER?.let { sb.append("$it ") }
         prop.ADDRESSBUILDINGNAME?.let { sb.append("$it ") }
         sb.append("${prop.ADDRESSSTREETNAME} ")
-        if (prop.ADDRESSFLOORNUMBER != null && prop.ADDRESSUNITNUMBER != null) sb.append("#${prop.ADDRESSFLOORNUMBER}-${prop.ADDRESSUNITNUMBER} ")
+        if (prop.ADDRESSFLOORNUMBER != null && prop.ADDRESSUNITNUMBER != null) {
+            // Check for single digit
+            var floorNo = prop.ADDRESSFLOORNUMBER
+            var unitNo = prop.ADDRESSUNITNUMBER
+            try { if (floorNo.toInt() < 10) floorNo = "0$floorNo" } catch (e: NumberFormatException) { } // Not an issue if it crashes
+            try { if (unitNo.toInt() < 10) unitNo = "0$unitNo" } catch (e: NumberFormatException) { } // Not an issue if it crashes
+            sb.append("#$floorNo-$unitNo ")
+        }
         prop.ADDRESSPOSTALCODE.let { sb.append("S($it)")}
         return sb.toString()
     }
