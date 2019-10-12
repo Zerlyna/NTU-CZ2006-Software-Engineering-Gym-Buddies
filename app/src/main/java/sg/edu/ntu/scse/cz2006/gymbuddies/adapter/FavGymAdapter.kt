@@ -71,7 +71,7 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
      * @return FavViewHolder The view holder that is created to store the data in
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavViewHolder {
-        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.recyclew_item_gym_detail, parent, false)
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.recycler_item_gym_detail, parent, false)
         return FavViewHolder(itemView, onClickListener)
     }
 
