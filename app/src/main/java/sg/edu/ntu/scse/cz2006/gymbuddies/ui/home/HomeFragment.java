@@ -714,7 +714,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         });
     }
 
-    private void submitReview(MaterialRatingBar bar, TextView reviewMessage) {
+    /**
+     * Internal function to submit review for the selected gym
+     * @param bar The rating bar object that stores the gym rating that the user has selected
+     * @param reviewMessage The review message TextInputEditText object that stores any review of the gym that the user is currently rating
+     */
+    private void submitReview(MaterialRatingBar bar, TextInputEditText reviewMessage) {
         float rateValue = bar.getRating();
         String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString();
         // Attempt to detect any error messsages
@@ -734,6 +739,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         });
     }
 
+    /**
+     * Internal function to update gym ratings for a selected gym
+     */
     private void updateGymRatings() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -760,6 +768,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         // TODO: Setup the "overall rating"/stars/rating count (probably do Cloud Functions first)
     }
 
+    /**
+     * Internal function to set the logged in user's gym review status
+     * This will determine if the user has a review for that particular gym or not.
+     * If there is, the view review layout is used, otherwise the create new review layout is used
+     *
+     * @param hasReview User currently has a review for the selected gym if true, false otherwise
+     * @param message Any review message in the user's review of the gym, null for empty
+     * @param rating The rating for the gym given by the user. Will be 0 by default
+     */
     private void setGymStatus(boolean hasReview, @Nullable String message, float rating) {
         LinearLayout edit = gymBottomSheet.findViewById(R.id.gym_details_rate_edit);
         LinearLayout view = gymBottomSheet.findViewById(R.id.gym_details_rate_view);
