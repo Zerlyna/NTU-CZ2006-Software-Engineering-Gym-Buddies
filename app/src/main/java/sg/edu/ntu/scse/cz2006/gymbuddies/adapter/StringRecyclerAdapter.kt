@@ -31,9 +31,13 @@ class StringRecyclerAdapter(string: List<String>, private var announce: Boolean)
     private var stringList: List<String> = ArrayList()
     private var onClickListener: View.OnClickListener? = null
 
-    init {
-        stringList = string
-    }
+    init { stringList = string }
+
+    /**
+     * Updates internal string list
+     * @param newString List<String> New list of string
+     */
+    fun updateStrings(newString: List<String>) { stringList = newString }
 
     /**
      * Overrides the default on click [listener]

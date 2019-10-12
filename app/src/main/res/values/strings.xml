@@ -72,5 +72,6 @@
     <string name="gym_details_fav_icon_content_desc">A heart</string>
     <string name="gym_details_car_icon_content_desc">Nearby Carpark</string>
     <string name="fav_list_header">Favourite Gyms</string>
+    <string name="date_placeholder">01/01/70</string>
     <string name="name_placeholder">Sundar Pichai</string>
 </resources>

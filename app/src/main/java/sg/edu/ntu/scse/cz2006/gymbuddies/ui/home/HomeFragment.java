@@ -64,16 +64,20 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FirestoreRating;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymRatings;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
@@ -691,11 +695,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             reviews.setItemAnimator(new DefaultItemAnimator());
         }
 
-        // TODO: Get reviews list from firebase based on the gym key
-        String[] toremove = {"No Reviews Found for this gym", "This feature is currently a WIP"};
-        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
-        reviews.setAdapter(adapter);
-
         // On Click
         carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         favourite.setOnClickListener(v -> heartIcon.callOnClick());
@@ -764,8 +763,62 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 else Toast.makeText(getContext(), "Failed to get your ratings (ObjectCastError)", Toast.LENGTH_LONG).show();
             }
         }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to get ratings (" + e.getLocalizedMessage() + ")", Toast.LENGTH_LONG).show());
-        // TODO: Populate gym ratings list
-        // TODO: Setup the "overall rating"/stars/rating count (probably do Cloud Functions first)
+        // Set loading status for review while we retrieve the needed data (double calls boo)
+        String[] loading = {"Loading Reviews for gym..."};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(loading), false);
+        reviews.setAdapter(adapter);
+
+        // Init for review count, rating and list
+        TextView reviewCount = gymBottomSheet.findViewById(R.id.gym_details_review_count);
+        TextView reviewCountGen = gymBottomSheet.findViewById(R.id.gym_details_review_count_general);
+        AppCompatRatingBar overallRating = gymBottomSheet.findViewById(R.id.gym_details_rate_bar);
+        TextView averageRating = gymBottomSheet.findViewById(R.id.gym_details_rate_avg);
+        reviewCount.setText("(...)");
+        reviewCountGen.setText("(...)");
+        overallRating.setRating(0f);
+        averageRating.setText("-");
+
+        if (getActivity() == null) return;
+        db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).orderBy("timestamp", Query.Direction.DESCENDING).get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<DocumentSnapshot> reviewDocList = querySnapshot.getDocuments();
+                    if (reviewDocList.size() <= 0) {
+                        // No reviews
+                        String[] noReviews = {"No Reviews Found for this gym. Make one now!"};
+                        adapter.updateStrings(Arrays.asList(noReviews));
+                        adapter.notifyDataSetChanged();
+                        reviewCount.setText("(0)");
+                        reviewCountGen.setText("(0)");
+                        return;
+                    }
+                    // Get user list as well
+                    db.collection(GymHelper.GYM_USERS_COLLECTION).get().addOnSuccessListener(querySnapshot1 -> {
+                        if (getActivity() == null) return; // No more visible activity, no point doing
+                        HashMap<String, User> userList = new HashMap<>();
+                        for (DocumentSnapshot d : querySnapshot1.getDocuments()) { userList.put(d.getId(), d.toObject(User.class)); } // Parse user objects into hashmap
+
+                        // Create the recycler items based off the reviews and users data
+                        ArrayList<GymRatings> reviewList = new ArrayList<>();
+                        float overallGymRating = 0.0f;
+                        for (DocumentSnapshot d : reviewDocList) {
+                            if (!userList.containsKey(d.getId())) continue; // Deleted user, Don't bother with their reviews
+                            FirestoreRating fr = d.toObject(FirestoreRating.class);
+                            User u = userList.get(d.getId());
+                            if (fr == null || u == null) continue; // Error occurred, dont add that
+                            reviewList.add(new GymRatings(d.getId(), fr, u));
+                            overallGymRating += fr.getRating();
+                        }
+
+                        GymReviewAdapter reviewAdapter = new GymReviewAdapter(getActivity(), reviewList);
+                        reviews.setAdapter(reviewAdapter);
+                        reviewCount.setText("(" + reviewList.size() + ")");
+                        reviewCountGen.setText("(" + reviewList.size() + ")");
+                        // Get overall rating and stuff
+                        float averageGymRating = overallGymRating / reviewList.size();
+                        overallRating.setRating(averageGymRating);
+                        averageRating.setText(String.format(Locale.US,"%.2f", averageGymRating));
+                    }).addOnFailureListener(e -> { Log.e(TAG, "Failed to get review users"); Toast.makeText(getContext(), "Failed to get rating list (users)", Toast.LENGTH_LONG).show(); });
+                }).addOnFailureListener(e -> { Toast.makeText(getContext(), "Failed to get rating list (list)", Toast.LENGTH_LONG).show(); Log.e(TAG, "Failed to get gym review list"); });
     }
 
     /**

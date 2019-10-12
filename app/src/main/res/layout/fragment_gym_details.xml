@@ -61,12 +61,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
+                    android:id="@+id/gym_details_rate_bar"
                     android:numStars="5"
                     android:rating="1" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/gym_details_rate_avg"
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="4dp"
                     android:text="@string/gym_detail_rating_placeholder" />
@@ -75,6 +77,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
+                    android:id="@+id/gym_details_review_count_general"
                     android:layout_marginStart="8dp"
                     android:text="@string/number_placeholder" />
             </LinearLayout>
@@ -342,6 +345,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/gym_details_review_count"
             android:text="@string/number_placeholder"
             android:layout_marginStart="4dp"
             android:textAppearance="?android:attr/textAppearanceLarge" />
