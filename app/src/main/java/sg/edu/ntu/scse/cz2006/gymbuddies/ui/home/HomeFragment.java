@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -733,8 +734,30 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         });
     }
 
-    private void updateGymMode() {
-        // TODO: Get gym details and stuff for this, then invoke gym layout
+    private void updateGymRatings() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.e(TAG, "User not logged in, cannot get ratings and stuff");
+            return; // We stop here
+        }
+        setGymStatus(false, null, 0f); // Default to no reviews while we are downloading
+        MaterialRatingBar bar = gymBottomSheet.findViewById(R.id.gym_details_rate_write);
+        if (bar.getRating() > 0f) {
+            flagReviewing = true;
+            bar.setRating(0);
+        }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        // Get your user's rating list if any
+        db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).document(user.getUid()).get().addOnSuccessListener(documentSnapshot -> {
+            if (!documentSnapshot.exists()) setGymStatus(false, null, 0f); // No reviews from user
+            else {
+                FirestoreRating rating = documentSnapshot.toObject(FirestoreRating.class);
+                if (rating != null) setGymStatus(true, rating.getMessage(), rating.getRating());
+                else Toast.makeText(getContext(), "Failed to get your ratings (ObjectCastError)", Toast.LENGTH_LONG).show();
+            }
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to get ratings (" + e.getLocalizedMessage() + ")", Toast.LENGTH_LONG).show());
+        // TODO: Populate gym ratings list
+        // TODO: Setup the "overall rating"/stars/rating count (probably do Cloud Functions first)
     }
 
     private void setGymStatus(boolean hasReview, @Nullable String message, float rating) {
@@ -824,5 +847,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
             debugView.setVisibility((sp.getBoolean("debug_mode", false) ? View.VISIBLE : View.GONE));
         }
+
+        updateGymRatings();
     }
 }
