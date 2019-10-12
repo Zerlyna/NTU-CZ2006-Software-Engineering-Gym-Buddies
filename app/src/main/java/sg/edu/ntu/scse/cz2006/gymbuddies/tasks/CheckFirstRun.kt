@@ -5,6 +5,7 @@ import android.os.AsyncTask
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 import java.lang.ref.WeakReference
 
 /**
@@ -57,7 +58,7 @@ class CheckFirstRun(activity: Activity, private val callback: Callback) : AsyncT
         val firebaseDb = FirebaseFirestore.getInstance()
         val debugStart = System.currentTimeMillis()
         Log.d(TAG, "Time Taken Data Processing Start: $debugStart")
-        firebaseDb.collection("users").document(uid).get().addOnSuccessListener {
+        firebaseDb.collection(GymHelper.GYM_USERS_COLLECTION).document(uid).get().addOnSuccessListener {
             Log.i(TAG, "User object retrieved, checking existance")
             val debugMid = System.currentTimeMillis()
             Log.d(TAG, "Time Taken Data Processing Middle: $debugMid")

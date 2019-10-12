@@ -53,4 +53,6 @@ object GymHelper {
      * A constant for the gym collection in Firebase Firestore DB
      */
     const val GYM_COLLECTION = "favgym"
+    const val GYM_REVIEWS_COLLECTION = "gymreviews"
+    const val GYM_USERS_COLLECTION = "users"
 }

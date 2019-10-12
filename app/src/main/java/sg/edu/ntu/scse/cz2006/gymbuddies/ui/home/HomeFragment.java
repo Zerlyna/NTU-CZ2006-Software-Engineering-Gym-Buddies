@@ -722,7 +722,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) { Snackbar.make(gymBottomSheet, "Error submitting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        DocumentReference ref = db.collection("gymreviews").document(selectedGymUid).collection("users").document(user.getUid());
+        DocumentReference ref = db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).document(user.getUid());
         ref.set(frate).addOnSuccessListener(aVoid -> {
             Snackbar.make(gymBottomSheet, "Review submitted successfully!", Snackbar.LENGTH_LONG).show();
             // Update the main view as well and replace edit mode with view mode
@@ -766,7 +766,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                             if (user == null) { Snackbar.make(gymBottomSheet, "Error deleting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
                             FirebaseFirestore db = FirebaseFirestore.getInstance();
-                            DocumentReference ref = db.collection("gymreviews").document(selectedGymUid).collection("users").document(user.getUid());
+                            DocumentReference ref = db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).document(user.getUid());
                             ref.delete().addOnSuccessListener(aVoid -> {
                                 Snackbar.make(gymBottomSheet, "Review deleted successfully!", Snackbar.LENGTH_LONG).show();
                                 setGymStatus(false, null, 0f);

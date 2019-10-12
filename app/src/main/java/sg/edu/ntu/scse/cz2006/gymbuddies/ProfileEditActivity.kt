@@ -25,6 +25,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateFirebaseFirestoreDocument
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UploadProfilePic
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.InputHelper
 import java.util.*
 import kotlin.collections.ArrayList
@@ -96,7 +97,7 @@ class ProfileEditActivity : AppCompatActivity() {
             if (intent.getBooleanExtra("view", false)) enterViewOnlyMode()
             loadImage.visibility = View.VISIBLE
             Toast.makeText(this, "Loading user data...", Toast.LENGTH_SHORT).show()
-            FirebaseFirestore.getInstance().collection("users").document(uid).get().addOnSuccessListener {
+            FirebaseFirestore.getInstance().collection(GymHelper.GYM_USERS_COLLECTION).document(uid).get().addOnSuccessListener {
                 loadImage.visibility = View.GONE
                 if (it.exists()) {
                     editUser = it.toObject(User::class.java)
@@ -247,7 +248,7 @@ class ProfileEditActivity : AppCompatActivity() {
             else User(name=name, prefLocation = prefLocation, gender = gender, prefTime = timeRange, prefDay = User.PrefDays(selectedDays), profilePicUri = profileUri.toString()).apply { flags.firstRun = false }
         user.uid = uid // Set UID for the user object
         val db = FirebaseFirestore.getInstance()
-        val ref = db.collection("users").document(uid)
+        val ref = db.collection(GymHelper.GYM_USERS_COLLECTION).document(uid)
         UpdateFirebaseFirestoreDocument(ref, user, object: UpdateFirebaseFirestoreDocument.Callback {
             override fun onComplete(success: Boolean) {
                 Log.i(TAG, "Insertion Status: $success")
