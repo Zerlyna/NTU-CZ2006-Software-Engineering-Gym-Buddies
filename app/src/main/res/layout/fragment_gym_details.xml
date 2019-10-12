@@ -303,8 +303,18 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:gravity="center_horizontal"
                 android:text="@string/gym_desc_placeholder_rant"
                 android:id="@+id/gym_details_review_readonly" />
+            <Button
+                style="@style/ColourButtonAccentText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:id="@+id/gym_details_rate_edit_btn"
+                android:text="Edit Review" />
         </LinearLayout>
 
     </LinearLayout>

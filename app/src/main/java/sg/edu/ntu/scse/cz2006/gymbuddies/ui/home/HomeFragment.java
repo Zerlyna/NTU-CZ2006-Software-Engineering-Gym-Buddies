@@ -15,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatRatingBar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -674,22 +676,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             if (ProfilePicHelper.getProfilePic() != null) profilePics.setImageDrawable(ProfilePicHelper.getProfilePic());
             else ProfilePicHelper.getProfilePicUpdateListener().add(profilePics::setImageDrawable);
             new AlertDialog.Builder(gymBottomSheet.getContext()).setTitle("Feedback about Gym").setCancelable(false)
-                    .setView(review).setPositiveButton("Submit", (dialog, which) -> {
-                        float rateValue = bar.getRating();
-                        String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString();
-                        // Attempt to detect any error messsages
-                        String error = (reviewValue.length() > 512) ? "Review message is too long" : null;
-                        FirestoreRating frate = new FirestoreRating(rateValue, reviewValue);
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        if (user == null) { Snackbar.make(gymBottomSheet, "Error submitting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
-                        FirebaseFirestore db = FirebaseFirestore.getInstance();
-                        DocumentReference ref = db.collection("gymreviews").document(selectedGymUid).collection("users").document(user.getUid());
-                        ref.set(frate).addOnSuccessListener(aVoid -> Snackbar.make(gymBottomSheet, "Review submitted successfully!", Snackbar.LENGTH_LONG).show())
-                                .addOnFailureListener(e -> {
-                                    Snackbar.make(gymBottomSheet, "Failed to submit review (" + ((error == null) ? e.getLocalizedMessage() : error) + ")", Snackbar.LENGTH_LONG).show();
-                                    Log.e(TAG, "Failed to submit review (" + e.getLocalizedMessage() + ")");
-                                });
-                    }).setNeutralButton(android.R.string.cancel, (dialog, which) -> {
+                    .setView(review).setPositiveButton("Submit", (dialog, which) -> submitReview(bar, reviewMessage)).setNeutralButton(android.R.string.cancel, (dialog, which) -> {
                         flagReviewing = true;
                         ratingBar.setRating(0);
                     }).show();
@@ -724,6 +711,71 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 }
             }
         });
+    }
+
+    private void submitReview(MaterialRatingBar bar, TextView reviewMessage) {
+        float rateValue = bar.getRating();
+        String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString();
+        // Attempt to detect any error messsages
+        String error = (reviewValue.length() > 512) ? "Review message is too long" : null;
+        FirestoreRating frate = new FirestoreRating(rateValue, reviewValue, System.currentTimeMillis());
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) { Snackbar.make(gymBottomSheet, "Error submitting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference ref = db.collection("gymreviews").document(selectedGymUid).collection("users").document(user.getUid());
+        ref.set(frate).addOnSuccessListener(aVoid -> {
+            Snackbar.make(gymBottomSheet, "Review submitted successfully!", Snackbar.LENGTH_LONG).show();
+            // Update the main view as well and replace edit mode with view mode
+            setGymStatus(true, reviewValue, rateValue);
+        }).addOnFailureListener(e -> {
+            Snackbar.make(gymBottomSheet, "Failed to submit review (" + ((error == null) ? e.getLocalizedMessage() : error) + ")", Snackbar.LENGTH_LONG).show();
+            Log.e(TAG, "Failed to submit review (" + e.getLocalizedMessage() + ")");
+        });
+    }
+
+    private void updateGymMode() {
+        // TODO: Get gym details and stuff for this, then invoke gym layout
+    }
+
+    private void setGymStatus(boolean hasReview, @Nullable String message, float rating) {
+        LinearLayout edit = gymBottomSheet.findViewById(R.id.gym_details_rate_edit);
+        LinearLayout view = gymBottomSheet.findViewById(R.id.gym_details_rate_view);
+        edit.setVisibility((hasReview) ? View.GONE : View.VISIBLE);
+        view.setVisibility((hasReview) ? View.VISIBLE : View.GONE);
+        if (hasReview) {
+            // Update view mode
+            TextView review = view.findViewById(R.id.gym_details_review_readonly);
+            AppCompatRatingBar ratingBar = view.findViewById(R.id.gym_details_rate_read);
+            ratingBar.setRating(rating);
+            review.setText((message == null) ? "" : message);
+
+            // We set the onclick here as only here we can easily access the message and rating
+            Button editReview = gymBottomSheet.findViewById(R.id.gym_details_rate_edit_btn);
+            editReview.setOnClickListener(v -> {
+                View review1 = getLayoutInflater().inflate(R.layout.dialog_review, null);
+                MaterialRatingBar bar = review1.findViewById(R.id.gym_details_rate_write);
+                bar.setRating(rating);
+                TextInputEditText reviewMessage = review1.findViewById(R.id.gym_details_review);
+                reviewMessage.setText(message);
+                ImageView profilePics = review1.findViewById(R.id.profile_pic);
+                if (ProfilePicHelper.getProfilePic() != null) profilePics.setImageDrawable(ProfilePicHelper.getProfilePic());
+                else ProfilePicHelper.getProfilePicUpdateListener().add(profilePics::setImageDrawable);
+                new AlertDialog.Builder(gymBottomSheet.getContext()).setTitle("Feedback about Gym").setCancelable(false)
+                        .setView(review1).setPositiveButton("Submit", (dialog, which) -> submitReview(bar, reviewMessage)).setNegativeButton(android.R.string.cancel, null)
+                        .setNeutralButton("Delete", (dialog, which) -> {
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            if (user == null) { Snackbar.make(gymBottomSheet, "Error deleting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                            DocumentReference ref = db.collection("gymreviews").document(selectedGymUid).collection("users").document(user.getUid());
+                            ref.delete().addOnSuccessListener(aVoid -> {
+                                Snackbar.make(gymBottomSheet, "Review deleted successfully!", Snackbar.LENGTH_LONG).show();
+                                setGymStatus(false, null, 0f);
+                                flagReviewing = true;
+                                ((MaterialRatingBar) gymBottomSheet.findViewById(R.id.gym_details_rate_write)).setRating(0);
+                            }).addOnFailureListener(e -> Snackbar.make(gymBottomSheet, "Failed to delete review (" + e.getLocalizedMessage() + ")", Snackbar.LENGTH_LONG).show());
+                        }).show();
+            });
+        }
     }
 
     /**
