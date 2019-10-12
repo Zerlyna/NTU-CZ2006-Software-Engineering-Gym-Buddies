@@ -3,8 +3,7 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="email_placeholder">sundarpichai@google.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
@@ -73,4 +72,5 @@
     <string name="gym_details_fav_icon_content_desc">A heart</string>
     <string name="gym_details_car_icon_content_desc">Nearby Carpark</string>
     <string name="fav_list_header">Favourite Gyms</string>
+    <string name="name_placeholder">Sundar Pichai</string>
 </resources>
