@@ -213,6 +213,27 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/gym_details_debug_layout">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="4dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="Gym ID"
+            android:id="@+id/gym_details_debug_value" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.6dp"
+            android:paddingTop="?attr/dialogPreferredPadding"
+            android:layout_marginBottom="2dp"
+            android:background="#5d5d5d" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical">
         <ImageView

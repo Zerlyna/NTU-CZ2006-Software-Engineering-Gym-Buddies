@@ -763,5 +763,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             if (documentSnapshot != null && documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
             else favCount.setText("(0)");
         });
+
+        // DEBUG SETTINGS
+        if (getContext() != null) {
+            LinearLayout debugView = gymBottomSheet.findViewById(R.id.gym_details_debug_layout);
+            TextView gymDetails = gymBottomSheet.findViewById(R.id.gym_details_debug_value);
+            gymDetails.setText(gym.getProperties().getINC_CRC());
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+            debugView.setVisibility((sp.getBoolean("debug_mode", false) ? View.VISIBLE : View.GONE));
+        }
     }
 }
