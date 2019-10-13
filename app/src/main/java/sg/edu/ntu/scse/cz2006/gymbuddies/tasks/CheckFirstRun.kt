@@ -74,7 +74,7 @@ class CheckFirstRun(activity: Activity, private val callback: Callback) : AsyncT
                     if (flags.uid.isEmpty()) {
                         // Update user UID object silently
                         flags.uid = uid
-                        firebaseDb.collection("users").document(uid).set(flags) // Silent so we do not care about results
+                        firebaseDb.collection(GymHelper.GYM_USERS_COLLECTION).document(uid).set(flags) // Silent so we do not care about results
                     }
                     doCallback(false, activity)
                 }
