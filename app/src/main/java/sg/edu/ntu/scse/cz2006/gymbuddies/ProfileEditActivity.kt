@@ -245,6 +245,7 @@ class ProfileEditActivity : AppCompatActivity() {
         val selectedDays = getSelectedDays()
         val user = if (!firstRun && editUser != null) editUser!!.copy(name=name, prefLocation=prefLocation, gender=gender, prefTime=timeRange, prefDay=User.PrefDays(selectedDays), profilePicUri=profileUri.toString())
             else User(name=name, prefLocation = prefLocation, gender = gender, prefTime = timeRange, prefDay = User.PrefDays(selectedDays), profilePicUri = profileUri.toString()).apply { flags.firstRun = false }
+        user.uid = uid // Set UID for the user object
         val db = FirebaseFirestore.getInstance()
         val ref = db.collection("users").document(uid)
         UpdateFirebaseFirestoreDocument(ref, user, object: UpdateFirebaseFirestoreDocument.Callback {

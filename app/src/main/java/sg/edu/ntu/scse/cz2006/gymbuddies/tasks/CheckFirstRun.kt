@@ -68,7 +68,15 @@ class CheckFirstRun(activity: Activity, private val callback: Callback) : AsyncT
                 Log.d(TAG, "Time Taken Data Processing End: $debugEnd")
                 Log.d(TAG, "[Calculation] Total: ${debugEnd - debugStart}ms | S -> M: ${debugMid - debugStart}ms | M -> E: ${debugEnd - debugMid}ms")
                 if (flags == null || flags.flags.firstRun) doCallback(true, activity) // User exists but has not completed first run for some reason
-                else doCallback(false, activity) // User exists and completed first run
+                else {
+                    // User exists and completed first run
+                    if (flags.uid.isEmpty()) {
+                        // Update user UID object silently
+                        flags.uid = uid
+                        firebaseDb.collection("users").document(uid).set(flags) // Silent so we do not care about results
+                    }
+                    doCallback(false, activity)
+                }
             } else { Log.i(TAG, "User does not exist, creating new user"); Log.d(TAG, "[Calculation] Total: ${debugMid - debugStart}ms"); doCallback(true, activity) } // New User
         }.addOnFailureListener { Log.w(TAG, "Error getting Firebase Collection", it); activity.runOnUiThread { callback.isError() } } // Error, Fail it
         return null

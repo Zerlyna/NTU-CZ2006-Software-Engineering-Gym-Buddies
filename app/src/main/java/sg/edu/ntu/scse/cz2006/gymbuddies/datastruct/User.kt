@@ -15,6 +15,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User.PrefDays
  * @author Kenneth Soh
  * @since 2019-09-16
  * @property name String User name
+ * @property uid String User Identifier (this is obtained from FirebaseAuth#getUID())
  * @property prefLocation String User Preferred Location
  * @property gender String User Gender
  * @property prefTime String User Preferred Time Range
@@ -23,7 +24,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User.PrefDays
  * @property flags [Flags] User Flags
  * @constructor Creates a user object based on the Firebase Firestore document
  */
-data class User(var name: String = "", var prefLocation: String = "West", var gender: String = "Male", var prefTime: String = "AM",
+data class User(var name: String = "", var uid: String = "", var prefLocation: String = "West", var gender: String = "Male", var prefTime: String = "AM",
                 var prefDay: PrefDays = PrefDays(), var profilePicUri: String = "", var flags: Flags = Flags()) {
     /**
      * Inner class to display user flags
