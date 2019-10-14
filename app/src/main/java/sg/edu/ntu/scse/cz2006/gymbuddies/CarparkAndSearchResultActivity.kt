@@ -91,6 +91,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
      * Enable custom backstack handling
      */
     private var backStack = false
+    private var autoExpandFlag = false
 
 
     override fun onBackPressed() {
@@ -112,10 +113,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 backStack = newState == BottomSheetBehavior.STATE_EXPANDED || newState == BottomSheetBehavior.STATE_COLLAPSED
                 supportActionBar?.title = if (newState == BottomSheetBehavior.STATE_EXPANDED) "View Gym Details" else "Search Results"
                 gym_details_title.isSingleLine = newState == BottomSheetBehavior.STATE_COLLAPSED
-                /*if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
+                if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
                     autoExpandFlag = false
-                    gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED)
-                }*/
+                    gymBottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -171,6 +172,15 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
         if (result.size > 0) {
             val results = FavGymAdapter(result)
+            results.setOnClickListener(View.OnClickListener { v ->
+                if (v.tag is FavGymAdapter.FavViewHolder) {
+                    val obj = (v.tag as FavGymAdapter.FavViewHolder).gymObj as GymList.GymShell
+                    showGymDetails()
+                    updateGymDetails(obj)
+                    zoomToMyLocation(LatLng(obj.geometry.getLat(), obj.geometry.getLng()))
+                    autoExpandFlag = true
+                }
+            })
             results_list.adapter = results
             result.forEach {
                 // Add markers for each as well
