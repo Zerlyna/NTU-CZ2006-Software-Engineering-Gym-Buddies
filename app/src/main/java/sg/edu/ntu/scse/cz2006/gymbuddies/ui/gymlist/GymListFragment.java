@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -138,6 +139,11 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
     private RecyclerView reviews;
 
     /**
+     * Swipe Refresh Listener
+     */
+    private SwipeRefreshLayout swipeToRefresh;
+
+    /**
      * Internal lifecycle fragment for creating the fragment view
      * @param inflater Layout Inflater object
      * @param container View Group Container object
@@ -169,6 +175,15 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
             itemTouchHelper.attachToRecyclerView(favouritesList);
         }
         emptyFavourites();
+
+        swipeToRefresh = root.findViewById(R.id.swipe_refresh);
+        swipeToRefresh.setOnRefreshListener(() -> {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                FirebaseFirestore.getInstance().collection(GymHelper.GYM_COLLECTION).whereArrayContains("userIds", user.getUid()).get().addOnSuccessListener(GymListFragment.this::processFavListUpdates);
+            }
+        });
+        swipeToRefresh.setColorSchemeResources(R.color.google_1, R.color.google_2, R.color.google_3, R.color.google_4);
 
         // Setup Gym Details View (sync with the gym section of the Home frag)
         TextView gymTitle = root.findViewById(R.id.gym_details_title);
@@ -352,7 +367,6 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
 
         // Handle back press (if in gym details mode should revert)
         requireActivity().getOnBackPressedDispatcher().addCallback(this, backStack);
-
 
         return root;
     }
@@ -572,6 +586,7 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
             }
             gymListViewModel.updateCurrentUserFavourites(workingSet);
         } else gymListViewModel.updateCurrentUserFavourites(new HashMap<>());
+        if (swipeToRefresh.isRefreshing()) swipeToRefresh.setRefreshing(false);
     }
 
     /**
