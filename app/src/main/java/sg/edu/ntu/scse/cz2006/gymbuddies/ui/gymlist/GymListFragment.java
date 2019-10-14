@@ -28,6 +28,9 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.transition.Fade;
+import androidx.transition.Transition;
+import androidx.transition.TransitionManager;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -384,6 +387,11 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
     private void setGymStatus(boolean hasReview, @androidx.annotation.Nullable String message, float rating, String selectedGymUid) {
         LinearLayout edit = gymBottomSheet.findViewById(R.id.gym_details_rate_edit);
         LinearLayout view = gymBottomSheet.findViewById(R.id.gym_details_rate_view);
+        Transition transition = new Fade();
+        transition.setDuration(300);
+        transition.addTarget(edit).addTarget(view);
+
+        TransitionManager.beginDelayedTransition((ViewGroup) gymBottomSheet, transition);
         edit.setVisibility((hasReview) ? View.GONE : View.VISIBLE);
         view.setVisibility((hasReview) ? View.VISIBLE : View.GONE);
         if (hasReview) {
