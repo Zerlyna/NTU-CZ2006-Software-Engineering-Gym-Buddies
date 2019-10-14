@@ -15,18 +15,26 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_carpark_and_search_result.*
+import kotlinx.android.synthetic.main.fragment_gym_details.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymSearchBy
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.SearchGym
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 
-class CarparkAndSearchResultActivity : AppCompatActivity() {
+class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var state = STATE_SEARCH
+    private lateinit var mMap: GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +53,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
             else -> STATE_UNKNOWN
         }
 
-        when (state) {
-            STATE_SEARCH -> doSearch()
-            STATE_CARPARK -> doCarpark()
-            else -> errorAndExit("Unknown action, exiting activity")
-        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) gpsPerm = true
+
+        map_view.onCreate(savedInstanceState)
+        map_view.getMapAsync(this)
     }
 
     private fun errorAndExit(errorMessage: String) {
@@ -75,6 +82,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
         // Check user location permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             // TODO: Enable after setting up map: if (mMap != null) { hasGps(true) }
+            gpsPerm = true
             // TODO: Do the search in an async task
             callSearchTask(param)
         } else {
@@ -88,11 +96,14 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
         }
     }
 
+    private var gpsPerm = false
+
     private fun callSearchTask(param: GymSearchBy) {
         val locationClient = LocationServices.getFusedLocationProviderClient(this)
         locationClient.lastLocation.addOnSuccessListener(this) { location ->
             if (location == null) return@addOnSuccessListener
             val lastLocation = LatLng(location.latitude, location.longitude)
+            zoomToMyLocation(lastLocation)
             SearchGym(this, object: SearchGym.OnComplete { override fun onComplete(result: ArrayList<FavGymObject>) { onSearchResult(result) } }, param, lastLocation).execute()
         }
     }
@@ -103,6 +114,11 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
         if (result.size > 0) {
             val results = FavGymAdapter(result)
             results_list.adapter = results
+            result.forEach {
+                // Add markers for each as well
+                mMap.addMarker(MarkerOptions().position(LatLng(it.gym.geometry.getLat(), it.gym.geometry.getLng())).title(it.gym.properties.Name).snippet(
+                    GymHelper.generateAddress(it.gym.properties)))
+            }
         } else {
             val noResults = StringRecyclerAdapter(noReviews.toList(), false)
             results_list.adapter = noResults
@@ -146,6 +162,44 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) { finish(); return true }
         return super.onOptionsItemSelected(item)
+    }
+
+    // GMaps related issues
+
+    override fun onResume() {
+        super.onResume()
+        map_view.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        map_view.onPause()
+    }
+
+    override fun onMapReady(p0: GoogleMap) {
+        mMap = p0
+        mMap.isTrafficEnabled = true
+        val settings = mMap.uiSettings
+        settings.isMapToolbarEnabled = false
+        settings.isMyLocationButtonEnabled = true
+
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(1.3413054, 103.8074233), 10f))
+        val gymBottomSheetBehavior = BottomSheetBehavior.from<View>(gym_details_sheet)
+        mMap.setOnInfoWindowClickListener { gymBottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED }
+        mMap.isMyLocationEnabled = gpsPerm
+
+        when (state) {
+            STATE_SEARCH -> doSearch()
+            STATE_CARPARK -> doCarpark()
+            else -> errorAndExit("Unknown action, exiting activity")
+        }
+    }
+
+    /**
+     * Internal method to zoom the map to the user's current location
+     */
+    private fun zoomToMyLocation(lastLocation: LatLng) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f))
     }
 
     companion object {
