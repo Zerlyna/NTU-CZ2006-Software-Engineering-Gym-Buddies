@@ -37,9 +37,10 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/results_list"
+            android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <include android:visibility="gone" layout="@layout/fragment_gym_details" />
+    <include layout="@layout/fragment_gym_details" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
