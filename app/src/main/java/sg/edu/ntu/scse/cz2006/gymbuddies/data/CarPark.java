@@ -5,6 +5,14 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+
+/**
+ * Data Model for entity 'hdbcarparks' in the Room database.
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.data in Gym Buddies!
+ *
+ * @author Chia Yu
+ * @since 2019-09-14
+ */
 @Entity(tableName = "hdbcarparks")
 public class CarPark {
 

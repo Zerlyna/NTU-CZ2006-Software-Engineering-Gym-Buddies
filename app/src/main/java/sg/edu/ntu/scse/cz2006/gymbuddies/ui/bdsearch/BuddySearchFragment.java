@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 
@@ -24,8 +25,8 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 public class BuddySearchFragment extends Fragment {
     private BuddySearchViewModel buddySearchViewModel;
     private Button btnTest;
-    private Spinner spLiveRegion;
-    private RadioGroup rgBuddyGender;
+    private Spinner spPrefLocation;
+    private RadioGroup rgBuddyGender, rgPrefTime;
     private LinearLayout llPrefDays;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,20 +41,20 @@ public class BuddySearchFragment extends Fragment {
         });
 
 
-        spLiveRegion = root.findViewById(R.id.spinner_live_region);
+        spPrefLocation = root.findViewById(R.id.spinner_live_region);
+        rgPrefTime    = root.findViewById(R.id.rg_bd_time);
         rgBuddyGender = root.findViewById(R.id.rg_bd_gender);
         llPrefDays = root.findViewById(R.id.ll_pref_days);
         btnTest = root.findViewById(R.id.btn_search);
         btnTest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
                 Intent intent = new Intent(getActivity(), BuddySearchResultActivity.class);
                 Bundle data = new Bundle();
-                data.putString("liveRegion", spLiveRegion.getSelectedItem().toString());
+                data.putString("pref_location", spPrefLocation.getSelectedItem().toString());
                 data.putIntArray("pref_days", getPrefDays());
-                data.putString("gender", getSelectedGender());
+                data.putString("pref_time", getRadioText(rgPrefTime));
+                data.putString("gender",  getRadioText(rgBuddyGender) );
                 intent.putExtras(data);
                 startActivity(intent);
             }
@@ -64,15 +65,9 @@ public class BuddySearchFragment extends Fragment {
         return root;
     }
 
-    private String getSelectedGender(){
-        switch (rgBuddyGender.getCheckedRadioButtonId()){
-            case R.id.rb_female:
-                return "Female";
-            case R.id.rb_male:
-                return "Male";
-            default:
-                return "Both";
-        }
+    private String getRadioText(RadioGroup rg){
+        RadioButton selected = getView().findViewById(rg.getCheckedRadioButtonId());
+        return (String) selected.getText();
     }
 
     private int[] getPrefDays(){

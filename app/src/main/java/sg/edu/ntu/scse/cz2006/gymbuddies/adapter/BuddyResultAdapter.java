@@ -3,6 +3,7 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.adapter;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,34 +23,83 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.FavBuddyHelper;
 
+
+/**
+ * Recycler Adapter for Buddy search result
+ * For sg.edu.ntu.scse.cz2006.gymbuddies.adapter in Gym Buddies!
+ *
+ * @author Chia Yu
+ * @since 2019-09-28
+ * @property listBuddies List<User> The list of all searched users
+ * @constructor Creates a adapter for the Buddy Search Result List RecyclerView
+ */
 public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.ViewHolder> {
+    private String TAG = "GB.Adapter.BuddyResult";
+    public static final int ACTION_INVALID = -1;
     public static final int ACTION_CLICK_ON_ITEM_BODY   = 1;
     public static final int ACTION_CLICK_ON_FAV_ITEM    = 2;
     public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
+    private FavBuddyHelper favBuddyHelper;
+
+    /**
+     * Custom listener to allow activity to listen to user interaction between views
+     */
     public interface OnBuddyClickedListener {
-        void onBuddyItemClicked(ViewHolder holder, int action, int position);
-        void onBuddyItemCheckChanged(ViewHolder holder, int action, int position, boolean checked);
+        void onBuddyItemClicked(View view, ViewHolder holder, int action);
     }
-    private String TAG = "GB.Adapter.BuddyResult";
     private List<User> listBuddies;
     private OnBuddyClickedListener listener;
 
+    /**
+     * Constructor to create Recycler Adapter for Buddy search result
+     */
     public BuddyResultAdapter(List<User> listBuddies) {
         this.listBuddies = listBuddies;
     }
 
+    public void setFavBuddyHelper(FavBuddyHelper favBuddyHelper){
+        this.favBuddyHelper = favBuddyHelper;
+        if (this.favBuddyHelper == null){
+            return;
+        }
+        this.favBuddyHelper.setUpdateListener(new FavBuddyHelper.OnFavBuddiesUpdateListener() {
+            @Override
+            public void onFavBuddiesChanges(FavBuddyRecord record) {
+                Log.d(TAG, "onFavBuddiesChanges->"+record);
+                BuddyResultAdapter.this.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFavBuddiesUpdate(boolean success) {
+                Log.d(TAG, "onFavBuddiesUpdate->"+success);
+            }
+        });
+    }
+
+
+    /**
+     * Allow other classes to listen to user interaction via OnBuddyClickedListener
+     */
     public void setOnBuddyClickedListener(OnBuddyClickedListener listener){
         this.listener = listener;
     }
 
+    /**
+     * get number of items to be display on recycler view
+     */
     @Override
     public int getItemCount() {
         return this.listBuddies.size();
     }
 
+    /**
+     * render an item view, and assign the view to view holder
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -60,24 +110,31 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     }
 
 
+    /**
+     * get number of items to be display on recycler view
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.setPosition(position);
+        holder.update();
     }
 
 
-
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
-        View itemView;
+    /**
+     * View Holder to hold data displaying data
+     *
+     * @author Chia Yu
+     * @since 2019-09-28
+     * @property itemView the view represents the whole item
+     * @constructor Creates a adapter for the Buddy Search Result List RecyclerView
+     */
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView tvName;
         ImageView imgViewPic, imgViewGender;
         LinearLayout llPrefDays;
         CheckBox cbFav;
-        private int position;
 
         ViewHolder(View itemView) {
             super(itemView);
-            this.itemView=itemView;
             tvName = itemView.findViewById(R.id.tv_bd_name);
             imgViewPic = itemView.findViewById(R.id.img_bd_pic);
             imgViewGender = itemView.findViewById(R.id.img_bd_gender);
@@ -85,9 +142,10 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             cbFav = itemView.findViewById(R.id.cb_bd_fav);
 
             // set up click listener
-            itemView.setOnClickListener(this);
+            super.itemView.setOnClickListener(this);
             imgViewPic.setOnClickListener(this);
-            cbFav.setOnCheckedChangeListener(this);
+            cbFav.setOnClickListener(this);
+
 
             // programmingly change profdays
             CheckBox cbDay;
@@ -102,26 +160,33 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             }
         }
 
-        public void setPosition(int position){
-            this.position = position;
-            updateAs(this.position);
-        }
-
-        private void updateAs(int position) {
-            User curUser = listBuddies.get(position);
+        /**
+         * update item view based on holder's current position
+         */
+        private void update(){
+            User curUser = listBuddies.get(getAdapterPosition());
             tvName.setText(curUser.getName());
             if (curUser.getGender().equals("Male")) {
                 imgViewGender.setImageResource(R.drawable.ic_human_male);
             } else {
                 imgViewGender.setImageResource(R.drawable.ic_human_female);
             }
-            // TODO: update fav button! (pending on firebase update)
+
+            cbFav.setOnClickListener(null);
+            cbFav.setChecked(false);
+            if (favBuddyHelper != null && favBuddyHelper.getFavBuddyRecord()!=null && favBuddyHelper.getFavBuddyRecord().getBuddiesId().contains(curUser.getUid()) ){
+                cbFav.setChecked(true);
+            }
+            cbFav.setOnClickListener(this);
 
             updatePrefDays(curUser);
             updateProfilePic(curUser);
         }
 
 
+        /**
+         * update preference workout days based on user
+         */
         private  void updatePrefDays(User user){
             ((CheckBox) llPrefDays.getChildAt(0)).setChecked(user.getPrefDay().getMonday());
             ((CheckBox) llPrefDays.getChildAt(1)).setChecked(user.getPrefDay().getTuesday());
@@ -132,7 +197,12 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             ((CheckBox) llPrefDays.getChildAt(6)).setChecked(user.getPrefDay().getSunday());
         }
 
+        /**
+         * update profile picture for each user
+         * @see GetProfilePicFromFirebaseAuth
+         */
         private void updateProfilePic(User user){
+            // TODO: use default picture before picture is being loaded
             // cache image if needed
             if (user.getProfilePicUri() != null) {
                 Activity activity = (Activity) itemView.getContext();
@@ -151,29 +221,17 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
 
         @Override
         public void onClick(View view) {
-            if (view == itemView) {
-                if (listener != null) {
-                    listener.onBuddyItemClicked(this, ACTION_CLICK_ON_ITEM_BODY, position);
-                }
+            int action = ACTION_INVALID;
+            if (view == super.itemView) {
+                action = ACTION_CLICK_ON_ITEM_BODY;
             } else if (view == cbFav){
-                if (listener != null) {
-                    listener.onBuddyItemClicked(this, ACTION_CLICK_ON_FAV_ITEM, position);
-                }
+                action = ACTION_CLICK_ON_FAV_ITEM;
             } else if (view == imgViewPic){
-                if (listener != null) {
-                    listener.onBuddyItemClicked(this, ACTION_CLICK_ON_ITEM_PIC, position);
-                }
+                action = ACTION_CLICK_ON_ITEM_PIC;
             }
-        }
-
-        @Override
-        public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-            if (compoundButton == cbFav){
-                if (listener != null){
-                    listener.onBuddyItemCheckChanged(this, ACTION_CLICK_ON_FAV_ITEM, position, checked);
-                }
+            if (action != ACTION_INVALID && listener != null) {
+                listener.onBuddyItemClicked(view,this, action);
             }
-
         }
     }
 }

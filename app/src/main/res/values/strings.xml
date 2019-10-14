@@ -34,6 +34,9 @@
     <string name="txt_both">Both</string>
     <string name="txt_male">Male</string>
     <string name="txt_female">Female</string>
+    <string name="txt_am">AM</string>
+    <string name="txt_pm">PM</string>
+    <string name="txt_pref_time">Preferred Time</string>
     <string name="txt_pref_location">Preferred Location</string>
     <string name="txt_buddy_gender">Buddy gender</string>
     <string name="txt_pref_dym_days">Preferred workout days</string>
