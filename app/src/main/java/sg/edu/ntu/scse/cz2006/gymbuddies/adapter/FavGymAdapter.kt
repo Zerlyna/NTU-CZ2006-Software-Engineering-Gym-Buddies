@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Recycler Adapter for Favourited Gyms
@@ -53,6 +55,12 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
     fun getList(): List<FavGymObject> { return gymList }
 
     /**
+     * Updates the gym list stored in this adapter
+     * @param newList List<FavGymObject> New Gym List object
+     */
+    fun updateList(newList: List<FavGymObject>) { this.gymList = newList }
+
+    /**
      * Internal function to bind the view [holder] at the current RecyclerView [position] to a specific data
      * @param holder FavViewHolder Holder to store the data
      * @param position Int Positing in the RecyclerView
@@ -61,6 +69,9 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
         val s = gymList[position]
         holder.title.text = s.gym.properties.Name
         holder.favCount.text = "(${s.favCount})"
+        holder.ratingAvg.text = "%.2f".format(Locale.US, s.avgRating)
+        holder.rating.rating = s.avgRating
+        holder.ratingCount.text = "{${s.ratingCount})"
         holder.gymObj = s.gym
     }
 
@@ -71,7 +82,7 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
      * @return FavViewHolder The view holder that is created to store the data in
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavViewHolder {
-        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.recyclew_item_gym_detail, parent, false)
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.recycler_item_gym_detail, parent, false)
         return FavViewHolder(itemView, onClickListener)
     }
 

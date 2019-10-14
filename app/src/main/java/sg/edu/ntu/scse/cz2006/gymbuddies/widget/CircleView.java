@@ -13,10 +13,13 @@ import android.view.View;
 import androidx.vectordrawable.graphics.drawable.ArgbEvaluator;
 
 /**
- * Created by Kenneth on 1/10/2019.
+ * Animated "heart" button based off Twitter's implementation
+ * Adapted from https://github.com/frogermcs/LikeAnimation
+ *
  * for sg.edu.ntu.scse.cz2006.gymbuddies.widget in Gym Buddies!
  *
- * Adapted from https://github.com/frogermcs/LikeAnimation
+ * @author Kenneth Soh, frogermcs
+ * @since 2019-10-01
  */
 public class CircleView extends View {
     private static final int START_COLOR = 0xFFFF5722;

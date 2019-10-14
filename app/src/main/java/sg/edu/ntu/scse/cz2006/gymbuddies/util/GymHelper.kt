@@ -15,8 +15,16 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList
  */
 object GymHelper {
 
+    /**
+     * An internal property that stores parsed gym lists so that we do not need to parse it again
+     */
     @JvmStatic private var gymList: GymList? = null
 
+    /**
+     * Gets the list of gym objects from the JSON file in the application
+     * @param context Context Application Context
+     * @return GymList? Gyms saved in the JSON file and parsed
+     */
     @JvmStatic
     fun getGymList(context: Context): GymList? {
         if (gymList != null) return gymList
@@ -53,4 +61,12 @@ object GymHelper {
      * A constant for the gym collection in Firebase Firestore DB
      */
     const val GYM_COLLECTION = "favgym"
+    /**
+     * A constant for the gym review collection in Firebase Firestore DB
+     */
+    const val GYM_REVIEWS_COLLECTION = "gymreviews"
+    /**
+     * A constant for the gym user collection in Firebase Firestore DB
+     */
+    const val GYM_USERS_COLLECTION = "users"
 }

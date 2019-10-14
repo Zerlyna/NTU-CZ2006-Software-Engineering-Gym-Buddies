@@ -1,6 +1,7 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.ui.home;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,14 +16,17 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatRatingBar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -32,6 +36,9 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.transition.Fade;
+import androidx.transition.Transition;
+import androidx.transition.TransitionManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -45,6 +52,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -59,18 +67,26 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
+import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FirestoreRating;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymRatingStats;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymRatings;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.TrimNearbyGyms;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.SwipeDeleteCallback;
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView;
 
@@ -331,7 +347,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
                 for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
                 for (String id : currentUserFavList.keySet()) {
-                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
+                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id), 0.0f, 0));
                     else Log.e(TAG, "Unknown Gym (" + id + ")");
                 }
                 favAdapter = new FavGymAdapter(finalList);
@@ -353,6 +369,26 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 else params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 favBottomSheet.setLayoutParams(params);
                 favBottomSheet.requestLayout();
+                // Get the list of gyms with reviews and update the list after
+                Log.d(TAG, "Retrieving Gym Reviews to determine ratings");
+                FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).get().addOnSuccessListener(querySnapshot1 -> {
+                    Log.d(TAG, "Gym Reviews for Favourites obtained. Size: " + querySnapshot1.getDocuments().size());
+                    HashMap<String, GymRatingStats> refs = new HashMap<>();
+                    for (DocumentSnapshot ds : querySnapshot1.getDocuments()) { refs.put(ds.getId(), ds.toObject(GymRatingStats.class)); }
+
+                    List<FavGymObject> favGyms = favAdapter.getList();
+                    for (FavGymObject fg : favGyms) {
+                        if (refs.containsKey(fg.getGym().getProperties().getINC_CRC())) {
+                            GymRatingStats gs = refs.get(fg.getGym().getProperties().getINC_CRC());
+                            if (gs == null) continue;
+                            fg.setRatingCount(gs.getCount());
+                            fg.setAvgRating(gs.getAverageRating());
+                        }
+                    }
+                    favAdapter.updateList(favGyms);
+                    favAdapter.notifyDataSetChanged();
+                }).addOnFailureListener(Throwable::printStackTrace);
+
             }
         } else emptyFavourites();
     }
@@ -617,11 +653,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
     /**
      * View Gym's Nearby Carparks button
      */
-    private Button carpark;
-    /**
-     * Rate and review gym button
-     */
-    private Button rate;
+    private LinearLayout carpark;
     /**
      * Gym Reviews recyclerview
      */
@@ -636,8 +668,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
     private String selectedGymUid = null;
 
     /**
+     * If the user is currently reviewing a gym
+     */
+    private boolean flagReviewing = false;
+
+    /**
      * Initialize method for setting up the gym details bottom sheet
      */
+    @SuppressLint("InflateParams")
     private void setupGymDetailsControls() {
         // Init Elements
         gymTitle = gymBottomSheet.findViewById(R.id.gym_details_title);
@@ -647,10 +685,31 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         LinearLayout favourite = gymBottomSheet.findViewById(R.id.gym_details_fav);
         heartIcon = gymBottomSheet.findViewById(R.id.gym_details_fav_icon);
         carpark = gymBottomSheet.findViewById(R.id.gym_details_nearby_carparks_btn);
-        rate = gymBottomSheet.findViewById(R.id.gym_details_rate_btn);
         reviews = gymBottomSheet.findViewById(R.id.review_recycler);
         gymLocation.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" + ((coordinates == null) ?
                 gymLocation.getText().toString() : (coordinates.latitude + "," + coordinates.longitude))))));
+
+        // Rating Stuff
+        MaterialRatingBar editRatingBar = gymBottomSheet.findViewById(R.id.gym_details_rate_write);
+        ImageView profilePic = gymBottomSheet.findViewById(R.id.profile_pic);
+        if (ProfilePicHelper.getProfilePic() != null) profilePic.setImageDrawable(ProfilePicHelper.getProfilePic());
+        else ProfilePicHelper.getProfilePicUpdateListener().add(profilePic::setImageDrawable);
+
+        editRatingBar.setOnRatingChangeListener((ratingBar, rating) -> {
+            if (flagReviewing) { flagReviewing = false; return; }
+            View review = getLayoutInflater().inflate(R.layout.dialog_review, null);
+            MaterialRatingBar bar = review.findViewById(R.id.gym_details_rate_write);
+            bar.setRating(rating);
+            TextInputEditText reviewMessage = review.findViewById(R.id.gym_details_review);
+            ImageView profilePics = review.findViewById(R.id.profile_pic);
+            if (ProfilePicHelper.getProfilePic() != null) profilePics.setImageDrawable(ProfilePicHelper.getProfilePic());
+            else ProfilePicHelper.getProfilePicUpdateListener().add(profilePics::setImageDrawable);
+            new AlertDialog.Builder(gymBottomSheet.getContext()).setTitle("Feedback about Gym").setCancelable(false)
+                    .setView(review).setPositiveButton("Submit", (dialog, which) -> submitReview(bar, reviewMessage)).setNeutralButton(android.R.string.cancel, (dialog, which) -> {
+                        flagReviewing = true;
+                        ratingBar.setRating(0);
+                    }).show();
+        });
 
         if (reviews != null) {
             reviews.setHasFixedSize(true);
@@ -660,14 +719,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             reviews.setItemAnimator(new DefaultItemAnimator());
         }
 
-        // TODO: Get reviews list from firebase based on the gym key
-        String[] toremove = {"No Reviews Found for this gym", "This feature is currently a WIP"};
-        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(toremove));
-        reviews.setAdapter(adapter);
-
         // On Click
         carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
-        rate.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         favourite.setOnClickListener(v -> heartIcon.callOnClick());
         heartIcon.setOnClickListener(v -> {
             if (v instanceof FavButtonView) {
@@ -682,6 +735,169 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 }
             }
         });
+    }
+
+    /**
+     * Internal function to submit review for the selected gym
+     * @param bar The rating bar object that stores the gym rating that the user has selected
+     * @param reviewMessage The review message TextInputEditText object that stores any review of the gym that the user is currently rating
+     */
+    private void submitReview(MaterialRatingBar bar, TextInputEditText reviewMessage) {
+        float rateValue = bar.getRating();
+        String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString();
+        // Attempt to detect any error messsages
+        String error = (reviewValue.length() > 512) ? "Review message is too long" : null;
+        FirestoreRating frate = new FirestoreRating(rateValue, reviewValue, System.currentTimeMillis());
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) { Snackbar.make(gymBottomSheet, "Error submitting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference ref = db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).document(user.getUid());
+        ref.set(frate).addOnSuccessListener(aVoid -> {
+            Snackbar.make(gymBottomSheet, "Review submitted successfully!", Snackbar.LENGTH_LONG).show();
+            // Update the main view as well and replace edit mode with view mode
+            setGymStatus(true, reviewValue, rateValue);
+        }).addOnFailureListener(e -> {
+            Snackbar.make(gymBottomSheet, "Failed to submit review (" + ((error == null) ? e.getLocalizedMessage() : error) + ")", Snackbar.LENGTH_LONG).show();
+            Log.e(TAG, "Failed to submit review (" + e.getLocalizedMessage() + ")");
+        });
+    }
+
+    /**
+     * Internal function to update gym ratings for a selected gym
+     */
+    private void updateGymRatings() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.e(TAG, "User not logged in, cannot get ratings and stuff");
+            return; // We stop here
+        }
+        setGymStatus(false, null, 0f); // Default to no reviews while we are downloading
+        MaterialRatingBar bar = gymBottomSheet.findViewById(R.id.gym_details_rate_write);
+        if (bar.getRating() > 0f) {
+            flagReviewing = true;
+            bar.setRating(0);
+        }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        // Get your user's rating list if any
+        db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).document(user.getUid()).get().addOnSuccessListener(documentSnapshot -> {
+            if (!documentSnapshot.exists()) setGymStatus(false, null, 0f); // No reviews from user
+            else {
+                FirestoreRating rating = documentSnapshot.toObject(FirestoreRating.class);
+                if (rating != null) setGymStatus(true, rating.getMessage(), rating.getRating());
+                else Toast.makeText(getContext(), "Failed to get your ratings (ObjectCastError)", Toast.LENGTH_LONG).show();
+            }
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to get ratings (" + e.getLocalizedMessage() + ")", Toast.LENGTH_LONG).show());
+        // Set loading status for review while we retrieve the needed data (double calls boo)
+        String[] loading = {"Loading Reviews for gym..."};
+        StringRecyclerAdapter adapter = new StringRecyclerAdapter(Arrays.asList(loading), false);
+        reviews.setAdapter(adapter);
+
+        // Init for review count, rating and list
+        TextView reviewCount = gymBottomSheet.findViewById(R.id.gym_details_review_count);
+        TextView reviewCountGen = gymBottomSheet.findViewById(R.id.gym_details_review_count_general);
+        AppCompatRatingBar overallRating = gymBottomSheet.findViewById(R.id.gym_details_rate_bar);
+        TextView averageRating = gymBottomSheet.findViewById(R.id.gym_details_rate_avg);
+        reviewCount.setText("(...)");
+        reviewCountGen.setText("(...)");
+        overallRating.setRating(0f);
+        averageRating.setText("-");
+
+        if (getActivity() == null) return;
+        db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).orderBy("timestamp", Query.Direction.DESCENDING).get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<DocumentSnapshot> reviewDocList = querySnapshot.getDocuments();
+                    if (reviewDocList.size() <= 0) {
+                        // No reviews
+                        String[] noReviews = {"No Reviews Found for this gym. Make one now!"};
+                        adapter.updateStrings(Arrays.asList(noReviews));
+                        adapter.notifyDataSetChanged();
+                        reviewCount.setText("(0)");
+                        reviewCountGen.setText("(0)");
+                        return;
+                    }
+                    // Get user list as well
+                    db.collection(GymHelper.GYM_USERS_COLLECTION).get().addOnSuccessListener(querySnapshot1 -> {
+                        if (getActivity() == null) return; // No more visible activity, no point doing
+                        HashMap<String, User> userList = new HashMap<>();
+                        for (DocumentSnapshot d : querySnapshot1.getDocuments()) { userList.put(d.getId(), d.toObject(User.class)); } // Parse user objects into hashmap
+
+                        // Create the recycler items based off the reviews and users data
+                        ArrayList<GymRatings> reviewList = new ArrayList<>();
+                        float overallGymRating = 0.0f;
+                        for (DocumentSnapshot d : reviewDocList) {
+                            if (!userList.containsKey(d.getId())) continue; // Deleted user, Don't bother with their reviews
+                            FirestoreRating fr = d.toObject(FirestoreRating.class);
+                            User u = userList.get(d.getId());
+                            if (fr == null || u == null) continue; // Error occurred, dont add that
+                            reviewList.add(new GymRatings(d.getId(), fr, u));
+                            overallGymRating += fr.getRating();
+                        }
+
+                        GymReviewAdapter reviewAdapter = new GymReviewAdapter(getActivity(), reviewList);
+                        reviews.setAdapter(reviewAdapter);
+                        reviewCount.setText("(" + reviewList.size() + ")");
+                        reviewCountGen.setText("(" + reviewList.size() + ")");
+                        // Get overall rating and stuff
+                        float averageGymRating = overallGymRating / reviewList.size();
+                        overallRating.setRating(averageGymRating);
+                        averageRating.setText(String.format(Locale.US,"%.2f", averageGymRating));
+                    }).addOnFailureListener(e -> { Log.e(TAG, "Failed to get review users"); Toast.makeText(getContext(), "Failed to get rating list (users)", Toast.LENGTH_LONG).show(); });
+                }).addOnFailureListener(e -> { Toast.makeText(getContext(), "Failed to get rating list (list)", Toast.LENGTH_LONG).show(); Log.e(TAG, "Failed to get gym review list"); });
+    }
+
+    /**
+     * Internal function to set the logged in user's gym review status
+     * This will determine if the user has a review for that particular gym or not.
+     * If there is, the view review layout is used, otherwise the create new review layout is used
+     *
+     * @param hasReview User currently has a review for the selected gym if true, false otherwise
+     * @param message Any review message in the user's review of the gym, null for empty
+     * @param rating The rating for the gym given by the user. Will be 0 by default
+     */
+    private void setGymStatus(boolean hasReview, @Nullable String message, float rating) {
+        LinearLayout edit = gymBottomSheet.findViewById(R.id.gym_details_rate_edit);
+        LinearLayout view = gymBottomSheet.findViewById(R.id.gym_details_rate_view);
+        Transition transition = new Fade();
+        transition.setDuration(300);
+        transition.addTarget(edit).addTarget(view);
+
+        TransitionManager.beginDelayedTransition((ViewGroup) gymBottomSheet, transition);
+        edit.setVisibility((hasReview) ? View.GONE : View.VISIBLE);
+        view.setVisibility((hasReview) ? View.VISIBLE : View.GONE);
+        if (hasReview) {
+            // Update view mode
+            TextView review = view.findViewById(R.id.gym_details_review_readonly);
+            AppCompatRatingBar ratingBar = view.findViewById(R.id.gym_details_rate_read);
+            ratingBar.setRating(rating);
+            review.setText((message == null) ? "" : message);
+
+            // We set the onclick here as only here we can easily access the message and rating
+            Button editReview = gymBottomSheet.findViewById(R.id.gym_details_rate_edit_btn);
+            editReview.setOnClickListener(v -> {
+                View review1 = getLayoutInflater().inflate(R.layout.dialog_review, null);
+                MaterialRatingBar bar = review1.findViewById(R.id.gym_details_rate_write);
+                bar.setRating(rating);
+                TextInputEditText reviewMessage = review1.findViewById(R.id.gym_details_review);
+                reviewMessage.setText(message);
+                ImageView profilePics = review1.findViewById(R.id.profile_pic);
+                if (ProfilePicHelper.getProfilePic() != null) profilePics.setImageDrawable(ProfilePicHelper.getProfilePic());
+                else ProfilePicHelper.getProfilePicUpdateListener().add(profilePics::setImageDrawable);
+                new AlertDialog.Builder(gymBottomSheet.getContext()).setTitle("Feedback about Gym").setCancelable(false)
+                        .setView(review1).setPositiveButton("Submit", (dialog, which) -> submitReview(bar, reviewMessage)).setNegativeButton(android.R.string.cancel, null)
+                        .setNeutralButton("Delete", (dialog, which) -> {
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            if (user == null) { Snackbar.make(gymBottomSheet, "Error deleting review. Please relogin", Snackbar.LENGTH_LONG).show(); return; }
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                            DocumentReference ref = db.collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).collection(GymHelper.GYM_USERS_COLLECTION).document(user.getUid());
+                            ref.delete().addOnSuccessListener(aVoid -> {
+                                Snackbar.make(gymBottomSheet, "Review deleted successfully!", Snackbar.LENGTH_LONG).show();
+                                setGymStatus(false, null, 0f);
+                                flagReviewing = true;
+                                ((MaterialRatingBar) gymBottomSheet.findViewById(R.id.gym_details_rate_write)).setRating(0);
+                            }).addOnFailureListener(e -> Snackbar.make(gymBottomSheet, "Failed to delete review (" + e.getLocalizedMessage() + ")", Snackbar.LENGTH_LONG).show());
+                        }).show();
+            });
+        }
     }
 
     /**
@@ -721,5 +937,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             if (documentSnapshot != null && documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
             else favCount.setText("(0)");
         });
+
+        // DEBUG SETTINGS
+        if (getContext() != null) {
+            LinearLayout debugView = gymBottomSheet.findViewById(R.id.gym_details_debug_layout);
+            TextView gymDetails = gymBottomSheet.findViewById(R.id.gym_details_debug_value);
+            gymDetails.setText(gym.getProperties().getINC_CRC());
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+            debugView.setVisibility((sp.getBoolean("debug_mode", false) ? View.VISIBLE : View.GONE));
+        }
+
+        updateGymRatings();
     }
 }

@@ -1,15 +1,15 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies;
 
+import android.app.ProgressDialog;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.app.ProgressDialog;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.MenuItem;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
 public class BuddySearchResultActivity extends AppCompatActivity implements BuddyResultAdapter.OnBuddyClickedListener{
     private String TAG = "GB.BuddySearchResult";
@@ -76,7 +77,7 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
 
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference userRef = db.collection("users");
+        CollectionReference userRef = db.collection(GymHelper.GYM_USERS_COLLECTION);
 
         // step 1: limit to location
         Query q =  userRef.whereEqualTo("prefLocation", "East");

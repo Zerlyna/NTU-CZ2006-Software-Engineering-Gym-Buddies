@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             new GetProfilePicFromFirebaseAuth(this, bitmap -> { if (bitmap != null) {
                 RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
                 roundBitmap.setCircular(true);
+                ProfilePicHelper.setProfilePic(roundBitmap);
                 ((ImageView) header.findViewById(R.id.profile_pic)).setImageDrawable(roundBitmap);
             } }).execute(firebaseUser.getPhotoUrl()); // Download and set as profile pic
         header.setOnClickListener(v -> {

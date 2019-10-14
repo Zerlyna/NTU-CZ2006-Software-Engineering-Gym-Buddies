@@ -22,10 +22,13 @@ import androidx.annotation.DrawableRes;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 
 /**
- * Created by Kenneth on 1/10/2019.
+ * Animated "heart" button based off Twitter's implementation
+ * Adapted from https://github.com/frogermcs/LikeAnimation
+ *
  * for sg.edu.ntu.scse.cz2006.gymbuddies.widget in Gym Buddies!
  *
- * Adapted from https://github.com/frogermcs/LikeAnimation
+ * @author Kenneth Soh, frogermcs
+ * @since 2019-10-01
  */
 public class FavButtonView extends FrameLayout implements View.OnClickListener {
     private static final DecelerateInterpolator DECCELERATE_INTERPOLATOR = new DecelerateInterpolator();
