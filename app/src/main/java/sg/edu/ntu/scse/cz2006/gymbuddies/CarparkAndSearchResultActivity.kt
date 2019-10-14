@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -31,6 +32,8 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_carpark_and_search_result)
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         results_list.setHasFixedSize(true)
         val llm = LinearLayoutManager(this).apply { orientation = LinearLayoutManager.VERTICAL }
         results_list.layoutManager = llm
@@ -55,6 +58,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
     }
 
     private fun doSearch() {
+        supportActionBar?.title = "Search Results"
         // Get filter results
         val paramJson = intent.getStringExtra("searchparam")
         if (paramJson == null) {
@@ -137,6 +141,11 @@ class CarparkAndSearchResultActivity : AppCompatActivity() {
             }
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) { finish(); return true }
+        return super.onOptionsItemSelected(item)
     }
 
     companion object {

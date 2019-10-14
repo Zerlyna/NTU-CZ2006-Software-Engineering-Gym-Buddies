@@ -85,11 +85,11 @@ class SearchGym(activity: Activity, private val callback: OnComplete, private va
                 finalFilteredGym.sortBy { it.gym.properties.Name }
                 finalFilteredGym.reverse()
             }
-            GymSearchBy.SORT_FAV_ASC -> finalFilteredGym.sortBy { it.favCount }
-            GymSearchBy.SORT_FAV_DSC -> {
+            GymSearchBy.SORT_FAV_ASC -> {
                 finalFilteredGym.sortBy { it.favCount }
                 finalFilteredGym.reverse()
             }
+            GymSearchBy.SORT_FAV_DSC -> finalFilteredGym.sortBy { it.favCount }
         }
 
         // Send back to user as success
