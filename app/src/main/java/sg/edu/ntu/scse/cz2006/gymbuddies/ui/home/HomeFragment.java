@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,6 +72,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
+import sg.edu.ntu.scse.cz2006.gymbuddies.GymSearchActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
@@ -622,6 +624,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
     public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_main, menu);
         super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_search) {
+            startActivity(new Intent(getActivity(), GymSearchActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
