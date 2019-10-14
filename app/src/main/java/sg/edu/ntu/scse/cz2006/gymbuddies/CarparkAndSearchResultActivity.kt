@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
@@ -551,6 +552,29 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                     }.show()
             }
         }
+
+
+        // Update the rating after a delay
+        Handler().postDelayed({
+            FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid!!).get().addOnSuccessListener { documentSnapshot ->
+                val stats = documentSnapshot.toObject(GymRatingStats::class.java)
+                val user = FirebaseAuth.getInstance().currentUser
+                if (stats == null || user == null) return@addOnSuccessListener
+                gym_details_rate_bar.rating = stats.averageRating
+                gym_details_rate_avg.text = String.format(Locale.US, "%.2f", stats.averageRating)
+                gym_details_review_count_general.text = "(" + stats.count + ")"
+
+                // Update results list as well
+                val adapter = results_list.adapter as FavGymAdapter
+                val index = adapter.getList().indexOfFirst { predicate -> predicate.gym.properties.INC_CRC == selectedGymUid }
+                if (index >= 0) {
+                    adapter.getList()[index].avgRating = stats.averageRating
+                    adapter.getList()[index].ratingCount = stats.count
+                }
+
+                adapter.notifyDataSetChanged()
+            }
+        }, 5000) // Update after 5 seconds
     }
 
     /**
