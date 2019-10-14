@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -428,6 +429,22 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
                         }).show();
             });
         }
+
+        // Update the rating after a delay
+        new Handler().postDelayed(() -> FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).get().addOnSuccessListener(documentSnapshot -> {
+            GymRatingStats stats = documentSnapshot.toObject(GymRatingStats.class);
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (stats == null || user == null) return;
+            AppCompatRatingBar rate = gymBottomSheet.findViewById(R.id.gym_details_rate_bar);
+            TextView rating2 = gymBottomSheet.findViewById(R.id.gym_details_rate_avg);
+            TextView count = gymBottomSheet.findViewById(R.id.gym_details_review_count_general);
+            rate.setRating(stats.getAverageRating());
+            rating2.setText(String.format(Locale.US,"%.2f", stats.getAverageRating()));
+            count.setText("(" + stats.getCount() + ")");
+
+            // Update favourites list as well
+            FirebaseFirestore.getInstance().collection(GymHelper.GYM_COLLECTION).whereArrayContains("userIds", user.getUid()).get().addOnSuccessListener(this::processFavListUpdates);
+        }), 5000); // Update after 5 seconds
     }
 
     /**
