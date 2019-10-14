@@ -76,6 +76,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavGymObject;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FirestoreRating;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymList;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymRatingStats;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymRatings;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.ParseGymDataFile;
@@ -343,7 +344,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 HashMap<String, GymList.GymShell> gymDetailsList = new HashMap<>();
                 for (GymList.GymShell shells : markerList.values()) { gymDetailsList.put(shells.getProperties().getINC_CRC(), shells); }
                 for (String id : currentUserFavList.keySet()) {
-                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
+                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id), 0.0f, 0));
                     else Log.e(TAG, "Unknown Gym (" + id + ")");
                 }
                 favAdapter = new FavGymAdapter(finalList);
@@ -365,6 +366,26 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 else params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 favBottomSheet.setLayoutParams(params);
                 favBottomSheet.requestLayout();
+                // Get the list of gyms with reviews and update the list after
+                Log.d(TAG, "Retrieving Gym Reviews to determine ratings");
+                FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).get().addOnSuccessListener(querySnapshot1 -> {
+                    Log.d(TAG, "Gym Reviews for Favourites obtained. Size: " + querySnapshot1.getDocuments().size());
+                    HashMap<String, GymRatingStats> refs = new HashMap<>();
+                    for (DocumentSnapshot ds : querySnapshot1.getDocuments()) { refs.put(ds.getId(), ds.toObject(GymRatingStats.class)); }
+
+                    List<FavGymObject> favGyms = favAdapter.getList();
+                    for (FavGymObject fg : favGyms) {
+                        if (refs.containsKey(fg.getGym().getProperties().getINC_CRC())) {
+                            GymRatingStats gs = refs.get(fg.getGym().getProperties().getINC_CRC());
+                            if (gs == null) continue;
+                            fg.setRatingCount(gs.getCount());
+                            fg.setAvgRating(gs.getAverageRating());
+                        }
+                    }
+                    favAdapter.updateList(favGyms);
+                    favAdapter.notifyDataSetChanged();
+                }).addOnFailureListener(Throwable::printStackTrace);
+
             }
         } else emptyFavourites();
     }

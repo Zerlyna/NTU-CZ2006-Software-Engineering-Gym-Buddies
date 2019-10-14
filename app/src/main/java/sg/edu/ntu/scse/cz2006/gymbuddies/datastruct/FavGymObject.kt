@@ -10,4 +10,4 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.datastruct
  * @property favCount Int The number of users who have favouited the gym object in [gym]
  * @constructor Creates a object for the Favourites List RecyclerView
  */
-data class FavGymObject(val gym: GymList.GymShell, val favCount: Int = 0)
+data class FavGymObject(val gym: GymList.GymShell, val favCount: Int = 0, var avgRating: Float = 0.0f, var ratingCount: Int = 0)

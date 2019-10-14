@@ -244,7 +244,7 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
                 for (GymList.GymShell g : gymList.getGyms()) gymDetailsList.put(g.getProperties().getINC_CRC(), g);
 
                 for (String id : currentUserFavList.keySet()) {
-                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id)));
+                    if (gymDetailsList.containsKey(id)) finalList.add(new FavGymObject(gymDetailsList.get(id), currentUserFavList.get(id), 0.0f, 0));
                     else Log.e(TAG, "Unknown Gym (" + id + ")");
                 }
                 favAdapter = new FavGymAdapter(finalList);
