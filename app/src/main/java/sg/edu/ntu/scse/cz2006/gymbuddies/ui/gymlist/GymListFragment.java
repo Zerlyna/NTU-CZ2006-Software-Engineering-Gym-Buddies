@@ -430,7 +430,6 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
             });
         }
 
-
         // Update the rating after a delay
         new Handler().postDelayed(() -> FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).get().addOnSuccessListener(documentSnapshot -> {
             GymRatingStats stats = documentSnapshot.toObject(GymRatingStats.class);
