@@ -1,11 +1,20 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.ui.bdlist;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Adapter;
+import android.widget.CheckBox;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -99,12 +108,6 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
         return root;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-
-    }
 
     @Override
     public void onResume() {
@@ -223,10 +226,56 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_PIC:
-                Snackbar.make(rvResult, "to view profile", Snackbar.LENGTH_SHORT).show();
+                displayBuddyProfile(user, ((ImageView)view).getDrawable() );
                 break;
             default:
 
         }
+    }
+
+    private void displayBuddyProfile(User user, Drawable drawable){
+        // inflate dialog layout
+        LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+        View view = layoutInflater.inflate(R.layout.dialog_bd_profile, null);
+
+        ImageView imgPic = view.findViewById(R.id.profile_pic);
+        TextView tvName = view.findViewById(R.id.tv_bd_name);
+        TextView tvLocation = view.findViewById(R.id.tv_pref_location);
+        TextView tvTime = view.findViewById(R.id.tv_pref_time);
+        LinearLayout llPrefDays = view.findViewById(R.id.ll_pref_days);
+
+        imgPic.setImageDrawable(drawable);
+        tvName.setText(user.getName());
+        tvLocation.setText(user.getPrefLocation());
+        tvTime.setText(user.getPrefTime());
+
+        Drawable drawableLeft;
+        if (user.getGender().equals("Male")) {
+            drawableLeft = getResources().getDrawable(R.drawable.ic_human_male);
+        } else {
+            drawableLeft = getResources().getDrawable(R.drawable.ic_human_female);
+        }
+        tvName.setCompoundDrawablesWithIntrinsicBounds(drawableLeft, null, null, null);
+
+        for (int i =0; i<llPrefDays.getChildCount(); i++){
+            CheckBox cb = (CheckBox) llPrefDays.getChildAt(i);
+            cb.setEnabled(false);
+            cb.setText(cb.getText().subSequence(0,1));
+        }
+        ((CheckBox) llPrefDays.getChildAt(0)).setChecked(user.getPrefDay().getMonday());
+        ((CheckBox) llPrefDays.getChildAt(1)).setChecked(user.getPrefDay().getTuesday());
+        ((CheckBox) llPrefDays.getChildAt(2)).setChecked(user.getPrefDay().getWednesday());
+        ((CheckBox) llPrefDays.getChildAt(3)).setChecked(user.getPrefDay().getThursday());
+        ((CheckBox) llPrefDays.getChildAt(4)).setChecked(user.getPrefDay().getFriday());
+        ((CheckBox) llPrefDays.getChildAt(5)).setChecked(user.getPrefDay().getSaturday());
+        ((CheckBox) llPrefDays.getChildAt(6)).setChecked(user.getPrefDay().getSunday());
+
+
+        // build & display dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Profile")
+                .setView(view)
+                .setPositiveButton("Cancel",null)
+                .show();
     }
 }
