@@ -16,7 +16,9 @@ import android.widget.CheckBox;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -69,7 +71,7 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
 
         listData = new ArrayList<>();
         adapter = new BuddyResultAdapter(listData);
-        adapter.setOnBuddyClickedListener(this);
+        adapter.addOnBuddyClickedListener( this);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setOrientation(RecyclerView.VERTICAL);
 
@@ -112,8 +114,6 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference userRef = db.collection(GymHelper.GYM_USERS_COLLECTION);
 
-        //TODO: query all data uid not equal to self
-
         // step 1: limit to location
         Query q = userRef.whereEqualTo("prefLocation", location);
 
@@ -154,7 +154,11 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 pd.dismiss();
                 listData.clear();
-                listData.addAll(queryDocumentSnapshots.toObjects(User.class));
+                for ( DocumentSnapshot docSnapshot:queryDocumentSnapshots) {
+                    if (!docSnapshot.getId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
+                        listData.add(docSnapshot.toObject(User.class));
+                    }
+                }
                 adapter.notifyDataSetChanged();
 
                 Log.d(TAG, "size: "+listData.size());

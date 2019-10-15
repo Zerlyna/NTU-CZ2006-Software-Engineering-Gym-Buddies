@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
@@ -45,6 +47,8 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     public static final int ACTION_CLICK_ON_FAV_ITEM    = 2;
     public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
     private FavBuddyHelper favBuddyHelper;
+    private List<User> listBuddies;
+    private ArrayList< WeakReference<OnBuddyClickedListener> > listeners;
 
     /**
      * Custom listener to allow activity to listen to user interaction between views
@@ -52,14 +56,14 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     public interface OnBuddyClickedListener {
         void onBuddyItemClicked(View view, ViewHolder holder, int action);
     }
-    private List<User> listBuddies;
-    private OnBuddyClickedListener listener;
+
 
     /**
      * Constructor to create Recycler Adapter for Buddy search result
      */
     public BuddyResultAdapter(List<User> listBuddies) {
         this.listBuddies = listBuddies;
+        this.listeners = new ArrayList<>();
     }
 
     public void setFavBuddyHelper(FavBuddyHelper favBuddyHelper){
@@ -85,8 +89,8 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     /**
      * Allow other classes to listen to user interaction via OnBuddyClickedListener
      */
-    public void setOnBuddyClickedListener(OnBuddyClickedListener listener){
-        this.listener = listener;
+    public void addOnBuddyClickedListener( OnBuddyClickedListener listener){
+        this.listeners.add(new WeakReference<>(listener));
     }
 
     /**
@@ -202,8 +206,12 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
          * @see GetProfilePicFromFirebaseAuth
          */
         private void updateProfilePic(User user){
-            // TODO: use default picture before picture is being loaded
+            if (user.getProfilePicUri().equals(imgViewPic.getTag())){
+                return;
+            }
+
             // cache image if needed
+            imgViewPic.setImageResource(R.mipmap.ic_launcher);
             if (user.getProfilePicUri() != null) {
                 Activity activity = (Activity) itemView.getContext();
                 new GetProfilePicFromFirebaseAuth(activity, new GetProfilePicFromFirebaseAuth.Callback() {
@@ -213,6 +221,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
                             RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(activity.getResources(), bitmap);
                             roundBitmap.setCircular(true);
                             imgViewPic.setImageDrawable(roundBitmap);
+                            imgViewPic.setTag(user.getProfilePicUri());
                         }
                     }
                 }).execute(Uri.parse(user.getProfilePicUri()));
@@ -229,8 +238,12 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             } else if (view == imgViewPic){
                 action = ACTION_CLICK_ON_ITEM_PIC;
             }
-            if (action != ACTION_INVALID && listener != null) {
-                listener.onBuddyItemClicked(view,this, action);
+            if (action != ACTION_INVALID ) {
+                for (WeakReference<OnBuddyClickedListener> listener: listeners ) {
+                    if (listener.get()!= null){
+                        listener.get().onBuddyItemClicked(view, this, action);
+                    }
+                }
             }
         }
     }
