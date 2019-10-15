@@ -8,10 +8,12 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,6 +73,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
+import sg.edu.ntu.scse.cz2006.gymbuddies.GymSearchActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
@@ -624,6 +627,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_search) {
+            startActivity(new Intent(getActivity(), GymSearchActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     /**
      * Used for logging purposes for this activity
      */
@@ -898,6 +910,22 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                         }).show();
             });
         }
+
+        // Update the rating after a delay
+        new Handler().postDelayed(() -> FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).document(selectedGymUid).get().addOnSuccessListener(documentSnapshot -> {
+            GymRatingStats stats = documentSnapshot.toObject(GymRatingStats.class);
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (stats == null || user == null) return;
+            AppCompatRatingBar rate = gymBottomSheet.findViewById(R.id.gym_details_rate_bar);
+            TextView rating2 = gymBottomSheet.findViewById(R.id.gym_details_rate_avg);
+            TextView count = gymBottomSheet.findViewById(R.id.gym_details_review_count_general);
+            rate.setRating(stats.getAverageRating());
+            rating2.setText(String.format(Locale.US,"%.2f", stats.getAverageRating()));
+            count.setText("(" + stats.getCount() + ")");
+
+            // Update favourites list as well
+            FirebaseFirestore.getInstance().collection(GymHelper.GYM_COLLECTION).whereArrayContains("userIds", user.getUid()).get().addOnSuccessListener(this::processFavListUpdates);
+        }), 5000); // Update after 5 seconds
     }
 
     /**

@@ -71,7 +71,7 @@ class FavGymAdapter(gyms: List<FavGymObject>) : RecyclerView.Adapter<FavGymAdapt
         holder.favCount.text = "(${s.favCount})"
         holder.ratingAvg.text = "%.2f".format(Locale.US, s.avgRating)
         holder.rating.rating = s.avgRating
-        holder.ratingCount.text = "{${s.ratingCount})"
+        holder.ratingCount.text = "(${s.ratingCount})"
         holder.gymObj = s.gym
     }
 
