@@ -1,4 +1,4 @@
-Next Meeting: *Tuesday (15/10) from 1530hrs* @ Lounge/Arc (Lounge may be overly crowded)
+Next Meeting: *Tuesday (22/10) from 1530hrs* @ Lounge/Arc Project Discussion Room (Lounge may be overly crowded)
 
 _Useful Links_
 _Issue Tracking:_ https://jira.itachi1706.com:8123/browse/NTUSE
@@ -11,10 +11,9 @@ You only have to crash the app, no need to report. Firebase will automatically g
 This crash does not include the crash button in the app settings haha :P
 
 *Meeting agenda:*
-- Short meet-up to discuss certain issues:
+- FINALISATION of PRE-DEMO Deliverables:
     + Software Requirements Specifications
-        + Porting over status
-        + Defining our system architecture
+        + Defining system architecture
         + Class diagram - add start-up and container classes
         + Sequence diagram - change all action links to operations
         + State machine diagram - change all action links to operations
@@ -23,3 +22,5 @@ This crash does not include the crash button in the app settings haha :P
             + Identifying and storing persistent data
             + Providing access control
     + Android Application progress
+        + Have skeleton ready 
+            + Main functions
