@@ -1,4 +1,6 @@
-Next Meeting: *Tuesday (22/10) from 1530hrs* @ Lounge/Arc Project Discussion Room (Lounge may be overly crowded)
+Next Meeting: *Tuesday (22/10) from 1530hrs*
+Location: *The Arc (LHN) Project Discussion Room (LHN-PDR-08 at Basement 1)*
+*Estimated to end by 1930hrs (due to following day submission finalisation)*
 
 _Useful Links_
 _Issue Tracking:_ https://jira.itachi1706.com:8123/browse/NTUSE
