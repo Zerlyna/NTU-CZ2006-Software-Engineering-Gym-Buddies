@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -209,6 +210,7 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
         switch (action){
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_BODY:
                 Snackbar.make(rvResult, "To Chat, pos("+holder.getAdapterPosition()+")", Snackbar.LENGTH_LONG).show();
+                goChatActivity(otherUser);
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_PIC:
@@ -230,6 +232,16 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
                 Snackbar.make(rvResult, "Action("+action+") undefined", Snackbar.LENGTH_LONG).show();
                 break;
         }
+    }
+
+    private void goChatActivity(User other){
+        Intent intent = new Intent(this, ChatActivity.class);
+        Bundle data = new Bundle();
+        data.putString("buddy_id", other.getUid());
+        data.putString("buddy_name", other.getName());
+        data.putString("buddy_pic_url", other.getProfilePicUri());
+        intent.putExtras(data);
+        startActivity(intent);
     }
 
 

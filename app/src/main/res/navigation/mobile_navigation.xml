@@ -31,7 +31,7 @@
 
     <fragment
         android:id="@+id/nav_chat_list"
-        android:name="sg.edu.ntu.scse.cz2006.gymbuddies.ui.chat.ChatFragment"
+        android:name="sg.edu.ntu.scse.cz2006.gymbuddies.ui.chatlist.ChatListFragment"
         android:label="@string/menu_chat_list"
         tools:layout="@layout/fragment_chat_list" />
 

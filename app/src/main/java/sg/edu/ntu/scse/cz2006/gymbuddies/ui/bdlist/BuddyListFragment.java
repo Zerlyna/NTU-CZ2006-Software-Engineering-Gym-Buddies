@@ -1,17 +1,13 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.ui.bdlist;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.graphics.Bitmap;
-import android.graphics.Rect;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.Adapter;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,9 +33,10 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
+import sg.edu.ntu.scse.cz2006.gymbuddies.BuddySearchResultActivity;
+import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
@@ -203,26 +200,12 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
         User user = listFavUsers.get(holder.getAdapterPosition());
         switch (action){
             case BuddyResultAdapter.ACTION_CLICK_ON_FAV_ITEM:
-                listFavUsers.remove(user);
-                favBuddyHelper.removeFavBuddy(user);
-                adapter.notifyDataSetChanged();
-                Snackbar snackbar = Snackbar.make(rvResult, R.string.txt_msg_removed_favourite, Snackbar.LENGTH_SHORT);
-                snackbar.setAction(R.string.txt_undo, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        favBuddyHelper.addFavBuddy(user);
-                        listFavUsers.add(user);
-                        adapter.notifyDataSetChanged();
-                        Snackbar.make(rvResult, R.string.txt_msg_removed_favtorite_undone, Snackbar.LENGTH_SHORT).show();
-
-                    }
-                });
-                snackbar.show();
+                unfavUser(user);
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_BODY:
                 Snackbar.make(rvResult, "to chat", Snackbar.LENGTH_SHORT).show();
+                goChatActivity(user);
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_PIC:
@@ -277,5 +260,34 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
                 .setView(view)
                 .setPositiveButton("Cancel",null)
                 .show();
+    }
+
+    private void unfavUser(User other){
+        listFavUsers.remove(other);
+        favBuddyHelper.removeFavBuddy(other);
+        adapter.notifyDataSetChanged();
+        Snackbar snackbar = Snackbar.make(rvResult, R.string.txt_msg_removed_favourite, Snackbar.LENGTH_SHORT);
+        snackbar.setAction(R.string.txt_undo, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                favBuddyHelper.addFavBuddy(other);
+                listFavUsers.add(other);
+                adapter.notifyDataSetChanged();
+                Snackbar.make(rvResult, R.string.txt_msg_removed_favtorite_undone, Snackbar.LENGTH_SHORT).show();
+
+            }
+        });
+        snackbar.show();
+    }
+
+    private void goChatActivity(User other){
+        Intent intent = new Intent(getActivity(), ChatActivity.class);
+        Bundle data = new Bundle();
+        data.putString("buddy_id", other.getUid());
+        data.putString("buddy_name", other.getName());
+        data.putString("buddy_pic_url", other.getProfilePicUri());
+        intent.putExtras(data);
+        startActivity(intent);
     }
 }

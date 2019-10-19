@@ -1,4 +1,4 @@
-package sg.edu.ntu.scse.cz2006.gymbuddies.ui.chat;
+package sg.edu.ntu.scse.cz2006.gymbuddies.ui.chatlist;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,15 +14,15 @@ import androidx.lifecycle.ViewModelProviders;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 
-public class ChatFragment extends Fragment {
+public class ChatListFragment extends Fragment {
 
-    private ChatViewModel chatViewModel;
+    private ChatListViewModel chatListViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        chatViewModel = ViewModelProviders.of(this).get(ChatViewModel.class);
+        chatListViewModel = ViewModelProviders.of(this).get(ChatListViewModel.class);
         View root = inflater.inflate(R.layout.fragment_chat_list, container, false);
         final TextView textView = root.findViewById(R.id.text_send);
-        chatViewModel.getText().observe(this, new Observer<String>() {
+        chatListViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) { textView.setText(s);
             }
