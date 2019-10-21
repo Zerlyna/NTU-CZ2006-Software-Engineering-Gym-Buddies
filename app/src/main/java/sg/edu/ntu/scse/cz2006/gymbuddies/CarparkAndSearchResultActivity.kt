@@ -41,6 +41,7 @@ import kotlinx.android.synthetic.main.activity_carpark_and_search_result.*
 import kotlinx.android.synthetic.main.fragment_cp_details.*
 import kotlinx.android.synthetic.main.fragment_gym_details.*
 import me.zhanghai.android.materialratingbar.MaterialRatingBar
+import org.apache.commons.text.WordUtils
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.CarparkAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter
@@ -201,8 +202,8 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             val gymBottomSheetBehavior = BottomSheetBehavior.from<View>(gym_details_sheet)
-            mMap.setOnInfoWindowClickListener { marker -> gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED) }
-            mMap.setOnMapClickListener { latLng -> Log.d("mMap", "mapClicked()"); unselectGymDetails() }
+            mMap.setOnInfoWindowClickListener { gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED) }
+            mMap.setOnMapClickListener { Log.d("mMap", "mapClicked()"); unselectGymDetails() }
             mMap.setOnMarkerClickListener { marker ->
                 // Hide and reshow gym
                 Log.d("mMap", "markerClicked()")
@@ -437,6 +438,9 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         cp_details_rate.text = "${cp.first.shortTermParking} HOURLY PARKING\n${if (cp.first.freeParking == "NO") "NO FREE PARKING" else 
             "FREE PARKING FOR ${cp.first.freeParking}"}\n${if (cp.first.nightParking == "NO") "NO" else ""}NIGHT PARKING AVAILABLE "
         cp_details_misc.text = "${cp.first.carParkType}\n${cp.first.systemType} ${if (cp.first.basement=="N") "" else "\nBASEMENT PARKING AVAILABLE"} ${if (cp.first.decks > 0) "\n${cp.first.decks} decks available" else ""}"
+
+        cp_details_rate.text = WordUtils.capitalizeFully(cp_details_rate.text.toString(), ' ', '\n')
+        cp_details_misc.text = WordUtils.capitalizeFully(cp_details_misc.text.toString(), ' ', '\n')
 
         val coordinates = SVY21Coordinate(cp.first.y, cp.first.x).asLatLon()
         cp_details_direction.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" +
@@ -704,7 +708,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 AlertDialog.Builder(it.context).setTitle("Feedback about Gym").setCancelable(false)
                     .setView(review1).setPositiveButton("Submit") { _, _ -> submitReview(bar, reviewMessage) }
                     .setNegativeButton(android.R.string.cancel, null)
-                    .setNeutralButton("Delete") { dialog, which ->
+                    .setNeutralButton("Delete") { _, _ ->
                         val user = FirebaseAuth.getInstance().currentUser
                         if (user == null) {
                             Snackbar.make(gym_details_sheet, "Error deleting review. Please relogin", Snackbar.LENGTH_LONG).show()

@@ -102,6 +102,14 @@
     <me.jfenn.attribouter.wedges.LicensesWedge
         showDefaults="false">
 
+        <!-- Apache Commons Lang -->
+        <me.jfenn.attribouter.wedges.LicenseWedge
+            title="Apache Commons Text"
+            repo="apache/commons-text"
+            description="^Apache Commons Text is a library focused on algorithms working on strings."
+            website="https://commons.apache.org/proper/commons-text/"
+            license="apache-2.0" />
+
         <!-- VNT Number Picker Preference -->
         <me.jfenn.attribouter.wedges.LicenseWedge
             title="VNT Number Picker Preference"
