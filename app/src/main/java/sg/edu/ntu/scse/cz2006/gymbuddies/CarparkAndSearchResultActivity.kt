@@ -42,6 +42,8 @@ import me.zhanghai.android.materialratingbar.MaterialRatingBar
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter
+import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark
+import sg.edu.ntu.scse.cz2006.gymbuddies.data.GBDatabase
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.SearchGym
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites
@@ -141,12 +143,9 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Check user location permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // TODO: Enable after setting up map: if (mMap != null) { hasGps(true) }
             gpsPerm = true
-            // TODO: Do the search in an async task
             callSearchTask(param)
         } else {
-            // TODO: Request GPS Permissions
             Log.i(TAG, "No permissions, requesting...")
             val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -210,6 +209,28 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun doCarpark() {
         // TODO: For carpark
+        val gymId = intent.getStringExtra("gym");
+        if (gymId == null) {
+            errorAndExit("No Gym Selected")
+            return
+        }
+
+        val gym = GymHelper.getGym(this, gymId)
+        if (gym == null) {
+            errorAndExit("Gym not found")
+            return
+        }
+
+        // Get carpark DB
+        val carParks: List<CarPark>? = GBDatabase.getInstance(application).carParkDao().allCarParks.value
+        if (carParks == null) {
+            errorAndExit("Failed to retrieve carpark database")
+            return
+        }
+
+        // TODO: Find carparks that are nearby (within 1km and up to 10)
+        carParks.forEach {  }
+
     }
 
     private fun updateResultsLayoutHeight() {
