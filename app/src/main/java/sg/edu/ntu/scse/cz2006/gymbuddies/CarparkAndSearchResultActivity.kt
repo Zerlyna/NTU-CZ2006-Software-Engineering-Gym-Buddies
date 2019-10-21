@@ -38,6 +38,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_carpark_and_search_result.*
+import kotlinx.android.synthetic.main.fragment_cp_details.*
 import kotlinx.android.synthetic.main.fragment_gym_details.*
 import me.zhanghai.android.materialratingbar.MaterialRatingBar
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.CarparkAdapter
@@ -80,8 +81,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
         val resultsBottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
         val gymBottomSheetBehavior = BottomSheetBehavior.from(gym_details_sheet)
+        val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
         resultsBottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         gymBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        cpBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) gpsPerm = true
 
@@ -98,6 +101,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
      * Enable custom backstack handling
      */
     private var backStack = false
+    private var backStackCp = false
     private var autoExpandFlag = false
 
 
@@ -106,6 +110,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
             val gymBottomSheetBehavior = BottomSheetBehavior.from(gym_details_sheet)
             if (gymBottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED) // Collapse gym details
             else if (gymBottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) unselectGymDetails()
+        } else if (backStackCp) {
+            val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
+            if (cpBottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) cpBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED) // Collapse gym details
+            else if (cpBottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) unselectCpDetails()
         } else super.onBackPressed()
     }
 
@@ -130,7 +138,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 // Not used
             }
         }
-        gymBottomSheetBehavior.setBottomSheetCallback(callback)
+        gymBottomSheetBehavior.bottomSheetCallback = callback
         setupGymDetailsControls()
         // Get filter results
         val paramJson = intent.getStringExtra("searchparam")
@@ -212,8 +220,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun doCarpark() {
-        // TODO: For carpark
-        supportActionBar?.title = "View nearby carparks"
+        supportActionBar?.title = "View Nearby Carparks"
         val gymId = intent.getStringExtra("gym")
         if (gymId == null) {
             errorAndExit("No Gym Selected")
@@ -228,12 +235,8 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Get carpark DB
         val carParksDao = GBDatabase.getInstance(application).carParkDao()
-        /*if (carParks == null) {
-            errorAndExit("Failed to retrieve carpark database")
-            return
-        }*/
+        setupCpControls()
 
-        // TODO: Find carparks that are nearby (within 1km and up to 10)
         val gymLatLng = LatLng(gym.geometry.getLat(), gym.geometry.getLng())
         EvaluateCarparkDistance(gymLatLng, carParksDao, object: EvaluateCarparkDistance.Callback { override fun onComplete(results: ArrayList<Pair<CarPark, Float>>) { processCarpark(results, gym) } }).execute()
 
@@ -268,6 +271,15 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         // TODO: Display in list
         if (cpFiltered.isNotEmpty()) {
             val adapter = CarparkAdapter(cpFiltered)
+            adapter.setOnClickListener(View.OnClickListener {
+                if (it.tag is CarparkAdapter.CarparkViewHolder) {
+                    val holder = it.tag as CarparkAdapter.CarparkViewHolder
+                    val pair = Pair(holder.cpObj!!, holder.distance)
+                    showCpDetails()
+                    displayCarpark(pair)
+                    autoExpandFlag = true
+                }
+            })
             results_list.adapter = adapter
         } else {
             val noCarparks = arrayOf("No carparks found within 1km from the gym")
@@ -350,6 +362,85 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     private fun zoomToMyLocation(lastLocation: LatLng, zoom: Float = 15f) {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, zoom))
+    }
+
+    // Carpark Related
+
+    private fun setupCpControls() {
+        val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
+        val callback = object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                Log.d("CpDetailsSheet", "State Changed: $newState")
+                bottomSheet.findViewById<View>(R.id.drag_bar).visibility = if (newState == BottomSheetBehavior.STATE_EXPANDED) View.INVISIBLE else View.VISIBLE
+                backStackCp = newState == BottomSheetBehavior.STATE_EXPANDED || newState == BottomSheetBehavior.STATE_COLLAPSED
+                cp_details_title.isSingleLine = newState == BottomSheetBehavior.STATE_COLLAPSED
+                if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
+                    autoExpandFlag = false
+                    cpBottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // Not used
+            }
+        }
+        cpBottomSheetBehavior.bottomSheetCallback = callback
+
+        mMap.setOnInfoWindowClickListener { cpBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED) }
+        mMap.setOnMapClickListener { Log.d("mMap", "mapClicked()"); unselectCpDetails() }
+        mMap.setOnMarkerClickListener { marker ->
+            // Hide and reshow gym
+            Log.d("mMap", "markerClicked()")
+            @Suppress("UNCHECKED_CAST")
+            if (marker.tag != null && marker.tag is Pair<*, *>) {
+                showCpDetails()
+                displayCarpark(marker.tag as Pair<CarPark, Float>)
+            } else unselectCpDetails()
+            false // We still want to show the info window right now
+        }
+    }
+
+    /**
+     * Internal function called to hide the gym details bottom sheet and redisplay the favourites list bottom sheet
+     */
+    private fun unselectCpDetails() {
+        val resultsBottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
+        val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
+        resultsBottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        resultsBottomSheetBehavior.isHideable = false
+        cpBottomSheetBehavior.isHideable = true
+        cpBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        if (gymDetailFavListener != null) {
+            gymDetailFavListener!!.remove()
+            gymDetailFavListener = null
+        }
+    }
+
+    /**
+     * Internal function called to hide the favourites list bottom sheet and display the gym details bottom sheet
+     */
+    private fun showCpDetails() {
+        val resultsBottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
+        val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
+        cpBottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        cpBottomSheetBehavior.isHideable = false
+        resultsBottomSheetBehavior.isHideable = true
+        resultsBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+    }
+
+    private fun displayCarpark(cp: Pair<CarPark, Float>) {
+        cp_details_title.text = cp.first.address
+        cp_details_distance.text = "${cp.second}m away"
+        cp_details_id.text = cp.first.id
+        cp_details_address.text = cp.first.address
+        cp_details_height.text = if (cp.first.gantryHeight > 0) "${cp.first.gantryHeight}m height limit" else "No height limit"
+        cp_details_rate.text = "${cp.first.shortTermParking} HOURLY PARKING\n${if (cp.first.freeParking == "NO") "NO FREE PARKING" else 
+            "FREE PARKING FOR ${cp.first.freeParking}"}\n${if (cp.first.nightParking == "NO") "NO" else ""}NIGHT PARKING AVAILABLE "
+        cp_details_misc.text = "${cp.first.carParkType}\n${cp.first.systemType} ${if (cp.first.basement=="N") "" else "\nBASEMENT PARKING AVAILABLE"} ${if (cp.first.decks > 0) "\n${cp.first.decks} decks available" else ""}"
+
+        val coordinates = SVY21Coordinate(cp.first.y, cp.first.x).asLatLon()
+        cp_details_direction.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" +
+                if (coordinates == null) cp_details_address.text.toString() else "${coordinates.latitude},${coordinates.longitude}"))) }
     }
 
     // Search related
