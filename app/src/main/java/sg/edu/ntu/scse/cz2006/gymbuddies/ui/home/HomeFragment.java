@@ -733,7 +733,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         }
 
         // On Click
-        //carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
         carpark.setOnClickListener(view -> {
             Intent i = new Intent(view.getContext(), CarparkAndSearchResultActivity.class);
             i.putExtra("carpark", true);

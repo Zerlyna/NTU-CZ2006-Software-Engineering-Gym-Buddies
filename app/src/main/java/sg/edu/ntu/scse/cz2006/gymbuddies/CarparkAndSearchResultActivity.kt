@@ -519,6 +519,13 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                     }).execute()
             } }
         }
+
+        gym_details_nearby_carparks_btn.setOnClickListener { view ->
+            val i = Intent(view.getContext(), CarparkAndSearchResultActivity::class.java)
+            i.putExtra("carpark", true)
+            i.putExtra("gym", selectedGymUid)
+            startActivity(i)
+        }
     }
 
     /**
