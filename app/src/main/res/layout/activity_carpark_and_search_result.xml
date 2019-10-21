@@ -43,4 +43,5 @@
     </LinearLayout>
 
     <include layout="@layout/fragment_gym_details" />
+    <include layout="@layout/fragment_cp_details" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

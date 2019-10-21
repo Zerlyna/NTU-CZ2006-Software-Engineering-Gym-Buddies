@@ -73,6 +73,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
+import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.GymSearchActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
@@ -732,7 +733,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         }
 
         // On Click
-        carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
+        carpark.setOnClickListener(view -> {
+            Intent i = new Intent(view.getContext(), CarparkAndSearchResultActivity.class);
+            i.putExtra("carpark", true);
+            i.putExtra("gym", selectedGymUid);
+            startActivity(i);
+        });
         favourite.setOnClickListener(v -> heartIcon.callOnClick());
         heartIcon.setOnClickListener(v -> {
             if (v instanceof FavButtonView) {

@@ -5,6 +5,7 @@ import android.os.AsyncTask
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Distance
 
 /**
  * Task to execute to cut down the number of markers displayed on the map for gyms
@@ -30,14 +31,6 @@ class TrimNearbyGyms(private var count: Int, private val location: LatLng, priva
          */
         fun onComplete(results: ArrayList<MarkerOptions>)
     }
-
-    /**
-     * Internal data class for storing [distance] of a [marker] from the current user
-     * @property distance Float Distance of the marker from the current user
-     * @property marker MarkerOptions? The marker in which the distance relates to
-     * @constructor Creates an object of the [distance] of the [marker] to the user's current location
-     */
-    private data class Distance(var distance: Float = 0f, var marker: MarkerOptions? = null)
 
     /**
      * Internal task to execute in the background on a seperate thread
