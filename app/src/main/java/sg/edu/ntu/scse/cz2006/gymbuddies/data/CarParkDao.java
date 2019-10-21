@@ -1,10 +1,10 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.data;
 
-import java.util.List;
-
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Query;
+
+import java.util.List;
 
 
 /**
@@ -21,6 +21,12 @@ public interface CarParkDao {
      */
     @Query("SELECT * FROM hdbcarparks")
     LiveData<List<CarPark>> getAllCarParks();
+
+    /**
+     * Get a list of all carparks from the database
+     */
+    @Query("SELECT * FROM hdbcarparks")
+    List<CarPark> getAllCarParksNow();
 
 
 }

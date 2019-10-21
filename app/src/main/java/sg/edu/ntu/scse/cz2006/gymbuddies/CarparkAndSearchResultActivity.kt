@@ -26,6 +26,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -45,10 +46,12 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark
 import sg.edu.ntu.scse.cz2006.gymbuddies.data.GBDatabase
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.*
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.EvaluateCarparkDistance
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.SearchGym
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.svy21converter.SVY21Coordinate
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView
 import java.util.*
 
@@ -222,15 +225,44 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         // Get carpark DB
-        val carParks: List<CarPark>? = GBDatabase.getInstance(application).carParkDao().allCarParks.value
-        if (carParks == null) {
+        val carParksDao = GBDatabase.getInstance(application).carParkDao()
+        /*if (carParks == null) {
             errorAndExit("Failed to retrieve carpark database")
             return
-        }
+        }*/
 
         // TODO: Find carparks that are nearby (within 1km and up to 10)
-        carParks.forEach {  }
+        val gymLatLng = LatLng(gym.geometry.getLat(), gym.geometry.getLng())
+        EvaluateCarparkDistance(gymLatLng, carParksDao, object: EvaluateCarparkDistance.Callback { override fun onComplete(results: ArrayList<Pair<CarPark, Float>>) { processCarpark(results, gym) } }).execute()
 
+    }
+
+    private fun processCarpark(results: ArrayList<Pair<CarPark, Float>>, gym: GymList.GymShell) {
+        // Get first 10 only
+        val cp = results.subList(0, 10)
+        // Remove any thats greater than 1000m
+        val cpFiltered = cp.filter { p -> p.second <= 1000 }
+        Log.i(TAG, "Accessible carparks: ${cpFiltered.size}, displaying on map")
+        // cp.removeIf { p -> p.second > 1000 }
+
+        // Add markers to map
+        mMap.clear()
+        // Selected gym as a pin
+        // mMap.addMarker(MarkerOptions().position(LatLng(it.gym.geometry.getLat(), it.gym.geometry.getLng())).title(it.gym.properties.Name).snippet(GymHelper.generateAddress(it.gym.properties)))
+        val gymLoc = LatLng(gym.geometry.getLat(), gym.geometry.getLng())
+        mMap.addMarker(MarkerOptions().position(gymLoc).title(gym.properties.Name).snippet(GymHelper.generateAddress(gym.properties)))
+        zoomToMyLocation(gymLoc, 16f)
+
+        // Add all the carparks
+        cpFiltered.forEach {
+            val svy21 = SVY21Coordinate(it.first.y, it.first.x)
+            val latlng = svy21.asLatLon()
+            val cpObj = it.first
+            mMap.addMarker(MarkerOptions().position(LatLng(latlng.latitude, latlng.longitude)).title(cpObj.address)
+                .snippet("${cpObj.id} | ${it.second} m away").icon(BitmapDescriptorFactory.fromBitmap(ProfilePicHelper.getBitmap(this, R.drawable.ic_parking))))
+            Log.d(TAG, "Added ${cpObj.id} to map")
+        }
+        // TODO: Display in list
     }
 
     private fun updateResultsLayoutHeight() {
@@ -298,8 +330,8 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
     /**
      * Internal method to zoom the map to the user's current location
      */
-    private fun zoomToMyLocation(lastLocation: LatLng) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, 15f))
+    private fun zoomToMyLocation(lastLocation: LatLng, zoom: Float = 15f) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(lastLocation, zoom))
     }
 
     // Search related
