@@ -40,6 +40,7 @@ import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_carpark_and_search_result.*
 import kotlinx.android.synthetic.main.fragment_gym_details.*
 import me.zhanghai.android.materialratingbar.MaterialRatingBar
+import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.CarparkAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.StringRecyclerAdapter
@@ -212,7 +213,8 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun doCarpark() {
         // TODO: For carpark
-        val gymId = intent.getStringExtra("gym");
+        supportActionBar?.title = "View nearby carparks"
+        val gymId = intent.getStringExtra("gym")
         if (gymId == null) {
             errorAndExit("No Gym Selected")
             return
@@ -258,11 +260,27 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
             val svy21 = SVY21Coordinate(it.first.y, it.first.x)
             val latlng = svy21.asLatLon()
             val cpObj = it.first
-            mMap.addMarker(MarkerOptions().position(LatLng(latlng.latitude, latlng.longitude)).title(cpObj.address)
+            val mark = mMap.addMarker(MarkerOptions().position(LatLng(latlng.latitude, latlng.longitude)).title(cpObj.address)
                 .snippet("${cpObj.id} | ${it.second} m away").icon(BitmapDescriptorFactory.fromBitmap(ProfilePicHelper.getBitmap(this, R.drawable.ic_parking))))
+            mark.tag = it
             Log.d(TAG, "Added ${cpObj.id} to map")
         }
         // TODO: Display in list
+        if (cpFiltered.isNotEmpty()) {
+            val adapter = CarparkAdapter(cpFiltered)
+            results_list.adapter = adapter
+        } else {
+            val noCarparks = arrayOf("No carparks found within 1km from the gym")
+            val noResults = StringRecyclerAdapter(noCarparks.toList(), false)
+            results_list.adapter = noResults
+        }
+        updateResultsLayoutHeight()
+        loading.visibility = View.GONE
+
+        val scale = resources.displayMetrics.density
+        val px = (100 * scale + 0.5f).toInt()
+        BottomSheetBehavior.from(bottom_sheet).setPeekHeight(px, true)
+        //bottom_sheet.requestLayout()
     }
 
     private fun updateResultsLayoutHeight() {
