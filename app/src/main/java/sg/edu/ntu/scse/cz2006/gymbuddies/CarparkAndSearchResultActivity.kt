@@ -269,7 +269,6 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
             mark.tag = it
             Log.d(TAG, "Added ${cpObj.id} to map")
         }
-        // TODO: Display in list
         if (cpFiltered.isNotEmpty()) {
             val adapter = CarparkAdapter(cpFiltered)
             adapter.setOnClickListener(View.OnClickListener {
