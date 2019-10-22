@@ -139,7 +139,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 // Not used
             }
         }
-        gymBottomSheetBehavior.bottomSheetCallback = callback
+        gymBottomSheetBehavior.setBottomSheetCallback(callback)
         setupGymDetailsControls()
         // Get filter results
         val paramJson = intent.getStringExtra("searchparam")
@@ -384,7 +384,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 // Not used
             }
         }
-        cpBottomSheetBehavior.bottomSheetCallback = callback
+        cpBottomSheetBehavior.setBottomSheetCallback(callback)
 
         mMap.setOnInfoWindowClickListener { cpBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED) }
         mMap.setOnMapClickListener { Log.d("mMap", "mapClicked()"); unselectCpDetails() }

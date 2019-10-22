@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import kotlinx.android.synthetic.main.activity_login_chooser.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.CheckFirstRun
 
@@ -42,6 +44,21 @@ class UpdateUserActivity : AppCompatActivity() {
 
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
         if (!sp.contains("nearby-gyms")) sp.edit().putInt("nearby-gyms", 10).apply() // Default to 10 nearby gyms
+
+        // Do retreival of remote config files
+        val remoteConfig = FirebaseRemoteConfig.getInstance()
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(3600)
+            .build()
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        remoteConfig.setDefaultsAsync(R.xml.remote_config)
+        remoteConfig.fetchAndActivate().addOnSuccessListener {
+            Log.i(TAG, "Fetched latest settings")
+            Log.d(TAG, "LTA Key: ${remoteConfig.getString("lta_datamall_api_key")}")
+            sp.edit().putString("ltakey", remoteConfig.getString("lta_datamall_api_key")).apply()
+        }.addOnFailureListener{
+            Log.e(TAG, "Failed to fetch from Remote Config. Exception: ${it.localizedMessage}")
+        }
 
         CheckFirstRun(this, object: CheckFirstRun.Callback {
             override fun isFirstRun(success: Boolean) {
