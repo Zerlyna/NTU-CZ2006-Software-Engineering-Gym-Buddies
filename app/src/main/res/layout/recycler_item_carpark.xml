@@ -35,11 +35,33 @@
             android:id="@+id/cp_title"
             android:textColor="#000000" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/number_placeholder"
-            android:id="@+id/cp_desc" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/number_placeholder"
+                android:id="@+id/cp_desc" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/cp_lots_logo"
+                android:layout_marginStart="4dp"
+                app:srcCompat="@drawable/ic_parking" />
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:id="@+id/cp_lots"
+                android:text="0" />
+        </LinearLayout>
     </LinearLayout>
 
     <ImageView
