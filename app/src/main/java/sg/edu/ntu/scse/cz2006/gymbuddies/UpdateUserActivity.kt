@@ -10,6 +10,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import kotlinx.android.synthetic.main.activity_login_chooser.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.CheckFirstRun
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateCarparkAvailabilityService
 
 /**
  * This activity is just used to ensure that we have processed everything from our database that we need to prevent
@@ -76,6 +77,14 @@ class UpdateUserActivity : AppCompatActivity() {
 
         }).execute(auth.uid)
         return
+    }
+
+    /**
+     * Lifecycle method when activity resumes
+     */
+    override fun onResume() {
+        super.onResume()
+        UpdateCarparkAvailabilityService.updateCarpark(this)
     }
 
     /**
