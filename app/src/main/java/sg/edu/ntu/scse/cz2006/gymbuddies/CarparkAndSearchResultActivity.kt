@@ -51,12 +51,15 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.data.GBDatabase
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.EvaluateCarparkDistance
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.SearchGym
+import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateCarparkAvailabilityService
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.UpdateGymFavourites
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.svy21converter.SVY21Coordinate
 import sg.edu.ntu.scse.cz2006.gymbuddies.widget.FavButtonView
+import java.io.File
 import java.util.*
+import kotlin.collections.HashMap
 
 class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -241,6 +244,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         val gymLatLng = LatLng(gym.geometry.getLat(), gym.geometry.getLng())
         EvaluateCarparkDistance(gymLatLng, carParksDao, object: EvaluateCarparkDistance.Callback { override fun onComplete(results: ArrayList<Pair<CarPark, Float>>) { processCarpark(results, gym) } }).execute()
 
+        UpdateCarparkAvailabilityService.updateCarpark(this) // Refresh availability data
     }
 
     private fun processCarpark(results: ArrayList<Pair<CarPark, Float>>, gym: GymList.GymShell) {
@@ -440,6 +444,17 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
         cp_details_rate.text = WordUtils.capitalizeFully(cp_details_rate.text.toString(), ' ', '\n')
         cp_details_misc.text = WordUtils.capitalizeFully(cp_details_misc.text.toString(), ' ', '\n')
+
+        // Get data from file
+        val jsonFile = File(cacheDir, "avail.txt")
+        val json = jsonFile.readText()
+        val gson = Gson()
+        val arr = gson.fromJson<Array<CarparkAvailability>>(json, Array<CarparkAvailability>::class.java)
+        val hmap = HashMap<String, CarparkAvailability>()
+        arr.forEach { hmap[it.CarParkID] = it }
+        if (hmap.containsKey(cp.first.id)) {
+            cp_details_lots.text = "Lots Available: ${hmap[cp.first.id]?.AvailableLots ?: "Unknown"}"
+        } else cp_details_lots.text = "No Lots Availability Information Found"
 
         val coordinates = SVY21Coordinate(cp.first.y, cp.first.x).asLatLon()
         cp_details_direction.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" +
