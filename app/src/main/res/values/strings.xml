@@ -81,5 +81,12 @@
     <string name="txt_undo">Undo</string>
     <string name="txt_msg_removed_favourite">Removed from favourite</string>
     <string name="txt_msg_removed_favtorite_undone">Removed from favourite undone</string>
+    <string name="cp_details_lots_placeholder">Lots Available: 500</string>
+    <string name="cp_details_price_placeholder">Free Parking on Sundays and Public Holidays \nHourly Parking from 7-10 \nNight Parking available</string>
+    <string name="cp_details_height_placeholder">No Height Limit</string>
+    <string name="cp_details_desc_placeholder">Other Miscellaneous Information like underground</string>
+    <string name="cp_details_cpid">Carpark ID</string>
+    <string name="cp_details_direction_contentdesc">Directions to CP</string>
+    <string name="cp_details_direction">Directions to Carpark</string>
 
 </resources>
