@@ -1,13 +1,21 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.adapter
 
+import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
 import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.CarparkAvailability
+import java.io.File
 
 /**
  * Recycler Adapter for Carpark Results
@@ -19,13 +27,21 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark
  * @property onClickListener OnClickListener? Set this to override the default onClick listener defined in [CarparkAdapter.CarparkViewHolder.onClick]
  * @constructor Creates a adapter for the Gym Favourites List RecyclerView
  */
-class CarparkAdapter(carpark: List<Pair<CarPark, Float>>) : RecyclerView.Adapter<CarparkAdapter.CarparkViewHolder>() {
+class CarparkAdapter(context: Context, carpark: List<Pair<CarPark, Float>>) : RecyclerView.Adapter<CarparkAdapter.CarparkViewHolder>() {
 
     private var carparkList: List<Pair<CarPark, Float>> = ArrayList()
     private var onClickListener: View.OnClickListener? = null
 
+    private var carparkLots: HashMap<String, Int> = HashMap()
+
     init {
         this.carparkList = carpark
+        val jsonFile = File(context.cacheDir, "avail.txt")
+        val json = jsonFile.readText()
+        val gson = Gson()
+        val arr = gson.fromJson<Array<CarparkAvailability>>(json, Array<CarparkAvailability>::class.java)
+        carparkLots.clear()
+        arr.forEach { carparkLots[it.CarParkID] = it.AvailableLots }
     }
 
     /**
@@ -64,9 +80,16 @@ class CarparkAdapter(carpark: List<Pair<CarPark, Float>>) : RecyclerView.Adapter
     override fun onBindViewHolder(holder: CarparkViewHolder, position: Int) {
         val s = carparkList[position]
         holder.title.text = s.first.address
-        holder.description.text = "${s.first.id} | ${s.second} m away"
+        holder.description.text = "${s.first.id} | ${s.second} m"
         holder.cpObj = s.first
         holder.distance = s.second
+        holder.lots.text = carparkLots[s.first.id]?.toString() ?: "-"
+        if (carparkLots.containsKey(s.first.id)) {
+            holder.lotsPic.imageTintList = ColorStateList.valueOf(if (carparkLots[s.first.id]!! > 0) Color.GREEN else Color.RED)
+        } else {
+            holder.lotsPic.imageTintList = null
+        }
+        holder.lotsPic.imageTintMode = PorterDuff.Mode.SRC_ATOP
     }
 
     /**
@@ -94,6 +117,8 @@ class CarparkAdapter(carpark: List<Pair<CarPark, Float>>) : RecyclerView.Adapter
     inner class CarparkViewHolder(v: View, listener: View.OnClickListener?) : RecyclerView.ViewHolder(v), View.OnClickListener {
         var title: TextView = v.findViewById(R.id.cp_title)
         var description: TextView = v.findViewById(R.id.cp_desc)
+        var lots: TextView = v.findViewById(R.id.cp_lots)
+        var lotsPic: ImageView = v.findViewById(R.id.cp_lots_logo)
         var cpObj: CarPark? = null
         var distance: Float = 0f
 
