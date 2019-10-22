@@ -62,7 +62,7 @@ class GymReviewAdapter(activity: Activity, reviews: List<GymRatings>) : Recycler
         holder.review.text = s.ratingObj.message
 
         val sdf = SimpleDateFormat("dd/MM/yy", Locale.US)
-        val dt = Date().apply { s.ratingObj.timestamp }
+        val dt = Date().apply { time = s.ratingObj.timestamp }
         holder.date.text = sdf.format(dt)
 
         val activity = actRef.get() ?: return

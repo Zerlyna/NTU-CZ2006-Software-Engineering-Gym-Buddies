@@ -56,6 +56,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
+import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
@@ -261,7 +262,14 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
         // On Clicks
         gymLocation.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" + ((coordinates == null) ?
                 gymLocation.getText().toString() : (coordinates.latitude + "," + coordinates.longitude))))));
-        carpark.setOnClickListener(view -> Snackbar.make(coordinatorLayout, R.string.coming_soon_feature, Snackbar.LENGTH_LONG).show());
+        carpark.setOnClickListener(view -> {
+            GymList.GymShell gym = gymListViewModel.getSelectedGym().getValue();
+            if (gym == null) return;
+            Intent i = new Intent(view.getContext(), CarparkAndSearchResultActivity.class);
+            i.putExtra("carpark", true);
+            i.putExtra("gym", gym.getProperties().getINC_CRC());
+            startActivity(i);
+        });
         favourite.setOnClickListener(v -> heartIcon.callOnClick());
         heartIcon.setOnClickListener(v -> {
             if (v instanceof FavButtonView) {

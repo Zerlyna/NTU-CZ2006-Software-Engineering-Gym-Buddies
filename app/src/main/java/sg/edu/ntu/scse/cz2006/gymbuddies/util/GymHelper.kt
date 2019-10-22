@@ -35,6 +35,21 @@ object GymHelper {
     }
 
     /**
+     * Get gym object if available from the application
+     * @param context Context Application Context
+     * @param gymId String Gym ID
+     * @return GymList.GymShell? Gym object if any, null otherwise
+     */
+    @JvmStatic
+    fun getGym(context: Context, gymId: String): GymList.GymShell? {
+        val gym = getGymList(context) ?: return null
+        gym.gyms.forEach {
+            if (it.properties.INC_CRC == gymId) return it
+        }
+        return null
+    }
+
+    /**
      * Generates the gym address based on the gym properties [prop] that you have passed in
      * @param prop GymProperties The Gym's Properties object
      * @return String Full Address of the gym
