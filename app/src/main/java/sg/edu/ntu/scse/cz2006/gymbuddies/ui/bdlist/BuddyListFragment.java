@@ -43,9 +43,11 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
-public class BuddyListFragment extends Fragment  implements AppConstants, BuddyResultAdapter.OnBuddyClickedListener{
+public class BuddyListFragment extends Fragment implements AppConstants, OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> {
     private final String TAG = "GB.frag.BdList";
     private BuddyListViewModel buddyListViewModel;
     private RecyclerView rvResult;
@@ -83,17 +85,15 @@ public class BuddyListFragment extends Fragment  implements AppConstants, BuddyR
         });
 
 
-
-
         listFavUsers = new ArrayList<>();
-        listFavUserIds= new ArrayList<>();
+        listFavUserIds = new ArrayList<>();
         firestore = FirebaseFirestore.getInstance();
         adapter = new BuddyResultAdapter(listFavUsers, listFavUserIds);
-        adapter.addOnBuddyClickedListener(this);
+        adapter.setOnRecyclerViewClickedListener(this);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mLayoutManager.setOrientation(RecyclerView.VERTICAL);
         rvResult.setAdapter(adapter);
-        rvResult.setLayoutManager( mLayoutManager );
+        rvResult.setLayoutManager(mLayoutManager);
 
 
         srlUpdateFav.setColorSchemeResources(R.color.google_1, R.color.google_2, R.color.google_3, R.color.google_4);
@@ -106,34 +106,35 @@ public class BuddyListFragment extends Fragment  implements AppConstants, BuddyR
         return root;
     }
 
-    private void readData(){
+    private void readData() {
         Log.d(TAG, "do read data");
 //        favBuddyHelper.getFavBuddyRecord();
         queryFavUserRecord();
         srlUpdateFav.setRefreshing(true);
     }
 
-    private void queryFavUserRecord(){
+    private void queryFavUserRecord() {
         Log.d(TAG, "queryFavRecord");
-        if (favBuddiesRef == null){
+        if (favBuddiesRef == null) {
             String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
             favBuddiesRef = firestore.collection(COLLECTION_FAV_BUDDY).document(uid);
         }
 
-        favBuddiesRef.get().addOnSuccessListener((documentSnapshot)->{
-            Log.d(TAG, "favBuddiesRef.get() -> onSuccess "+documentSnapshot);
+        favBuddiesRef.get().addOnSuccessListener((documentSnapshot) -> {
+            Log.d(TAG, "favBuddiesRef.get() -> onSuccess " + documentSnapshot);
             readFavRecordDoc(documentSnapshot);
-        }).addOnFailureListener((e)->{
-            Log.d(TAG, "favBuddiesRef.get() -> onFailed "+e.getMessage());
+        }).addOnFailureListener((e) -> {
+            Log.d(TAG, "favBuddiesRef.get() -> onFailed " + e.getMessage());
         });
     }
-    private void readFavRecordDoc(DocumentSnapshot documentSnapshot){
+
+    private void readFavRecordDoc(DocumentSnapshot documentSnapshot) {
         favRecord = documentSnapshot.toObject(FavBuddyRecord.class);
-        if (favRecord==null){
+        if (favRecord == null) {
             favRecord = new FavBuddyRecord();
         }
         listFavUserIds.clear();
-        listFavUserIds.addAll( favRecord.getBuddiesId() );
+        listFavUserIds.addAll(favRecord.getBuddiesId());
 
         queryBuddies();
     }
@@ -177,124 +178,64 @@ public class BuddyListFragment extends Fragment  implements AppConstants, BuddyR
 //    }
 
 
-    private void queryBuddies(){
+    private void queryBuddies() {
         Log.d(TAG, "do read buddies");
         CollectionReference userRef = firestore.collection(GymHelper.GYM_USERS_COLLECTION);
-        userRef.get().addOnSuccessListener((snapshots)->{
+        userRef.get().addOnSuccessListener((snapshots) -> {
             Log.d(TAG, "userRef.get() success");
-                readUserQuerySnapshot(snapshots);
-        }).addOnFailureListener((e)->{
+            readUserQuerySnapshot(snapshots);
+        }).addOnFailureListener((e) -> {
             Log.d(TAG, "query all users failed");
         });
-
-//        userRef.addSnapshotListener((snapshots, e)->{
-//            Log.d(TAG, "userRef.addSnapshotListener -> onEvent "+snapshots);
-//            if (e != null){
-//                Log.w(TAG, "Listen failed", e);
-//                if (srlUpdateFav.isRefreshing()){
-//                    srlUpdateFav.setRefreshing(false);
-//                }
-//                return;
-//            }
-//            readUserQuerySnapshot(snapshots);
-//        });
     }
 
-    private void readUserQuerySnapshot(QuerySnapshot snapshots){
-        Log.d(TAG, "readUserQuerySnapshot -> "+snapshots);
+    private void readUserQuerySnapshot(QuerySnapshot snapshots) {
+        Log.d(TAG, "readUserQuerySnapshot -> " + snapshots);
         ArrayList<User> users = new ArrayList<>();
         users.addAll(snapshots.toObjects(User.class));
-        Log.d(TAG, "user.size->"+users.size());
-        Log.d(TAG, "favUserIds.size->"+listFavUserIds.size());
+        Log.d(TAG, "user.size->" + users.size());
+        Log.d(TAG, "favUserIds.size->" + listFavUserIds.size());
 
         // perform filtering
         listFavUsers.clear();
         String curUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        for (User user:users) {
-            if (user.getUid().equals(curUserId)){
+        for (User user : users) {
+            if (user.getUid().equals(curUserId)) {
                 continue;
             }
-            if (listFavUserIds.contains(user.getUid())){
+            if (listFavUserIds.contains(user.getUid())) {
                 listFavUsers.add(user);
             }
         }
 
         adapter.notifyDataSetChanged();
-        Log.d(TAG, "fav user.size->"+listFavUsers.size());
-        if (srlUpdateFav.isRefreshing()){
+        Log.d(TAG, "fav user.size->" + listFavUsers.size());
+        if (srlUpdateFav.isRefreshing()) {
             srlUpdateFav.setRefreshing(false);
         }
     }
 
-
     @Override
-    public void onBuddyItemClicked(View view, BuddyResultAdapter.ViewHolder holder, int action) {
+    public void onViewClicked(View view, BuddyResultAdapter.ViewHolder holder, int action) {
         User user = listFavUsers.get(holder.getAdapterPosition());
-        switch (action){
+        switch (action) {
             case BuddyResultAdapter.ACTION_CLICK_ON_FAV_ITEM:
                 unfavUser(user);
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_BODY:
-//                Snackbar.make(rvResult, "to chat", Snackbar.LENGTH_SHORT).show();
                 goChatActivity(user);
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_PIC:
-                displayBuddyProfile(user, ((ImageView)view).getDrawable() );
+                DialogHelper.displayBuddyProfile(getContext(), user, ((ImageView) view).getDrawable());
                 break;
             default:
-
         }
     }
 
-    private void displayBuddyProfile(User user, Drawable drawable){
-        // inflate dialog layout
-        LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-        View view = layoutInflater.inflate(R.layout.dialog_bd_profile, null);
 
-        ImageView imgPic = view.findViewById(R.id.profile_pic);
-        TextView tvName = view.findViewById(R.id.tv_bd_name);
-        TextView tvLocation = view.findViewById(R.id.tv_pref_location);
-        TextView tvTime = view.findViewById(R.id.tv_pref_time);
-        LinearLayout llPrefDays = view.findViewById(R.id.ll_pref_days);
-
-        imgPic.setImageDrawable(drawable);
-        tvName.setText(user.getName());
-        tvLocation.setText(user.getPrefLocation());
-        tvTime.setText(user.getPrefTime());
-
-        Drawable drawableLeft;
-        if (user.getGender().equals("Male")) {
-            drawableLeft = getResources().getDrawable(R.drawable.ic_human_male);
-        } else {
-            drawableLeft = getResources().getDrawable(R.drawable.ic_human_female);
-        }
-        tvName.setCompoundDrawablesWithIntrinsicBounds(drawableLeft, null, null, null);
-
-        for (int i =0; i<llPrefDays.getChildCount(); i++){
-            CheckBox cb = (CheckBox) llPrefDays.getChildAt(i);
-            cb.setEnabled(false);
-            cb.setText(cb.getText().subSequence(0,1));
-        }
-        ((CheckBox) llPrefDays.getChildAt(0)).setChecked(user.getPrefDay().getMonday());
-        ((CheckBox) llPrefDays.getChildAt(1)).setChecked(user.getPrefDay().getTuesday());
-        ((CheckBox) llPrefDays.getChildAt(2)).setChecked(user.getPrefDay().getWednesday());
-        ((CheckBox) llPrefDays.getChildAt(3)).setChecked(user.getPrefDay().getThursday());
-        ((CheckBox) llPrefDays.getChildAt(4)).setChecked(user.getPrefDay().getFriday());
-        ((CheckBox) llPrefDays.getChildAt(5)).setChecked(user.getPrefDay().getSaturday());
-        ((CheckBox) llPrefDays.getChildAt(6)).setChecked(user.getPrefDay().getSunday());
-
-
-        // build & display dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Profile")
-                .setView(view)
-                .setPositiveButton("Cancel",null)
-                .show();
-    }
-
-    private void unfavUser(User other){
+    private void unfavUser(User other) {
         listFavUsers.remove(other);
         listFavUserIds.remove(other.getUid());
         favRecord.getBuddiesId().remove(other.getUid());
@@ -316,22 +257,22 @@ public class BuddyListFragment extends Fragment  implements AppConstants, BuddyR
         snackbar.show();
     }
 
-    private void commitFavRecord(){
+    private void commitFavRecord() {
         firestore.runTransaction(new Transaction.Function<Void>() {
             @Override
             public Void apply(Transaction transaction) throws FirebaseFirestoreException {
                 transaction.set(favBuddiesRef, favRecord);
                 return null;
             }
-        }).addOnSuccessListener((v)->{
+        }).addOnSuccessListener((v) -> {
             Log.d(TAG, "favRecord updated success");
-        }).addOnFailureListener((e)->{
+        }).addOnFailureListener((e) -> {
             Log.d(TAG, "favRecord updated failed");
             e.printStackTrace();
         });
     }
 
-    private void goChatActivity(User other){
+    private void goChatActivity(User other) {
         Intent intent = new Intent(getActivity(), ChatActivity.class);
         Bundle data = new Bundle();
         data.putString("buddy_id", other.getUid());
@@ -340,4 +281,6 @@ public class BuddyListFragment extends Fragment  implements AppConstants, BuddyR
         intent.putExtras(data);
         startActivity(intent);
     }
+
+
 }

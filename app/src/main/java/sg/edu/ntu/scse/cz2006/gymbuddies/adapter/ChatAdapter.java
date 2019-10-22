@@ -33,23 +33,29 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
  */
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
     private String TAG = "gb.adapter.chatlist";
-    public static final int ACTION_ITEM_VIEW_CLICKED = 1;
+    public static final int ACTION_INVALID = -1;
+    public static final int ACTION_CLICK_ON_ITEM_BODY = 1;
+    public static final int ACTION_CLICK_ON_FAV_ITEM = 2;
+    public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
     private SimpleDateFormat sdf;
-    private String userUid;
     private List<Chat> chats;
     private List<String> favUserIds;
     private OnRecyclerViewClickedListener<ChatViewHolder> listener;
 
-    public ChatAdapter(List<Chat> chats, List<String> favUserIds){
+    public ChatAdapter(List<Chat> chats, List<String> favUserIds) {
         this.chats = chats;
         this.favUserIds = favUserIds;
         this.sdf = new SimpleDateFormat("dd/MM/yy");
     }
 
-    public void setOnRecyclerViewClickedListener(OnRecyclerViewClickedListener<ChatViewHolder> listener){
+    public void setOnRecyclerViewClickedListener(OnRecyclerViewClickedListener<ChatViewHolder> listener) {
         this.listener = listener;
     }
 
+    public void setFavUserIds(List<String> favUserIds) {
+        this.favUserIds = favUserIds;
+        notifyDataSetChanged();
+    }
 
 
     @Override
@@ -73,9 +79,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     }
 
 
-
-
-    public class ChatViewHolder extends RecyclerView.ViewHolder  implements View.OnClickListener {
+    public class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView tvName, tvLastMsg, tvUpdateTime;
         ImageView imgPic;
         CheckBox cbFav;
@@ -89,24 +93,31 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             cbFav = itemView.findViewById(R.id.cb_bd_fav);
 
             itemView.setOnClickListener(this);
+            imgPic.setOnClickListener(this);
+            cbFav.setOnClickListener(this);
         }
 
-        public void bind(Chat chat){
+        public void bind(Chat chat) {
             imgPic.setImageResource(R.mipmap.ic_launcher);
-            tvName.setText( "" );
-            if (chat.getOtherUser()!=null){
+            tvName.setText("");
+            // update fav
+            cbFav.setOnClickListener(null);
+            cbFav.setChecked(false);
+            if (chat.getOtherUser() != null) {
                 Log.d(TAG, "attempt update user");
                 tvName.setText(chat.getOtherUser().getName());
                 updateProfilePic(chat.getOtherUser());
+                if (favUserIds != null && favUserIds.contains(chat.getOtherUser().getUid())) {
+                    cbFav.setChecked(true);
+                }
             }
-
-            tvLastMsg.setText( chat.getLastMessage() );
-            tvUpdateTime.setText( sdf.format(chat.getLastUpdate()) );
-
+            cbFav.setOnClickListener(this);
+            tvLastMsg.setText(chat.getLastMessage());
+            tvUpdateTime.setText(sdf.format(chat.getLastUpdate()));
         }
 
-        private void updateProfilePic(User user){
-            if (user.getProfilePicUri().equals(imgPic.getTag())){
+        private void updateProfilePic(User user) {
+            if (user.getProfilePicUri().equals(imgPic.getTag())) {
                 return;
             }
 
@@ -130,14 +141,22 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
         @Override
         public void onClick(View v) {
-            if (v == itemView){
-                if (listener!=null){
-                    listener.onViewClicked(v, this, ACTION_ITEM_VIEW_CLICKED);
+            int action = ACTION_INVALID;
+            if (v == super.itemView) {
+                action = ACTION_CLICK_ON_ITEM_BODY;
+            } else if (v == cbFav) {
+                action = ACTION_CLICK_ON_FAV_ITEM;
+            } else if (v == imgPic) {
+                action = ACTION_CLICK_ON_ITEM_PIC;
+            }
+
+            if (action != ACTION_INVALID) {
+                if (listener != null) {
+                    listener.onViewClicked(v, this, action);
                 }
             }
         }
     }
-
 
 
 }

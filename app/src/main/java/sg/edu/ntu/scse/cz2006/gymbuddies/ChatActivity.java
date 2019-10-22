@@ -93,9 +93,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     }
 
     private void init(){
-        Bundle data =  getIntent().getExtras();
         if (getIntent().hasExtra("chat_id")){
-            String chatId = (String) data.get("chat_id");
             // load chat > load message
             queryChatByChatId();
         } else if (getIntent().hasExtra("buddy_id")){
@@ -103,6 +101,14 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             // find or create chat > load message;
         } else {
             showDialogInvalidArgs();
+        }
+
+        if (getIntent().hasExtra("buddy_name")){
+            tvTitle.setText(getIntent().getStringExtra("buddy_name"));
+        }
+
+        if (getIntent().hasExtra("buddy_pic_url")){
+            getProfilePic(getIntent().getStringExtra("buddy_pic_url"));
         }
     }
 
@@ -126,7 +132,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         chatRef = firestore.collection(AppConstants.COLLECTION_CHAT).document(chatId);
         chatRef.get().addOnSuccessListener((documentSnapshot)->{
             curChat = documentSnapshot.toObject(Chat.class);
-            // TODO update screen
+
             listenToMessages();
         }).addOnFailureListener((e)->{
             Log.d(TAG, "query chat failed, e-> "+e.getMessage());
@@ -142,8 +148,6 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
 
 
         CollectionReference chatCollectionRef = firestore.collection(AppConstants.COLLECTION_CHAT);
-//        Query queryChats = chatRef.whereArrayContains("participant", uid)
-//                .whereArrayContains("participant", otherUid);
         Query queryChats = chatCollectionRef.whereEqualTo(FieldPath.of(  "participant", uid), true)
                 .whereEqualTo(FieldPath.of(  "participant", otherUid), true);
         ListenerRegistration listener = queryChats.addSnapshotListener((queryDocumentSnapshots, e)->{
@@ -226,22 +230,6 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         }
     }
 
-//    private void addDummyData(){
-//        int min = 1000*60;
-//        long time = System.currentTimeMillis();
-//
-//        messages.add( new ChatMessage("Hi", "2", time-10*min));
-//        messages.add( new ChatMessage("Hi", "1", time-9*min));
-//        messages.add( new ChatMessage("Test 1", "1", time-6*min));
-//        messages.add( new ChatMessage("Test 2", "2", time-5*min));
-//        messages.add( new ChatMessage("Test 3", "2", time-4*min));
-//        messages.add( new ChatMessage("Test 3", "1", time-3*min));
-//        adapter.notifyDataSetChanged();
-//    }
-
-
-
-
     /**
      * Handle option menu action
      */
@@ -275,20 +263,24 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
 
     }
 
-    private void getProfilePic(){
-        String imgUrl = getIntent().getStringExtra("buddy_pic_url");
+    private void getProfilePic(String imgUrl){
+        if (imgUrl.equals(imgBuddyPic.getTag())){
+            return;
+        }
 
-            new GetProfilePicFromFirebaseAuth(this, new GetProfilePicFromFirebaseAuth.Callback() {
-                @Override
-                public void onComplete(@Nullable Bitmap bitmap) {
-                    if (bitmap != null) {
-                        RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
-                        roundBitmap.setCircular(true);
+        new GetProfilePicFromFirebaseAuth(this, new GetProfilePicFromFirebaseAuth.Callback() {
+            @Override
+            public void onComplete(@Nullable Bitmap bitmap) {
+                if (bitmap != null) {
+                    RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+                    roundBitmap.setCircular(true);
 
-                        imgBuddyPic.setImageDrawable(roundBitmap);
-                    }
+                    imgBuddyPic.setImageDrawable(roundBitmap);
+                    imgBuddyPic.setTag(imgUrl);
                 }
-            }).execute(Uri.parse(imgUrl));
+            }
+        }).execute(Uri.parse(imgUrl));
+
     }
 
     private void showDialogInvalidArgs(){
