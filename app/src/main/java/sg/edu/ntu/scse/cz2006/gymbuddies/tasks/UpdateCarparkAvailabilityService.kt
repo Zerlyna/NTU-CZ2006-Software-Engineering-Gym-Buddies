@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.CarparkAvailability
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.LtaObject
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -64,6 +65,9 @@ class UpdateCarparkAvailabilityService : IntentService(TAG) {
 
         // Write to file
         Log.i(TAG, "Writing carpark list to file, Availability Size: ${carparkList.size}")
+        val jsonString = gson.toJson(carparkList)
+        val jsonFile = File(cacheDir, "avail.txt")
+        jsonFile.writeText(jsonString)
     }
 
     override fun onCreate() {
