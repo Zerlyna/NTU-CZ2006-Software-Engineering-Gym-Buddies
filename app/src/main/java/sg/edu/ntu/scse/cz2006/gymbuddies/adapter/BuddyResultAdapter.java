@@ -18,12 +18,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
+
 import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
 
 
@@ -43,15 +43,9 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     public static final int ACTION_CLICK_ON_FAV_ITEM    = 2;
     public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
     private List<User> listBuddies;
-    private ArrayList< WeakReference<OnBuddyClickedListener> > listeners;
+    private OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> listener;
     private List<String> favUsers;
 
-    /**
-     * Custom listener to allow activity to listen to user interaction between views
-     */
-    public interface OnBuddyClickedListener {
-        void onBuddyItemClicked(View view, ViewHolder holder, int action);
-    }
 
 
     /**
@@ -60,34 +54,14 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     public BuddyResultAdapter(List<User> listBuddies, List<String> favUsers) {
         this.listBuddies = listBuddies;
         this.favUsers = favUsers;
-        this.listeners = new ArrayList<>();
     }
-
-//    public void setFavBuddyHelper(FavBuddyHelper favBuddyHelper){
-//        this.favBuddyHelper = favBuddyHelper;
-//        if (this.favBuddyHelper == null){
-//            return;
-//        }
-//        this.favBuddyHelper.setUpdateListener(new FavBuddyHelper.OnFavBuddiesUpdateListener() {
-//            @Override
-//            public void onFavBuddiesChanges(FavBuddyRecord record) {
-//                Log.d(TAG, "onFavBuddiesChanges->"+record);
-//                BuddyResultAdapter.this.notifyDataSetChanged();
-//            }
-//
-//            @Override
-//            public void onFavBuddiesUpdate(boolean success) {
-//                Log.d(TAG, "onFavBuddiesUpdate->"+success);
-//            }
-//        });
-//    }
 
 
     /**
      * Allow other classes to listen to user interaction via OnBuddyClickedListener
      */
-    public void addOnBuddyClickedListener( OnBuddyClickedListener listener){
-        this.listeners.add(new WeakReference<>(listener));
+    public void setOnRecyclerViewClickedListener( OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> listener){
+        this.listener=listener;
     }
 
     /**
@@ -236,10 +210,8 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
                 action = ACTION_CLICK_ON_ITEM_PIC;
             }
             if (action != ACTION_INVALID ) {
-                for (WeakReference<OnBuddyClickedListener> listener: listeners ) {
-                    if (listener.get()!= null){
-                        listener.get().onBuddyItemClicked(view, this, action);
-                    }
+                if (listener != null){
+                    listener.onViewClicked(view, this, action);
                 }
             }
         }

@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -26,6 +28,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
@@ -34,6 +37,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.ChatAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
 public class ChatListFragment extends Fragment implements OnRecyclerViewClickedListener<ChatAdapter.ChatViewHolder> {
@@ -51,6 +55,7 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
     ListenerRegistration queryChatListener;
     Query queryChats;
 
+    // TODO listen to fav user changes
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         chatListViewModel = ViewModelProviders.of(this).get(ChatListViewModel.class);
@@ -91,9 +96,7 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         firestore = FirebaseFirestore.getInstance();
         CollectionReference chatRef = firestore.collection(AppConstants.COLLECTION_CHAT);
-        //TODO update query
         queryChats = chatRef.whereEqualTo(FieldPath.of(  "participant", uid), true);
-
 
         return root;
     }
@@ -143,10 +146,12 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
         for (DocumentSnapshot doc:snapshots){
             temp = doc.toObject(Chat.class);
             temp.setChatId(doc.getId());
-            if (temp.getLastUpdate()>0){
+            if (temp.getLastUpdate()!=0){
                 chats.add( temp );
             }
         }
+
+        Collections.sort(chats, (c1,c2)->{ return (int)(c2.getLastUpdate()-c1.getLastUpdate());});
         Log.d(TAG, "chat size -> "+chats.size());
         adapter.notifyDataSetChanged();
         queryUser();
@@ -192,25 +197,33 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
 
 
     private void goChatActivity(Chat chat){
-            Intent intent = new Intent(getActivity(), ChatActivity.class);
-            Bundle data = new Bundle();
-            data.putString("chat_id", chat.getChatId());
-//            data.putString("buddy_name", other.getName());
-//            data.putString("buddy_pic_url", other.getProfilePicUri());
-            intent.putExtras(data);
-            startActivity(intent);
+        Intent intent = new Intent(getActivity(), ChatActivity.class);
+        Bundle data = new Bundle();
+        data.putString("chat_id", chat.getChatId());
+        if (chat.getOtherUser() != null){
+            data.putString("buddy_name", chat.getOtherUser().getName());
+            data.putString("buddy_pic_url", chat.getOtherUser().getProfilePicUri());
+        }
 
+        intent.putExtras(data);
+        startActivity(intent);
     }
 
     @Override
     public void onViewClicked(View view, ChatAdapter.ChatViewHolder holder, int action) {
         Chat chat = chats.get(holder.getAdapterPosition());
         switch (action){
-            case ChatAdapter.ACTION_ITEM_VIEW_CLICKED:
+            case ChatAdapter.ACTION_CLICK_ON_ITEM_PIC:
+                if (chat.getOtherUser()!=null){
+                    DialogHelper.displayBuddyProfile(getContext(), chat.getOtherUser(), ((ImageView)view).getDrawable() );
+                }
+                break;
+            case ChatAdapter.ACTION_CLICK_ON_ITEM_BODY:
                 goChatActivity(chat);
                 break;
             default:
-                Log.d(TAG, "unknown action");
+                Log.d(TAG, "unknown action -> "+action);
+                Snackbar.make(getView(), "action implementing", Snackbar.LENGTH_SHORT).show();
         }
     }
 }
