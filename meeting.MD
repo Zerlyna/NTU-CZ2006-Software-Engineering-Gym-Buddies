@@ -1,28 +1,30 @@
-Next Meeting: *Tuesday (22/10) from 1530hrs*
-Location: *The Arc (LHN) Project Discussion Room (LHN-PDR-08 at Basement 1)*
-*Estimated to end by 1930hrs (due to following day submission finalisation)*
+Next Meeting: __Tuesday (29/10) from 1530hrs__  
+Location: __SCSE Lounge__  
+__Estimated to end by 1800hrs__
 
-_Useful Links_
-_Issue Tracking:_ https://jira.itachi1706.com:8123/browse/NTUSE
-_Code Repository:_ https://gitlab.com/kennethsohyq/school/university/ntu-cz2006-underconstruction
-_SVN Link (Requires NTU Intranet):_ https://155.69.100.25/svn/CX2006/SSP4/UnderConstruction
-_Android JavaDocs:_ https://ntugit.itachi1706.com/projects/se/html/app
+__IMPORTANT Details__
 
-*ANDROID USERS PLEASE DOWNLOAD THE APP AND CRASH IT AS BEST AS YOU CAN SO THAT WE CAN FIX ISSUES*
+__Final Presentation__: 6 November 2019, Wednesday at SWLAB3, 1030hrs  
+__Final Submission__: 10 November 2019, Sunday
+
+__Useful Links__  
+__Issue Tracking:__ https://jira.itachi1706.com:8123/browse/NTUSE  
+__Code Repository:__ https://gitlab.com/kennethsohyq/school/university/ntu-cz2006-underconstruction  
+__SVN Link (Requires NTU Intranet):__ https://155.69.100.25/svn/CX2006/SSP4/UnderConstruction  
+__Android JavaDocs:__ https://ntugit.itachi1706.com/projects/se/html/app
+
+__ANDROID USERS PLEASE DOWNLOAD THE APP AND CRASH IT AS BEST AS YOU CAN SO THAT WE CAN FIX ISSUES__  
 You only have to crash the app, no need to report. Firebase will automatically generate a crash report and add an issue to JIRA
 This crash does not include the crash button in the app settings haha :P
 
 *Meeting agenda:*
-- FINALISATION of PRE-DEMO Deliverables:
+- FINALISATION of FINAL SUBMISSION:
     + Software Requirements Specifications
-        + Defining system architecture
-        + Class diagram - add start-up and container classes
-        + Sequence diagram - change all action links to operations
-        + State machine diagram - change all action links to operations
-        + Key design issues
-            + Define in SRS and implement in diagrams to resolve
-            + Identifying and storing persistent data
-            + Providing access control
-    + Android Application progress
-        + Have skeleton ready 
-            + Main functions
+        + Everything with __FINE TUNING__
+        + White and Black Box testing
+        + Add back Forum stuff if have time for implementation
+    + Android Application
+        + Main functions
+    + Presentation slides
+    + Video of application
+    
