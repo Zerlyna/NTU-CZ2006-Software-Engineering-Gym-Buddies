@@ -22,39 +22,43 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
 
-import sg.edu.ntu.scse.cz2006.gymbuddies.BuddySearchResultActivity;
+import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
-import sg.edu.ntu.scse.cz2006.gymbuddies.util.FavBuddyHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
-public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFavBuddiesUpdateListener, BuddyResultAdapter.OnBuddyClickedListener{
+public class BuddyListFragment extends Fragment  implements AppConstants, BuddyResultAdapter.OnBuddyClickedListener{
     private final String TAG = "GB.frag.BdList";
     private BuddyListViewModel buddyListViewModel;
-    private ListenerRegistration userSnapshotsListener;
-    private FavBuddyHelper favBuddyHelper;
-    private ArrayList<User> listUsers;
-    private ArrayList<User> listFavUsers;
     private RecyclerView rvResult;
     private BuddyResultAdapter adapter;
     SwipeRefreshLayout srlUpdateFav;
+
+    private ArrayList<User> listFavUsers;
+    private ArrayList<String> listFavUserIds;
+
+    private FirebaseFirestore firestore;
+    private DocumentReference favBuddiesRef;
+    private FavBuddyRecord favRecord;
+    private ListenerRegistration favRecordChangeListener;
 
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -79,16 +83,13 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
         });
 
 
-        listUsers = new ArrayList<>();
+
+
         listFavUsers = new ArrayList<>();
-        favBuddyHelper = new FavBuddyHelper();
-//        favBuddyHelper.setUpdateListener(this);
-
-        adapter = new BuddyResultAdapter(listFavUsers);
-//        adapter.setOnBuddyClickedListener(this);
+        listFavUserIds= new ArrayList<>();
+        firestore = FirebaseFirestore.getInstance();
+        adapter = new BuddyResultAdapter(listFavUsers, listFavUserIds);
         adapter.addOnBuddyClickedListener(this);
-        adapter.setFavBuddyHelper(favBuddyHelper);
-
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mLayoutManager.setOrientation(RecyclerView.VERTICAL);
         rvResult.setAdapter(adapter);
@@ -99,101 +100,132 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
         srlUpdateFav.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                queryBuddies();
+                readData();
             }
         });
         return root;
     }
 
+    private void readData(){
+        Log.d(TAG, "do read data");
+//        favBuddyHelper.getFavBuddyRecord();
+        queryFavUserRecord();
+        srlUpdateFav.setRefreshing(true);
+    }
+
+    private void queryFavUserRecord(){
+        Log.d(TAG, "queryFavRecord");
+        if (favBuddiesRef == null){
+            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            favBuddiesRef = firestore.collection(COLLECTION_FAV_BUDDY).document(uid);
+        }
+
+        favBuddiesRef.get().addOnSuccessListener((documentSnapshot)->{
+            Log.d(TAG, "favBuddiesRef.get() -> onSuccess "+documentSnapshot);
+            readFavRecordDoc(documentSnapshot);
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "favBuddiesRef.get() -> onFailed "+e.getMessage());
+        });
+    }
+    private void readFavRecordDoc(DocumentSnapshot documentSnapshot){
+        favRecord = documentSnapshot.toObject(FavBuddyRecord.class);
+        if (favRecord==null){
+            favRecord = new FavBuddyRecord();
+        }
+        listFavUserIds.clear();
+        listFavUserIds.addAll( favRecord.getBuddiesId() );
+
+        queryBuddies();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Log.d(TAG, "onStart()");
+        readData();
+    }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        favBuddyHelper.startListeningFirestore();
-        queryBuddies();
-        srlUpdateFav.setRefreshing(true);
+//        listenFavRecordChanges();
     }
 
     @Override
     public void onPause() {
-        favBuddyHelper.stopListeningFirestore();
-        if (userSnapshotsListener != null){
-            userSnapshotsListener.remove();
-            userSnapshotsListener = null;
-        }
 
+//        stopListenFavRecordChanges();
         super.onPause();
     }
+//    private void listenFavRecordChanges(){
+//        favRecordChangeListener = favBuddiesRef.addSnapshotListener((doc, e)->{
+//            Log.d(TAG, "favBuddiesRef.addSnapshotListener -> onEvent ");
+//            if (e != null){
+//                Log.w(TAG, "Listen failed", e);
+//                return;
+//            }
+//            readFavRecordDoc(doc);
+//        });
+//    }
+//    private void stopListenFavRecordChanges(){
+//        if (favRecordChangeListener!=null){
+//            favRecordChangeListener.remove();
+//            favRecordChangeListener = null;
+//        }
+//    }
 
-
-
-    @Override
-    public void onFavBuddiesChanges(FavBuddyRecord record) {
-
-    }
-
-    @Override
-    public void onFavBuddiesUpdate(boolean success) {
-
-    }
 
     private void queryBuddies(){
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference userRef = db.collection(GymHelper.GYM_USERS_COLLECTION);
-
-        userRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot snapshots) {
-                listUsers.clear();
-                listUsers.addAll(snapshots.toObjects(User.class));
-                performFiltering();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d(TAG, "query all users failed");
-            }
+        Log.d(TAG, "do read buddies");
+        CollectionReference userRef = firestore.collection(GymHelper.GYM_USERS_COLLECTION);
+        userRef.get().addOnSuccessListener((snapshots)->{
+            Log.d(TAG, "userRef.get() success");
+                readUserQuerySnapshot(snapshots);
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "query all users failed");
         });
-        userRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
-                if (e != null){
-                    Log.w(TAG, "Listen failed", e);
-                    if (srlUpdateFav.isRefreshing()){
-                        srlUpdateFav.setRefreshing(false);
-                    }
-                    return;
-                }
 
-                listUsers.clear();
-                listUsers.addAll(snapshots.toObjects(User.class));
-                performFiltering();
-            }
-        });
+//        userRef.addSnapshotListener((snapshots, e)->{
+//            Log.d(TAG, "userRef.addSnapshotListener -> onEvent "+snapshots);
+//            if (e != null){
+//                Log.w(TAG, "Listen failed", e);
+//                if (srlUpdateFav.isRefreshing()){
+//                    srlUpdateFav.setRefreshing(false);
+//                }
+//                return;
+//            }
+//            readUserQuerySnapshot(snapshots);
+//        });
     }
 
-    private void performFiltering(){
+    private void readUserQuerySnapshot(QuerySnapshot snapshots){
+        Log.d(TAG, "readUserQuerySnapshot -> "+snapshots);
+        ArrayList<User> users = new ArrayList<>();
+        users.addAll(snapshots.toObjects(User.class));
+        Log.d(TAG, "user.size->"+users.size());
+        Log.d(TAG, "favUserIds.size->"+listFavUserIds.size());
+
+        // perform filtering
         listFavUsers.clear();
-        if (favBuddyHelper.getFavBuddyRecord()!=null){
-            String curUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            for (User user:listUsers) {
-                if (user.getUid().equals(curUserId)){
-                    continue;
-                }
-                if (favBuddyHelper.getFavBuddyRecord().getBuddiesId().contains(user.getUid())){
-                    listFavUsers.add(user);
-                }
+        String curUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        for (User user:users) {
+            if (user.getUid().equals(curUserId)){
+                continue;
+            }
+            if (listFavUserIds.contains(user.getUid())){
+                listFavUsers.add(user);
             }
         }
-        adapter.notifyDataSetChanged();
 
-        Log.d(TAG, "user.size->"+listUsers.size());
-        Log.d(TAG, "buddies.size->"+listFavUsers.size());
+        adapter.notifyDataSetChanged();
+        Log.d(TAG, "fav user.size->"+listFavUsers.size());
         if (srlUpdateFav.isRefreshing()){
             srlUpdateFav.setRefreshing(false);
         }
     }
+
 
     @Override
     public void onBuddyItemClicked(View view, BuddyResultAdapter.ViewHolder holder, int action) {
@@ -204,7 +236,7 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_BODY:
-                Snackbar.make(rvResult, "to chat", Snackbar.LENGTH_SHORT).show();
+//                Snackbar.make(rvResult, "to chat", Snackbar.LENGTH_SHORT).show();
                 goChatActivity(user);
                 break;
 
@@ -264,21 +296,39 @@ public class BuddyListFragment extends Fragment  implements  FavBuddyHelper.OnFa
 
     private void unfavUser(User other){
         listFavUsers.remove(other);
-        favBuddyHelper.removeFavBuddy(other);
+        listFavUserIds.remove(other.getUid());
+        favRecord.getBuddiesId().remove(other.getUid());
+        commitFavRecord();
         adapter.notifyDataSetChanged();
         Snackbar snackbar = Snackbar.make(rvResult, R.string.txt_msg_removed_favourite, Snackbar.LENGTH_SHORT);
         snackbar.setAction(R.string.txt_undo, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                favBuddyHelper.addFavBuddy(other);
                 listFavUsers.add(other);
+                listFavUserIds.add(other.getUid());
+                favRecord.getBuddiesId().add(other.getUid());
+                commitFavRecord();
                 adapter.notifyDataSetChanged();
                 Snackbar.make(rvResult, R.string.txt_msg_removed_favtorite_undone, Snackbar.LENGTH_SHORT).show();
 
             }
         });
         snackbar.show();
+    }
+
+    private void commitFavRecord(){
+        firestore.runTransaction(new Transaction.Function<Void>() {
+            @Override
+            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
+                transaction.set(favBuddiesRef, favRecord);
+                return null;
+            }
+        }).addOnSuccessListener((v)->{
+            Log.d(TAG, "favRecord updated success");
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "favRecord updated failed");
+            e.printStackTrace();
+        });
     }
 
     private void goChatActivity(User other){
