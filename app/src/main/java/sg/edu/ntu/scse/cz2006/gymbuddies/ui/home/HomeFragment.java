@@ -337,6 +337,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
      */
     private void processFavListUpdates(QuerySnapshot querySnapshot) {
         Log.d(TAG, "processFavListUpdates()");
+        if (getContext() == null) return;
         // Update favourites
         if (querySnapshot != null && querySnapshot.size() > 0) {
             List<DocumentSnapshot> gyms = querySnapshot.getDocuments();
@@ -968,6 +969,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         // Register update
         if (gymDetailFavListener != null) gymDetailFavListener.remove();
         gymDetailFavListener = gymRef.addSnapshotListener((documentSnapshot, e) -> {
+            if (getContext() == null) return; // Prevent crash of fragment
             if (documentSnapshot != null && documentSnapshot.exists()) favCount.setText(getResources().getString(R.string.number_counter, Integer.parseInt(documentSnapshot.get("count").toString())));
             else favCount.setText("(0)");
         });
