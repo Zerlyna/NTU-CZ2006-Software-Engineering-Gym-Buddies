@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,18 +25,22 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
-import sg.edu.ntu.scse.cz2006.gymbuddies.util.FavBuddyHelper;
 
 
 /**
@@ -46,12 +51,19 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.FavBuddyHelper;
  * @author Chia Yu
  * @since 2019-09-28
  */
-public class BuddySearchResultActivity extends AppCompatActivity implements BuddyResultAdapter.OnBuddyClickedListener{
+public class BuddySearchResultActivity extends AppCompatActivity implements AppConstants, BuddyResultAdapter.OnBuddyClickedListener{
     private String TAG = "GB.act.bdSearchResult";
     private RecyclerView rvResult;
-    ArrayList<User> listData;
-    BuddyResultAdapter adapter;
-    FavBuddyHelper favHelper;
+    private ArrayList<User> listUsers;
+    private ArrayList<String> listFavUserIds;
+    private BuddyResultAdapter adapter;
+//    FavBuddyHelper favHelper;
+
+
+    private FirebaseFirestore firestore;
+    private DocumentReference favBuddiesRef;
+    private FavBuddyRecord favRecord;
+    private ListenerRegistration favRecordChangeListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,8 +87,9 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
             }
         }
 
-        listData = new ArrayList<>();
-        adapter = new BuddyResultAdapter(listData);
+        listUsers = new ArrayList<>();
+        listFavUserIds = new ArrayList<>();
+        adapter = new BuddyResultAdapter(listUsers, listFavUserIds);
         adapter.addOnBuddyClickedListener( this);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setOrientation(RecyclerView.VERTICAL);
@@ -86,21 +99,66 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
         rvResult.setLayoutManager( mLayoutManager );
         adapter.notifyDataSetChanged();
 
-        favHelper = new FavBuddyHelper();
-        adapter.setFavBuddyHelper(favHelper);
+//        favHelper = new FavBuddyHelper();
+//        adapter.setFavBuddyHelper(favHelper);
+
+        firestore = FirebaseFirestore.getInstance();
+        queryFavUserRecord();
         queryBuddy();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        favHelper.startListeningFirestore();
+        listenFavRecordChanges();
     }
 
     @Override
     protected void onPause() {
+        stopListenFavRecordChanges();
         super.onPause();
-        favHelper.stopListeningFirestore();
+    }
+    private void listenFavRecordChanges(){
+        favRecordChangeListener = favBuddiesRef.addSnapshotListener((doc, e)->{
+            Log.d(TAG, "favBuddiesRef.addSnapshotListener -> onEvent ");
+            if (e != null){
+                Log.w(TAG, "Listen failed", e);
+                return;
+            }
+            readFavRecordDoc(doc);
+        });
+    }
+    private void stopListenFavRecordChanges(){
+        if (favRecordChangeListener!=null){
+            favRecordChangeListener.remove();
+            favRecordChangeListener = null;
+        }
+    }
+
+    private void queryFavUserRecord(){
+        Log.d(TAG, "queryFavRecord");
+        if (favBuddiesRef == null){
+            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            favBuddiesRef = firestore.collection(COLLECTION_FAV_BUDDY).document(uid);
+        }
+
+        favBuddiesRef.get().addOnSuccessListener((documentSnapshot)->{
+            Log.d(TAG, "favBuddiesRef.get() -> onSuccess "+documentSnapshot);
+            readFavRecordDoc(documentSnapshot);
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "favBuddiesRef.get() -> onFailed "+e.getMessage());
+        });
+    }
+
+
+
+    private void readFavRecordDoc(DocumentSnapshot documentSnapshot){
+        favRecord = documentSnapshot.toObject(FavBuddyRecord.class);
+        if (favRecord==null){
+            favRecord = new FavBuddyRecord();
+        }
+        listFavUserIds.clear();
+        listFavUserIds.addAll( favRecord.getBuddiesId() );
     }
 
     /**
@@ -159,16 +217,16 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 pd.dismiss();
-                listData.clear();
+                listUsers.clear();
                 for ( DocumentSnapshot docSnapshot:queryDocumentSnapshots) {
                     if (!docSnapshot.getId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
-                        listData.add(docSnapshot.toObject(User.class));
+                        listUsers.add(docSnapshot.toObject(User.class));
                     }
                 }
                 adapter.notifyDataSetChanged();
 
-                Log.d(TAG, "size: "+listData.size());
-                for (User u : listData){
+                Log.d(TAG, "size: "+ listUsers.size());
+                for (User u : listUsers){
                     Log.d(TAG, u.getName()+", days: "+u.getPrefDay()+", "+u.getPrefLocation());
                 }
             }
@@ -205,10 +263,11 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
         Log.d(TAG, "onBuddyItemClicked::action: "+action+", pos: "+holder.getAdapterPosition()+", view: "+view.getClass().getSimpleName());
 
         // TODO: handle event
-        User otherUser = listData.get(holder.getAdapterPosition());
+        User otherUser = listUsers.get(holder.getAdapterPosition());
         switch (action){
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_BODY:
                 Snackbar.make(rvResult, "To Chat, pos("+holder.getAdapterPosition()+")", Snackbar.LENGTH_LONG).show();
+                goChatActivity(otherUser);
                 break;
 
             case BuddyResultAdapter.ACTION_CLICK_ON_ITEM_PIC:
@@ -220,9 +279,9 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
                 if (view instanceof CheckBox){
                     CheckBox cbFav = (CheckBox)view;
                     if (cbFav.isChecked()){
-                        favHelper.addFavBuddy( otherUser );
+                        doAddFavBuddy(otherUser);
                     } else {
-                        favHelper.removeFavBuddy( otherUser );
+                        doRemoveFavBuddy(otherUser);
                     }
                 }
                 break;
@@ -231,6 +290,51 @@ public class BuddySearchResultActivity extends AppCompatActivity implements Budd
                 break;
         }
     }
+
+    private void doAddFavBuddy(User otherUser){
+        Log.d(TAG, "doAddFavBuddy->"+otherUser.getUid());
+        if (!listFavUserIds.contains(otherUser.getUid())){
+            listFavUserIds.add(otherUser.getUid());
+            favRecord.getBuddiesId().add(otherUser.getUid());
+            commitFavRecord();
+        }
+    }
+
+    private void doRemoveFavBuddy(User otherUser){
+        Log.d(TAG, "doRemoveFavBuddy->"+otherUser.getUid());
+        if (listFavUserIds.contains(otherUser.getUid())){
+            listFavUserIds.remove(otherUser.getUid());
+            favRecord.getBuddiesId().remove(otherUser.getUid());
+            commitFavRecord();
+        }
+    }
+
+    private void commitFavRecord(){
+        firestore.runTransaction(new Transaction.Function<Void>() {
+            @Override
+            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
+                transaction.set(favBuddiesRef, favRecord);
+                return null;
+            }
+        }).addOnSuccessListener((v)->{
+            Log.d(TAG, "favRecord updated success");
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "favRecord updated failed");
+            e.printStackTrace();
+        });
+    }
+
+    private void goChatActivity(User other){
+        Intent intent = new Intent(this, ChatActivity.class);
+        Bundle data = new Bundle();
+        data.putString("buddy_id", other.getUid());
+        data.putString("buddy_name", other.getName());
+        data.putString("buddy_pic_url", other.getProfilePicUri());
+        intent.putExtras(data);
+        startActivity(intent);
+    }
+
+
 
 
     private void displayBuddyProfile(User user, Drawable drawable){

@@ -3,12 +3,10 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.adapter;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,10 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
-import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
-import sg.edu.ntu.scse.cz2006.gymbuddies.util.FavBuddyHelper;
 
 
 /**
@@ -46,9 +42,9 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     public static final int ACTION_CLICK_ON_ITEM_BODY   = 1;
     public static final int ACTION_CLICK_ON_FAV_ITEM    = 2;
     public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
-    private FavBuddyHelper favBuddyHelper;
     private List<User> listBuddies;
     private ArrayList< WeakReference<OnBuddyClickedListener> > listeners;
+    private List<String> favUsers;
 
     /**
      * Custom listener to allow activity to listen to user interaction between views
@@ -61,29 +57,30 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     /**
      * Constructor to create Recycler Adapter for Buddy search result
      */
-    public BuddyResultAdapter(List<User> listBuddies) {
+    public BuddyResultAdapter(List<User> listBuddies, List<String> favUsers) {
         this.listBuddies = listBuddies;
+        this.favUsers = favUsers;
         this.listeners = new ArrayList<>();
     }
 
-    public void setFavBuddyHelper(FavBuddyHelper favBuddyHelper){
-        this.favBuddyHelper = favBuddyHelper;
-        if (this.favBuddyHelper == null){
-            return;
-        }
-        this.favBuddyHelper.setUpdateListener(new FavBuddyHelper.OnFavBuddiesUpdateListener() {
-            @Override
-            public void onFavBuddiesChanges(FavBuddyRecord record) {
-                Log.d(TAG, "onFavBuddiesChanges->"+record);
-                BuddyResultAdapter.this.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onFavBuddiesUpdate(boolean success) {
-                Log.d(TAG, "onFavBuddiesUpdate->"+success);
-            }
-        });
-    }
+//    public void setFavBuddyHelper(FavBuddyHelper favBuddyHelper){
+//        this.favBuddyHelper = favBuddyHelper;
+//        if (this.favBuddyHelper == null){
+//            return;
+//        }
+//        this.favBuddyHelper.setUpdateListener(new FavBuddyHelper.OnFavBuddiesUpdateListener() {
+//            @Override
+//            public void onFavBuddiesChanges(FavBuddyRecord record) {
+//                Log.d(TAG, "onFavBuddiesChanges->"+record);
+//                BuddyResultAdapter.this.notifyDataSetChanged();
+//            }
+//
+//            @Override
+//            public void onFavBuddiesUpdate(boolean success) {
+//                Log.d(TAG, "onFavBuddiesUpdate->"+success);
+//            }
+//        });
+//    }
 
 
     /**
@@ -178,7 +175,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
 
             cbFav.setOnClickListener(null);
             cbFav.setChecked(false);
-            if (favBuddyHelper != null && favBuddyHelper.getFavBuddyRecord()!=null && favBuddyHelper.getFavBuddyRecord().getBuddiesId().contains(curUser.getUid()) ){
+            if (favUsers.contains(curUser.getUid()) ){
                 cbFav.setChecked(true);
             }
             cbFav.setOnClickListener(this);
