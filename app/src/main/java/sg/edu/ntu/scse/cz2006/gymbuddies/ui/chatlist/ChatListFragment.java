@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
@@ -20,40 +21,49 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
+import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.ChatAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
-public class ChatListFragment extends Fragment implements OnRecyclerViewClickedListener<ChatAdapter.ChatViewHolder> {
+public class ChatListFragment extends Fragment implements AppConstants, OnRecyclerViewClickedListener<ChatAdapter.ChatViewHolder> {
     private static final String TAG = "gb.frag.chatlist";
     private ChatListViewModel chatListViewModel;
 
 
-    SwipeRefreshLayout srlUpdateChats;
-    ArrayList<Chat> chats;
-    ArrayList<String> favUserIds;
-    RecyclerView rvChats;
-    ChatAdapter adapter;
+    private SwipeRefreshLayout srlUpdateChats;
+    private ArrayList<Chat> chats;
+    private ArrayList<String> favUserIds;
+    private RecyclerView rvChats;
+    private ChatAdapter adapter;
 
-    FirebaseFirestore firestore;
-    ListenerRegistration queryChatListener;
-    Query queryChats;
+    private FirebaseFirestore firestore;
+
+    private DocumentReference favBuddiesRef;
+    private ListenerRegistration queryFavListener;
+    private ListenerRegistration queryChatListener;
+    private Query queryChats;
+    private FavBuddyRecord favRecord;
 
     // TODO listen to fav user changes
 
@@ -66,6 +76,11 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             public void onChanged(@Nullable String s) { /*textView.setText(s);*/
             }
         });
+
+        if (getActivity() != null) {
+            MainActivity activity = (MainActivity) getActivity();
+            activity.fab.hide();
+        }
 
 
 
@@ -101,20 +116,49 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
         return root;
     }
 
-
     @Override
-    public void onStart() {
-        super.onStart();
-        listenSnapshotChanges();
+    public void onResume() {
+        super.onResume();
+        listenChatListChanges();
+        listenFavChanges();
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        stopListenSnapshotChanges();
+    public void onPause() {
+        stopListenChatListChanges();
+        stopListenFavChanges();
+        super.onPause();
     }
 
-    private void listenSnapshotChanges(){
+    private void listenFavChanges(){
+        if (favBuddiesRef == null) {
+            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            favBuddiesRef = firestore.collection(COLLECTION_FAV_BUDDY).document(uid);
+        }
+        queryFavListener = favBuddiesRef.addSnapshotListener((doc, e)->{
+            if (e!=null){
+                e.printStackTrace();
+                return;
+            }
+
+            favUserIds.clear();
+            if (doc != null){
+                FavBuddyRecord fav = doc.toObject(FavBuddyRecord.class);
+                favUserIds.addAll(fav.getBuddiesId());
+            }
+            adapter.notifyDataSetChanged();
+        });
+    }
+    private void stopListenFavChanges(){
+        if (queryFavListener!=null){
+            queryFavListener.remove();
+            queryFavListener = null;
+        }
+
+    }
+
+
+    private void listenChatListChanges(){
         queryChatListener = queryChats.addSnapshotListener((queryDocumentSnapshots, e)->{
             Log.d(TAG, "chat query -> onEvent ("+queryDocumentSnapshots+", "+e+")");
             if (e != null){
@@ -132,7 +176,7 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
         });
     }
 
-    private void stopListenSnapshotChanges(){
+    private void stopListenChatListChanges(){
         if (queryChatListener!=null){
             queryChatListener.remove();
             queryChatListener = null;
@@ -141,6 +185,7 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
 
     private void readQuerySnapshot(QuerySnapshot snapshots){
         Log.d(TAG, "reading chat data "+snapshots);
+        ArrayList<Chat> oldChats = (ArrayList<Chat>) chats.clone();
         chats.clear();
         Chat temp;
         for (DocumentSnapshot doc:snapshots){
@@ -151,10 +196,33 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             }
         }
 
+        // sort chats by last update time
         Collections.sort(chats, (c1,c2)->{ return (int)(c2.getLastUpdate()-c1.getLastUpdate());});
         Log.d(TAG, "chat size -> "+chats.size());
-        adapter.notifyDataSetChanged();
-        queryUser();
+
+        // mapping with old chat and decide whether need to query user data
+        if (oldChats.size() == 0){
+            queryUser();
+        } else {
+            boolean needQueryUser = false;
+            for (Chat chat : chats){
+                for(int i=oldChats.size()-1; i>=0; i--){
+                    Chat oldChat = oldChats.get(i);
+                    if (chat.getChatId().equals(oldChat.getChatId())){
+                        chat.setOtherUser(oldChat.getOtherUser());
+                        oldChats.remove(oldChat);
+                    }
+                }
+                if (chat.getOtherUser() == null){
+                    needQueryUser = true;
+                }
+            }
+            adapter.notifyDataSetChanged();
+            if (needQueryUser){
+                queryUser();
+            }
+        }
+
     }
 
     private void queryUser(){
@@ -185,7 +253,6 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             if (otherUid.length()==0){ continue; }
             for (User user:users){
                 if (otherUid.equals(user.getUid())){
-                    users.remove(user);
                     chat.setOtherUser(user);
                     break;
                 }
@@ -221,9 +288,39 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             case ChatAdapter.ACTION_CLICK_ON_ITEM_BODY:
                 goChatActivity(chat);
                 break;
+            case ChatAdapter.ACTION_CLICK_ON_FAV_ITEM:
+                String bdUid = chat.getOtherUser().getUid();
+                CheckBox cbFav = (CheckBox) view;
+                if (cbFav.isChecked()){
+                    favUserIds.add(bdUid);
+                } else {
+                    favUserIds.remove(bdUid);
+                }
+                commitFavRecord();
+                break;
             default:
                 Log.d(TAG, "unknown action -> "+action);
                 Snackbar.make(getView(), "action implementing", Snackbar.LENGTH_SHORT).show();
         }
+    }
+
+    private void commitFavRecord() {
+        firestore.runTransaction(new Transaction.Function<Void>() {
+            @Override
+            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
+
+                FavBuddyRecord favRecord = transaction.get(favBuddiesRef).toObject(FavBuddyRecord.class);
+                favRecord.getBuddiesId().clear();
+                favRecord.getBuddiesId().addAll(favUserIds);
+
+                transaction.set(favBuddiesRef, favRecord);
+                return null;
+            }
+        }).addOnSuccessListener((v) -> {
+            Log.d(TAG, "favRecord updated success");
+        }).addOnFailureListener((e) -> {
+            Log.d(TAG, "favRecord updated failed");
+            e.printStackTrace();
+        });
     }
 }

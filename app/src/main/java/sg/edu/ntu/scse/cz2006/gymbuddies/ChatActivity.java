@@ -34,14 +34,13 @@ import com.google.firebase.firestore.Transaction;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.MessageAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.ChatMessage;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper;
 
 public class ChatActivity extends AppCompatActivity implements AppConstants, View.OnClickListener {
     private static final String TAG = "gb.act.chat";
@@ -93,10 +92,17 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     }
 
     private void init(){
+        boolean needUserPic = true;
         if (getIntent().hasExtra("chat_id")){
             // load chat > load message
             queryChatByChatId();
         } else if (getIntent().hasExtra("buddy_id")){
+            String buddyId = getIntent().getStringExtra("buddy_id");
+            //imgBuddyPic
+            if (DiskIOHelper.hasImageCache(this, buddyId)){
+                imgBuddyPic.setImageBitmap( DiskIOHelper.readImageCache(this, buddyId));
+                needUserPic = false;
+            }
             queryChatByParticipants();
             // find or create chat > load message;
         } else {
@@ -107,23 +113,25 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             tvTitle.setText(getIntent().getStringExtra("buddy_name"));
         }
 
-        if (getIntent().hasExtra("buddy_pic_url")){
+        if (needUserPic && getIntent().hasExtra("buddy_pic_url")){
             getProfilePic(getIntent().getStringExtra("buddy_pic_url"));
         }
     }
 
 
+
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
         listenToMessages();
     }
 
     @Override
-    protected void onStop() {
+    protected void onPause() {
         stopListenToMessages();
-        super.onStop();
+        super.onPause();
     }
+
 
 
     private void queryChatByChatId(){
@@ -216,11 +224,11 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             messages.clear();
             if (snapshots != null){
                 messages.addAll( snapshots.toObjects(ChatMessage.class));
-
             }else {
                 Log.d(TAG, "snapshots are null");
             }
             adapter.notifyDataSetChanged();
+            rvMessages.scrollToPosition(messages.size()-1);
         });
     }
     private void stopListenToMessages(){
@@ -257,6 +265,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
                 messages.add(newMsg);
                 adapter.notifyDataSetChanged();
                 etMessage.setText("");
+                rvMessages.scrollToPosition(messages.size()-1);
             }
 
         }

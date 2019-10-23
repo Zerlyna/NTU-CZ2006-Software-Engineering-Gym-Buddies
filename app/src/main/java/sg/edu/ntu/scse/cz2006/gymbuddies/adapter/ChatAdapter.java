@@ -1,8 +1,5 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.adapter;
 
-import android.app.Activity;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,20 +9,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.recyclerview.widget.RecyclerView;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
-import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
-import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.ViewHelper;
 
 /**
  * @author Chia Yu
@@ -106,7 +98,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             if (chat.getOtherUser() != null) {
                 Log.d(TAG, "attempt update user");
                 tvName.setText(chat.getOtherUser().getName());
-                updateProfilePic(chat.getOtherUser());
+                ViewHelper.updateUserPic(imgPic, chat.getOtherUser());
                 if (favUserIds != null && favUserIds.contains(chat.getOtherUser().getUid())) {
                     cbFav.setChecked(true);
                 }
@@ -116,28 +108,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             tvUpdateTime.setText(sdf.format(chat.getLastUpdate()));
         }
 
-        private void updateProfilePic(User user) {
-            if (user.getProfilePicUri().equals(imgPic.getTag())) {
-                return;
-            }
-
-            // cache image if needed
-            imgPic.setImageResource(R.mipmap.ic_launcher);
-            if (user.getProfilePicUri() != null) {
-                Activity activity = (Activity) itemView.getContext();
-                new GetProfilePicFromFirebaseAuth(activity, new GetProfilePicFromFirebaseAuth.Callback() {
-                    @Override
-                    public void onComplete(@Nullable Bitmap bitmap) {
-                        if (bitmap != null) {
-                            RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(activity.getResources(), bitmap);
-                            roundBitmap.setCircular(true);
-                            imgPic.setImageDrawable(roundBitmap);
-                            imgPic.setTag(user.getProfilePicUri());
-                        }
-                    }
-                }).execute(Uri.parse(user.getProfilePicUri()));
-            }
-        }
 
         @Override
         public void onClick(View v) {

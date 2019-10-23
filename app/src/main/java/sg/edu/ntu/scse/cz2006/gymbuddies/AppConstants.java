@@ -9,4 +9,6 @@ public interface AppConstants {
     String COLLECTION_CHAT = "chat";
     String COLLECTION_MESSAGES = "message";
 
+
+    long MAX_CACHE_DURATION = 1000*60*60*24; // 1 day
 }
