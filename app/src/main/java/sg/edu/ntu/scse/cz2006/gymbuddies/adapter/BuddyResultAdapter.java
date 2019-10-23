@@ -1,8 +1,5 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.adapter;
 
-import android.app.Activity;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,11 +9,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.jetbrains.annotations.Nullable;
 
 
 import java.util.List;
@@ -24,7 +18,7 @@ import java.util.List;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
-import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.ViewHelper;
 
 
 /**
@@ -155,7 +149,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             cbFav.setOnClickListener(this);
 
             updatePrefDays(curUser);
-            updateProfilePic(curUser);
+            ViewHelper.updateUserPic(imgViewPic, curUser);
         }
 
 
@@ -172,32 +166,6 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             ((CheckBox) llPrefDays.getChildAt(6)).setChecked(user.getPrefDay().getSunday());
         }
 
-        /**
-         * update profile picture for each user
-         * @see GetProfilePicFromFirebaseAuth
-         */
-        private void updateProfilePic(User user){
-            if (user.getProfilePicUri().equals(imgViewPic.getTag())){
-                return;
-            }
-
-            // cache image if needed
-            imgViewPic.setImageResource(R.mipmap.ic_launcher);
-            if (user.getProfilePicUri() != null) {
-                Activity activity = (Activity) itemView.getContext();
-                new GetProfilePicFromFirebaseAuth(activity, new GetProfilePicFromFirebaseAuth.Callback() {
-                    @Override
-                    public void onComplete(@Nullable Bitmap bitmap) {
-                        if (bitmap != null) {
-                            RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(activity.getResources(), bitmap);
-                            roundBitmap.setCircular(true);
-                            imgViewPic.setImageDrawable(roundBitmap);
-                            imgViewPic.setTag(user.getProfilePicUri());
-                        }
-                    }
-                }).execute(Uri.parse(user.getProfilePicUri()));
-            }
-        }
 
         @Override
         public void onClick(View view) {

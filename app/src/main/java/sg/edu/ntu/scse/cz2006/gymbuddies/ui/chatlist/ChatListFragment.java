@@ -32,6 +32,7 @@ import java.util.Collections;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
+import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.ChatAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
@@ -67,6 +68,11 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             }
         });
 
+        if (getActivity() != null) {
+            MainActivity activity = (MainActivity) getActivity();
+            activity.fab.hide();
+        }
+
 
 
         rvChats = root.findViewById(R.id.rv_chats);
@@ -101,18 +107,18 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
         return root;
     }
 
-
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         listenSnapshotChanges();
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
         stopListenSnapshotChanges();
+        super.onPause();
     }
+
 
     private void listenSnapshotChanges(){
         queryChatListener = queryChats.addSnapshotListener((queryDocumentSnapshots, e)->{
@@ -141,6 +147,7 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
 
     private void readQuerySnapshot(QuerySnapshot snapshots){
         Log.d(TAG, "reading chat data "+snapshots);
+        ArrayList<Chat> oldChats = (ArrayList<Chat>) chats.clone();
         chats.clear();
         Chat temp;
         for (DocumentSnapshot doc:snapshots){
@@ -151,10 +158,33 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             }
         }
 
+        // sort chats by last update time
         Collections.sort(chats, (c1,c2)->{ return (int)(c2.getLastUpdate()-c1.getLastUpdate());});
         Log.d(TAG, "chat size -> "+chats.size());
-        adapter.notifyDataSetChanged();
-        queryUser();
+
+        // mapping with old chat and decide whether need to query user data
+        if (oldChats.size() == 0){
+            queryUser();
+        } else {
+            boolean needQueryUser = false;
+            for (Chat chat : chats){
+                for(int i=oldChats.size()-1; i>=0; i--){
+                    Chat oldChat = oldChats.get(i);
+                    if (chat.getChatId().equals(oldChat.getChatId())){
+                        chat.setOtherUser(oldChat.getOtherUser());
+                        oldChats.remove(oldChat);
+                    }
+                }
+                if (chat.getOtherUser() == null){
+                    needQueryUser = true;
+                }
+            }
+            adapter.notifyDataSetChanged();
+            if (needQueryUser){
+                queryUser();
+            }
+        }
+
     }
 
     private void queryUser(){
@@ -185,7 +215,6 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             if (otherUid.length()==0){ continue; }
             for (User user:users){
                 if (otherUid.equals(user.getUid())){
-                    users.remove(user);
                     chat.setOtherUser(user);
                     break;
                 }
