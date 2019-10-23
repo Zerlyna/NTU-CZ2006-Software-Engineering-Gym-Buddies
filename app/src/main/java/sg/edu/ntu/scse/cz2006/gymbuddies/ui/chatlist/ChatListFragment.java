@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
@@ -20,12 +21,15 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,25 +40,30 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.ChatAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
+import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
-public class ChatListFragment extends Fragment implements OnRecyclerViewClickedListener<ChatAdapter.ChatViewHolder> {
+public class ChatListFragment extends Fragment implements AppConstants, OnRecyclerViewClickedListener<ChatAdapter.ChatViewHolder> {
     private static final String TAG = "gb.frag.chatlist";
     private ChatListViewModel chatListViewModel;
 
 
-    SwipeRefreshLayout srlUpdateChats;
-    ArrayList<Chat> chats;
-    ArrayList<String> favUserIds;
-    RecyclerView rvChats;
-    ChatAdapter adapter;
+    private SwipeRefreshLayout srlUpdateChats;
+    private ArrayList<Chat> chats;
+    private ArrayList<String> favUserIds;
+    private RecyclerView rvChats;
+    private ChatAdapter adapter;
 
-    FirebaseFirestore firestore;
-    ListenerRegistration queryChatListener;
-    Query queryChats;
+    private FirebaseFirestore firestore;
+
+    private DocumentReference favBuddiesRef;
+    private ListenerRegistration queryFavListener;
+    private ListenerRegistration queryChatListener;
+    private Query queryChats;
+    private FavBuddyRecord favRecord;
 
     // TODO listen to fav user changes
 
@@ -110,17 +119,46 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
     @Override
     public void onResume() {
         super.onResume();
-        listenSnapshotChanges();
+        listenChatListChanges();
+        listenFavChanges();
     }
 
     @Override
     public void onPause() {
-        stopListenSnapshotChanges();
+        stopListenChatListChanges();
+        stopListenFavChanges();
         super.onPause();
     }
 
+    private void listenFavChanges(){
+        if (favBuddiesRef == null) {
+            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            favBuddiesRef = firestore.collection(COLLECTION_FAV_BUDDY).document(uid);
+        }
+        queryFavListener = favBuddiesRef.addSnapshotListener((doc, e)->{
+            if (e!=null){
+                e.printStackTrace();
+                return;
+            }
 
-    private void listenSnapshotChanges(){
+            favUserIds.clear();
+            if (doc != null){
+                FavBuddyRecord fav = doc.toObject(FavBuddyRecord.class);
+                favUserIds.addAll(fav.getBuddiesId());
+            }
+            adapter.notifyDataSetChanged();
+        });
+    }
+    private void stopListenFavChanges(){
+        if (queryFavListener!=null){
+            queryFavListener.remove();
+            queryFavListener = null;
+        }
+
+    }
+
+
+    private void listenChatListChanges(){
         queryChatListener = queryChats.addSnapshotListener((queryDocumentSnapshots, e)->{
             Log.d(TAG, "chat query -> onEvent ("+queryDocumentSnapshots+", "+e+")");
             if (e != null){
@@ -138,7 +176,7 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
         });
     }
 
-    private void stopListenSnapshotChanges(){
+    private void stopListenChatListChanges(){
         if (queryChatListener!=null){
             queryChatListener.remove();
             queryChatListener = null;
@@ -250,9 +288,39 @@ public class ChatListFragment extends Fragment implements OnRecyclerViewClickedL
             case ChatAdapter.ACTION_CLICK_ON_ITEM_BODY:
                 goChatActivity(chat);
                 break;
+            case ChatAdapter.ACTION_CLICK_ON_FAV_ITEM:
+                String bdUid = chat.getOtherUser().getUid();
+                CheckBox cbFav = (CheckBox) view;
+                if (cbFav.isChecked()){
+                    favUserIds.add(bdUid);
+                } else {
+                    favUserIds.remove(bdUid);
+                }
+                commitFavRecord();
+                break;
             default:
                 Log.d(TAG, "unknown action -> "+action);
                 Snackbar.make(getView(), "action implementing", Snackbar.LENGTH_SHORT).show();
         }
+    }
+
+    private void commitFavRecord() {
+        firestore.runTransaction(new Transaction.Function<Void>() {
+            @Override
+            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
+
+                FavBuddyRecord favRecord = transaction.get(favBuddiesRef).toObject(FavBuddyRecord.class);
+                favRecord.getBuddiesId().clear();
+                favRecord.getBuddiesId().addAll(favUserIds);
+
+                transaction.set(favBuddiesRef, favRecord);
+                return null;
+            }
+        }).addOnSuccessListener((v) -> {
+            Log.d(TAG, "favRecord updated success");
+        }).addOnFailureListener((e) -> {
+            Log.d(TAG, "favRecord updated failed");
+            e.printStackTrace();
+        });
     }
 }
