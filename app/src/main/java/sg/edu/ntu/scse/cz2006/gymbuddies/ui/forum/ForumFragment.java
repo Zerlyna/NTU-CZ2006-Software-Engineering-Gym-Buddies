@@ -12,7 +12,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 
 public class ForumFragment extends Fragment {
 
@@ -28,6 +30,13 @@ public class ForumFragment extends Fragment {
                 textView.setText(s);
             }
         });
+
+
+        if (getActivity() != null) {
+            MainActivity activity = (MainActivity) getActivity();
+            //activity.fab.hide();
+            activity.fab.setOnClickListener(view ->  DialogHelper.displayBuildInfo(getContext()) );
+        }
         return root;
     }
 }
