@@ -8,8 +8,6 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -101,6 +100,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             //imgBuddyPic
             if (DiskIOHelper.hasImageCache(this, buddyId)){
                 imgBuddyPic.setImageBitmap( DiskIOHelper.readImageCache(this, buddyId));
+                imgBuddyPic.setTag(buddyId);
                 needUserPic = false;
             }
             queryChatByParticipants();
@@ -145,8 +145,8 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         }).addOnFailureListener((e)->{
             Log.d(TAG, "query chat failed, e-> "+e.getMessage());
             e.printStackTrace();
+            Snackbar.make(rvMessages, "Error(get chat by cid): "+e.getMessage(), Snackbar.LENGTH_SHORT).show();
         });
-
     }
 
     public void queryChatByParticipants(){
@@ -158,30 +158,28 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         CollectionReference chatCollectionRef = firestore.collection(AppConstants.COLLECTION_CHAT);
         Query queryChats = chatCollectionRef.whereEqualTo(FieldPath.of(  "participant", uid), true)
                 .whereEqualTo(FieldPath.of(  "participant", otherUid), true);
-        ListenerRegistration listener = queryChats.addSnapshotListener((queryDocumentSnapshots, e)->{
-            Log.d(TAG, "chat query -> onEvent ("+queryDocumentSnapshots+", "+e+")");
-            if (e!=null){
-                Log.d(TAG, "Error query chat by participant");
-                e.printStackTrace();
-            }
 
-            Log.d(TAG, "chat.size"+queryDocumentSnapshots.size());
-            for (DocumentSnapshot snapshot:queryDocumentSnapshots) {
+
+        queryChats.get().addOnSuccessListener((snapshots)->{
+            Log.d(TAG, "chat.size"+snapshots.size());
+            for (DocumentSnapshot snapshot:snapshots) {
                 Log.d(TAG, "doc id->"+snapshot.getId()+", "+snapshot.toObject(Chat.class));
             }
 
             // read chat or create new chat
-            if (queryDocumentSnapshots.size() == 0){
+            if (snapshots.size() == 0){
                 queryCreateChat();
             } else {
-
-                curChat = queryDocumentSnapshots.toObjects(Chat.class).get(0);
-                curChat.setChatId( queryDocumentSnapshots.getDocuments().get(0).getId());
+                curChat = snapshots.toObjects(Chat.class).get(0);
+                curChat.setChatId( snapshots.getDocuments().get(0).getId());
                 chatRef = firestore.collection(COLLECTION_CHAT).document(curChat.getChatId());
                 // load messages
                 listenToMessages();
             }
-            // remove listener?
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "Error query chat by participant");
+            e.printStackTrace();
+            Snackbar.make(rvMessages, "Error(get chat by uids): "+e.getMessage(), Snackbar.LENGTH_SHORT).show();
         });
     }
 
@@ -203,6 +201,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
                 }).addOnFailureListener((e)->{
                     Log.d(TAG, "queryCreateChat -> failed("+e.getMessage()+"");
                     e.printStackTrace();
+                    Snackbar.make(rvMessages, "Error(new chat): "+e.getMessage(), Snackbar.LENGTH_SHORT).show();
         });
 
     }
@@ -214,11 +213,14 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             return;
         };
 
-        msgListener = chatRef.collection(COLLECTION_MESSAGES).orderBy("timestamp", Query.Direction.ASCENDING).addSnapshotListener((snapshots, e) -> {
+        msgListener = chatRef.collection(COLLECTION_MESSAGES)
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .addSnapshotListener((snapshots, e) -> {
             Log.d(TAG, "Listen to message changes");
             if (e != null){
                 Log.d(TAG, "Listen failed -> "+e.getMessage());
                 e.printStackTrace();
+                return;
             }
 
             messages.clear();
@@ -297,12 +299,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         builder.setTitle("Invalid argument")
                 .setMessage("Argument missing")
                 .setCancelable(false)
-                .setPositiveButton("Dismiss", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
+                .setPositiveButton("Dismiss", (dialog, which)->{
+                    finish();
+                } )
                 .show();
     }
 

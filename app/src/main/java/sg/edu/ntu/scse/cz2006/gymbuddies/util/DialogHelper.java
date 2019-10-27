@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import sg.edu.ntu.scse.cz2006.gymbuddies.BuildConfig;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 
@@ -20,6 +21,20 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
  * @since 2019-10-22
  */
 public class DialogHelper {
+
+    public static Dialog displayBuildInfo(Context context){
+        String msg = "";
+        msg += String.format("VERSION_CODE: %d\n", BuildConfig.VERSION_CODE);
+        msg += String.format("VERSION_NAME: %s\n", BuildConfig.VERSION_NAME);
+        msg += String.format("BUILD_TYPE: %s\n", BuildConfig.BUILD_TYPE);
+        msg += String.format("BUILD_TIME: %s\n", BuildConfig.TIMESTAMP);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        return builder.setTitle("Build Info")
+                .setMessage(msg)
+                .setPositiveButton("Cancel",null)
+                .show();
+    }
 
     public static Dialog displayBuddyProfile(Context context, User user, Drawable drawable){
         // inflate dialog layout

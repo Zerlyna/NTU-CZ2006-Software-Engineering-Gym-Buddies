@@ -144,7 +144,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
             favUserIds.clear();
             if (doc != null){
                 FavBuddyRecord fav = doc.toObject(FavBuddyRecord.class);
-                favUserIds.addAll(fav.getBuddiesId());
+                if (fav!=null){
+                    favUserIds.addAll(fav.getBuddiesId());
+                }
             }
             adapter.notifyDataSetChanged();
         });
@@ -278,7 +280,13 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
 
     @Override
     public void onViewClicked(View view, ChatAdapter.ChatViewHolder holder, int action) {
-        Chat chat = chats.get(holder.getAdapterPosition());
+        int pos = holder.getAdapterPosition();
+        if (pos<0 || pos>=chats.size()){
+            Log.d(TAG, "invalid pos: "+pos);
+            return;
+        }
+
+        Chat chat = chats.get(pos);
         switch (action){
             case ChatAdapter.ACTION_CLICK_ON_ITEM_PIC:
                 if (chat.getOtherUser()!=null){
