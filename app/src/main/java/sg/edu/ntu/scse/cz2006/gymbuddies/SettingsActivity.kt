@@ -1,7 +1,9 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.preference.Preference
@@ -48,6 +50,8 @@ class SettingsActivity : AppCompatActivity() {
      */
     class SettingsFragment : PreferenceFragmentCompat() {
         private val dialogFragmentTag = "androidx.preference.PreferenceFragment.DIALOG"
+        private var devinfo: Int = 0
+        private var devToast: Toast? = null
         /**
          * Function that is ran when the preference screen is being created
          * @param savedInstanceState Bundle The Android saved instance state
@@ -56,9 +60,22 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             findPreference<Preference>("about")?.setOnPreferenceClickListener { Attribouter.from(context).show(); true }
-            findPreference<Preference>("crash")?.setOnPreferenceClickListener { Crashlytics.getInstance().crash(); true }
             findPreference<Preference>("nearby-gyms")?.setOnPreferenceChangeListener { pref, newVal -> pref.summary = newVal.toString(); true}
             findPreference<Preference>("nearby-gyms")?.summary = preferenceManager.sharedPreferences.getInt("nearby-gyms", 10).toString()
+            findPreference<Preference>("info")?.setOnPreferenceClickListener {
+                devinfo++
+                devToast?.cancel()
+                if (devinfo in 6..9) devToast = Toast.makeText(context, "${10 - devinfo} more taps to become a developer!", Toast.LENGTH_SHORT)
+                else if (devinfo == 10) {
+                    @SuppressLint("ShowToast")
+                    devToast = Toast.makeText(context, "You are now a developer!", Toast.LENGTH_LONG)
+                    addPreferencesFromResource(R.xml.root_devinfo)
+                    findPreference<Preference>("crash")?.setOnPreferenceClickListener { Crashlytics.getInstance().crash(); true }
+                }
+                devToast?.show()
+                true
+            }
+            findPreference<Preference>("info")?.summary = "${BuildConfig.VERSION_NAME}_b${BuildConfig.VERSION_CODE}"
         }
 
         /**

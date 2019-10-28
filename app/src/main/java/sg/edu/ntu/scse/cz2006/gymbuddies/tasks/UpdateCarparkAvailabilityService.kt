@@ -3,6 +3,9 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.tasks
 import android.app.IntentService
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.util.Log
 import androidx.preference.PreferenceManager
 import com.google.gson.Gson
@@ -11,11 +14,15 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.CarparkAvailability
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.LtaObject
 import java.io.File
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 
 /**
- * Created by Kenneth on 22/10/2019.
+ * Internal IntentService for updating carpark availability
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-22
  */
 class UpdateCarparkAvailabilityService : IntentService(TAG) {
 
@@ -24,8 +31,33 @@ class UpdateCarparkAvailabilityService : IntentService(TAG) {
         onHandleWork(intent)
     }
 
+    /**
+     * Checks if there is internet connection
+     *
+     * @return Boolean true if present, false otherwise
+     */
+    fun isInternetAvailable(): Boolean {
+        var result = false
+        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cm?.run {
+                cm.getNetworkCapabilities(cm.activeNetwork)?.run {
+                    result = when {
+                        hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                        hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                        hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                        else -> false
+                    }
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            cm?.run { cm.activeNetworkInfo?.run { if (type == ConnectivityManager.TYPE_WIFI) { result = true } else if (type == ConnectivityManager.TYPE_MOBILE) { result = true } } }
+        }
+        return result
+    }
+
     private fun onHandleWork(intent: Intent) {
-        // TODO: Fetch all the data from LTA API
         // Check for API key
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
         val apikey = sp.getString("ltakey", "invalid")
@@ -34,23 +66,31 @@ class UpdateCarparkAvailabilityService : IntentService(TAG) {
             return
         }
 
+        // Check internet connection
+        if (!isInternetAvailable()) {
+            Log.e(TAG, "No internet connection detected, not continuing")
+            return
+        }
+
         var skip = 0
         val gson = Gson()
         val carparkList = ArrayList<CarparkAvailability>()
         Log.i(TAG, "Downloading latest data")
+        var retry = 0
         while (true) {
-            val url = "$LTA_URL$skip"
-            val uri = URL(url)
-            val conn = uri.openConnection() as HttpURLConnection
-            conn.connectTimeout = TIMEOUT
-            conn.readTimeout = TIMEOUT
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("AccountKey", apikey)
-            conn.connect()
-            Log.d(TAG, "Connecting to $url")
-
-            val data = conn.inputStream.bufferedReader().use { it.readLine() }
             try {
+                val url = "$LTA_URL$skip"
+                val uri = URL(url)
+                val conn = uri.openConnection() as HttpURLConnection
+                conn.connectTimeout = TIMEOUT
+                conn.readTimeout = TIMEOUT
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("AccountKey", apikey)
+                conn.connect()
+                Log.d(TAG, "Connecting to $url")
+
+                val data = conn.inputStream.bufferedReader().use { it.readLine() }
+
                 val obj = gson.fromJson<LtaObject>(data, LtaObject::class.java)
                 if (obj.value.size == 0) {
                     Log.i(TAG, "Finished parsing data, exiting loop")
@@ -58,8 +98,18 @@ class UpdateCarparkAvailabilityService : IntentService(TAG) {
                 }
                 carparkList.addAll(obj.value)
                 skip += obj.value.size
+                retry = 0
             } catch (e: JsonSyntaxException) {
-                Log.e(TAG, "Failed to parse GSON from $data")
+                Log.e(TAG, "Failed to parse GSON from returned data")
+                retry++
+            } catch (e: SocketTimeoutException) {
+                Log.e(TAG, "HTTP Request Timeout (${e.localizedMessage})")
+                retry++
+            } finally {
+                if (retry > 10) {
+                    Log.e(TAG, "Failed query for getting availability from count $skip more than 10 times, failing and exiting service")
+                    return
+                }
             }
         }
 

@@ -364,6 +364,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                     }
                 });
                 favouritesList.setAdapter(favAdapter);
+                if (getContext() == null) return; // We don't go further when this happens
                 final float scale = getResources().getDisplayMetrics().density;
                 int maxHeight = (int) (450 * scale + 0.5f);
                 favBottomSheet.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -377,6 +378,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 // Get the list of gyms with reviews and update the list after
                 Log.d(TAG, "Retrieving Gym Reviews to determine ratings");
                 FirebaseFirestore.getInstance().collection(GymHelper.GYM_REVIEWS_COLLECTION).get().addOnSuccessListener(querySnapshot1 -> {
+                    if (favAdapter == null) { Log.w(TAG, "Adapter not initialized, not continuing to retreive ratings"); return; }
                     Log.d(TAG, "Gym Reviews for Favourites obtained. Size: " + querySnapshot1.getDocuments().size());
                     HashMap<String, GymRatingStats> refs = new HashMap<>();
                     for (DocumentSnapshot ds : querySnapshot1.getDocuments()) { refs.put(ds.getId(), ds.toObject(GymRatingStats.class)); }

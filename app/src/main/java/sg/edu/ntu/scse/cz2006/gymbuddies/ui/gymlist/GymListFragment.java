@@ -350,7 +350,8 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
                 favAdapter = new FavGymAdapter(finalList);
                 favAdapter.setOnClickListener(v -> {
                     if (v.getTag() instanceof FavGymAdapter.FavViewHolder) {
-                        gymListViewModel.setSelectedGym(favAdapter.getList().get(((FavGymAdapter.FavViewHolder) v.getTag()).getAdapterPosition()));
+                        FavGymAdapter.FavViewHolder vh = (FavGymAdapter.FavViewHolder) v.getTag();
+                        gymListViewModel.setSelectedGym((vh.getAdapterPosition() == -1) ? null : favAdapter.getList().get(vh.getAdapterPosition()));
                     }
                 });
                 favouritesList.setAdapter(favAdapter);
