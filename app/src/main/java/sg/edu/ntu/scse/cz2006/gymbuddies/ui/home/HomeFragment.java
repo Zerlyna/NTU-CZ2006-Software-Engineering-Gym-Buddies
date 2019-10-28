@@ -364,6 +364,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                     }
                 });
                 favouritesList.setAdapter(favAdapter);
+                if (getContext() == null) return; // We don't go further when this happens
                 final float scale = getResources().getDisplayMetrics().density;
                 int maxHeight = (int) (450 * scale + 0.5f);
                 favBottomSheet.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
