@@ -1,6 +1,6 @@
-Next Meeting: __Tuesday (29/10) from 1530hrs__  
-Location: __SCSE Lounge__  
-__Estimated to end by 1800hrs__
+Next Meeting: __Tuesday (5/11) from 1530hrs__  
+Location: __The Arc: LHN-PDR-??__  
+__Estimated to end by 1930hrs__
 
 __IMPORTANT Details__
 
@@ -50,6 +50,7 @@ This crash does not include the crash button in the app settings haha :P
         + Main functions
             + Kenneth - ???
             + Chiayu - Bug fixing for Chat
+            + Chiayu - Android-docs
         + Possibility of a Report function ???
     + Presentation slides
         + Due on presentation
@@ -67,4 +68,4 @@ This crash does not include the crash button in the app settings haha :P
     - UI
     - UML Diagrams
     - Design patterns
-    
+
