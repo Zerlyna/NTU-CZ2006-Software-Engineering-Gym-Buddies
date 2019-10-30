@@ -445,6 +445,18 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         cp_details_rate.text = WordUtils.capitalizeFully(cp_details_rate.text.toString(), ' ', '\n')
         cp_details_misc.text = WordUtils.capitalizeFully(cp_details_misc.text.toString(), ' ', '\n')
 
+        // Add HDB Rates to cp_details_rate cause by right all HDB
+        val centralCarparks = arrayListOf("HLM", "KAB", "KAM", "KAS", "PRM", "SLS", "SR1", "SR2", "TPM", "UCS") // These carparks are carparks that charges higher according to HDB site
+        val peakEiCarparks = getPeakCarparks();
+        if (cp.first.shortTermParking != "NO") {
+            // Has Hourly Parking, Display Hourly Parking rates
+            var rates = "Carpark Rates:\nCars: ${if (centralCarparks.contains(cp.first.id)) "$1.20 per half hour (7AM-5PM, Mon-Sat),\n" else ""}$0.60 per " +
+                    "half hour${if (centralCarparks.contains(cp.first.id)) " (other hours)" else ""}"
+            if (peakEiCarparks.containsKey(cp.first.id)) rates += "\nPeak: ${peakEiCarparks[cp.first.id]}"
+            rates += "\nMotocycles: $0.65 per lot"
+            cp_details_rate.text = cp_details_rate.text.toString() + "\n\n$rates"
+        }
+
         // Get data from file
         val jsonFile = File(cacheDir, "avail.txt")
         val json = jsonFile.readText()
@@ -459,6 +471,47 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         val coordinates = SVY21Coordinate(cp.first.y, cp.first.x).asLatLon()
         cp_details_direction.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?daddr=" +
                 if (coordinates == null) cp_details_address.text.toString() else "${coordinates.latitude},${coordinates.longitude}"))) }
+    }
+
+    /**
+     * Internal function used to get all HDB carparks as per data from https://www.hdb.gov.sg/cs/infoweb/car-parks/short-term-parking/short-term-parking-charges
+     * @return HashMap<String, String> Hashmap of all peak hour carpark data
+     */
+    private fun getPeakCarparks(): HashMap<String, String> {
+        return hashMapOf(
+            Pair("ACB", "$1.40 per half hour (10AM-10:30PM daily)"),
+            Pair("B6", "$0.80 per half hour (10AM-8PM daily)"),
+            Pair("B6M", "$0.80 per half hour (10AM-8PM daily)"),
+            Pair("B7", "$0.80 per half hour (10AM-8PM daily)"),
+            Pair("KB10", "$0.80 per half hour (7AM-2PM, Mon-Sat)"),
+            Pair("KB11", "$0.80 per half hour (7AM-2PM, Mon-Sat)"),
+            Pair("KB12", "$0.80 per half hour (7AM-2PM, Mon-Sat)"),
+            Pair("BBB", "$1.40 per half hour (10AM-10:30PM daily)"),
+            Pair("CY", "$1.40 per half hour (10AM-10:30PM daily)"),
+            Pair("GSM", "$0.80 per half hour (7AM-10:30PM, Fri, Sat & PH)"),
+            Pair("CR1", "$0.80 per half hour (10AM-10:30PM daily)"),
+            Pair("HG10", "$0.80 per half hour (11AM-2PM, Mon-Fri/7AM-2PM, Sat, Sun & PH)"),
+            Pair("HG95", "$0.80 per half hour (11AM-2PM, Mon-Fri/7AM-2PM, Sat, Sun & PH)"),
+            Pair("HG55", "$0.80 per half hour (10AM-10:30PM, Mon-Fri/7AM-10:30PM, Sat, Sun & PH)"),
+            Pair("JCM", "$0.80 per half hour (7AM-10:30PM, Fri-Sun & PH)"),
+            Pair("HG9", "$0.80 per half hour (11AM-2PM/6PM-9PM, Mon-Fri/11AM-9PM, Sat, Sun & PH)"),
+            Pair("HG16", "$0.80 per half hour (11AM-2PM/6PM-9PM, Mon-Fri/11AM-9PM, Sat, Sun & PH)"),
+            Pair("HG9T", "$0.80 per half hour (11AM-2PM/6PM-9PM, Mon-Fri/7AM-9PM, Sat, Sun & PH)"),
+            Pair("HG15", "$0.80 per half hour (11AM-2PM/6PM-9PM, Mon-Fri/7AM-5PM, Sat, Sun & PH)"),
+            Pair("HG25", "$0.80 per half hour (11AM-2PM/6PM-9PM, Mon-Fri/11AM-2PM, Sat, Sun & PH)"),
+            Pair("MP14", "$0.80 per half hour (8AM-8PM daily)"),
+            Pair("MP15", "$0.80 per half hour (8AM-8PM daily)"),
+            Pair("MP16", "$0.80 per half hour (8AM-8PM daily)"),
+            Pair("MP19", "$0.80 per half hour (10AM-2PM, Fri-Sun & PH)"),
+            Pair("SE20", "$0.80 per half hour (5PM-10:30PM daily)"),
+            Pair("SE24", "$0.80 per half hour (5PM-10:30PM daily)"),
+            Pair("SE21", "$0.80 per half hour (5PM-10:30PM, Mon-Sat)"),
+            Pair("SE22", "$0.80 per half hour (5PM-10:30PM, Mon-Sat)"),
+            Pair("BRB1", "$1.40 per half hour (8AM-6PM daily)"),
+            Pair("DUXM", "$1.40 per half hour (7AM-5PM, Mon-Sat)"),
+            Pair("WCB", "$1.40 per half hour (10AM-10:30PM daily)"),
+            Pair("BJ14", "$0.80 per half hour (7AM-10:30PM daily)")
+        )
     }
 
     // Search related
