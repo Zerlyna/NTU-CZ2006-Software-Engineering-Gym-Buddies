@@ -447,12 +447,12 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Add HDB Rates to cp_details_rate cause by right all HDB
         val centralCarparks = arrayListOf("HLM", "KAB", "KAM", "KAS", "PRM", "SLS", "SR1", "SR2", "TPM", "UCS") // These carparks are carparks that charges higher according to HDB site
-        val peakEiCarparks = getPeakCarparks();
+        val peakCarparks = getPeakCarparks();
         if (cp.first.shortTermParking != "NO") {
             // Has Hourly Parking, Display Hourly Parking rates
             var rates = "Carpark Rates:\nCars: ${if (centralCarparks.contains(cp.first.id)) "$1.20 per half hour (7AM-5PM, Mon-Sat),\n" else ""}$0.60 per " +
                     "half hour${if (centralCarparks.contains(cp.first.id)) " (other hours)" else ""}"
-            if (peakEiCarparks.containsKey(cp.first.id)) rates += "\nPeak: ${peakEiCarparks[cp.first.id]}"
+            if (peakCarparks.containsKey(cp.first.id)) rates += "\nPeak: ${peakCarparks[cp.first.id]}"
             rates += "\nMotocycles: $0.65 per lot"
             cp_details_rate.text = cp_details_rate.text.toString() + "\n\n$rates"
         }
