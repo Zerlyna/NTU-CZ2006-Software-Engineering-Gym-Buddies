@@ -216,7 +216,7 @@ class ProfileEditActivity : AppCompatActivity() {
     private fun validate(): Boolean {
         // Check all fields set up and filled
         til_etName.isErrorEnabled = false
-        val name = etName.text.toString()
+        val name = etName.text.toString().trim()
         val prefLocation = location.selectedItem.toString()
         val gender = findViewById<RadioButton>(radio_gender.checkedRadioButtonId).text
         val timeRange = findViewById<RadioButton>(radio_time.checkedRadioButtonId).text
