@@ -824,7 +824,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     private fun submitReview(bar: MaterialRatingBar, reviewMessage: TextInputEditText) {
         val rateValue = bar.rating
-        val reviewValue = if (reviewMessage.text == null) "" else reviewMessage.text!!.toString()
+        val reviewValue = if (reviewMessage.text == null) "" else reviewMessage.text!!.toString().trim()
         // Attempt to detect any error messsages
         val error = if (reviewValue.length > 512) "Review message is too long" else null
         val frate = FirestoreRating(rateValue, reviewValue, System.currentTimeMillis())
