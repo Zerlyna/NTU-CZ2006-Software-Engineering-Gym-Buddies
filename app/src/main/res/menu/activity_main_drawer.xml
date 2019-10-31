@@ -25,10 +25,6 @@
             android:id="@+id/nav_chat_list"
             android:icon="@drawable/ic_message_text"
             android:title="@string/menu_chat_list" />
-        <item
-            android:id="@+id/nav_forum"
-            android:icon="@drawable/ic_forum"
-            android:title="@string/menu_forum" />
     </group>
 
     <group android:id="@+id/nav_group_system_tools" android:checkableBehavior="single">
