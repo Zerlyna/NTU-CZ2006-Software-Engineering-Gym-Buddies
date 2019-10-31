@@ -2,6 +2,7 @@ package sg.edu.ntu.scse.cz2006.gymbuddies;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
@@ -26,6 +27,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper;
 
 public class MainActivity extends AppCompatActivity {
@@ -79,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
                 RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
                 roundBitmap.setCircular(true);
                 ProfilePicHelper.setProfilePic(roundBitmap);
+                DiskIOHelper.saveImageCache(this, bitmap, firebaseUser.getUid());
+                Log.i("Main", "Updated your own profile picture");
                 ((ImageView) header.findViewById(R.id.profile_pic)).setImageDrawable(roundBitmap);
             } }).execute(firebaseUser.getPhotoUrl()); // Download and set as profile pic
         header.setOnClickListener(v -> {

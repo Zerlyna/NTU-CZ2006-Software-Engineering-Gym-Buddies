@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.AsyncTask
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import sg.edu.ntu.scse.cz2006.gymbuddies.R
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymRatings
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
@@ -67,13 +69,23 @@ class GymReviewAdapter(activity: Activity, reviews: List<GymRatings>) : Recycler
 
         val activity = actRef.get() ?: return
         if (s.userObj.profilePicUri.isNotEmpty() && s.userObj.profilePicUri != "null")
-            GetProfilePicFromFirebaseAuth(activity, object: GetProfilePicFromFirebaseAuth.Callback {
-                override fun onComplete(bitmap: Bitmap?) {
-                    val roundBitmap = RoundedBitmapDrawableFactory.create(activity.resources, bitmap)
-                    roundBitmap.isCircular = true
-                    holder.profilePic.setImageDrawable(roundBitmap)
-                }
-            }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, Uri.parse(s.userObj.profilePicUri))
+            if (DiskIOHelper.hasImageCache(activity, s.userObj.uid)) {
+                Log.i("GymAdapter", "Found Cached Profile Pic for ${s.userObj.uid}")
+                val roundBitmap = RoundedBitmapDrawableFactory.create(activity.resources, DiskIOHelper.readImageCache(activity, s.userObj.uid))
+                roundBitmap.isCircular = true
+                holder.profilePic.setImageDrawable(roundBitmap)
+            } else {
+                GetProfilePicFromFirebaseAuth(activity, object : GetProfilePicFromFirebaseAuth.Callback {
+                        override fun onComplete(bitmap: Bitmap?) {
+                            val roundBitmap = RoundedBitmapDrawableFactory.create(activity.resources, bitmap)
+                            roundBitmap.isCircular = true
+                            holder.profilePic.setImageDrawable(roundBitmap)
+                            DiskIOHelper.saveImageCache(activity, bitmap, s.userObj.uid)
+                            Log.i("GymAdapter", "Caching Profile Pic for ${s.userObj.uid}")
+                        }
+                    }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, Uri.parse(s.userObj.profilePicUri)
+                )
+            }
     }
 
     /**
