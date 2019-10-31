@@ -132,7 +132,7 @@
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
             android:padding="8dp"
-            android:drawableStart="@drawable/ic_height"
+            android:drawableStart="@drawable/ic_height_limit_logo"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
             app:fontFamily="@font/google_product_sans"
