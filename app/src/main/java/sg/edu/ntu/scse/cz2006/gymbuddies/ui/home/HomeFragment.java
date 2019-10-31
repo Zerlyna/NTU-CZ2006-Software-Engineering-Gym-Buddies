@@ -765,7 +765,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
      */
     private void submitReview(MaterialRatingBar bar, TextInputEditText reviewMessage) {
         float rateValue = bar.getRating();
-        String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString();
+        String reviewValue = (reviewMessage.getText() == null) ? "" : reviewMessage.getText().toString().trim();
         // Attempt to detect any error messsages
         String error = (reviewValue.length() > 512) ? "Review message is too long" : null;
         FirestoreRating frate = new FirestoreRating(rateValue, reviewValue, System.currentTimeMillis());
