@@ -40,7 +40,7 @@ public class ViewHelper {
                 imgView.setTag(user.getProfilePicUri());
             }
         }else {
-            if (user.getProfilePicUri() != null) {
+            if (!user.getProfilePicUri().isEmpty() && !user.getProfilePicUri().equalsIgnoreCase("null")) {
                 Activity activity = (Activity) imgView.getContext();
                 new GetProfilePicFromFirebaseAuth(activity, new GetProfilePicFromFirebaseAuth.Callback() {
                     @Override
