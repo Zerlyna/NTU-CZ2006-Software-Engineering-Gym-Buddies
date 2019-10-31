@@ -34,10 +34,4 @@
         android:name="sg.edu.ntu.scse.cz2006.gymbuddies.ui.chatlist.ChatListFragment"
         android:label="@string/menu_chat_list"
         tools:layout="@layout/fragment_chat_list" />
-
-    <fragment
-        android:id="@+id/nav_forum"
-        android:name="sg.edu.ntu.scse.cz2006.gymbuddies.ui.forum.ForumFragment"
-        android:label="@string/menu_forum"
-        tools:layout="@layout/fragment_forum" />
 </navigation>
