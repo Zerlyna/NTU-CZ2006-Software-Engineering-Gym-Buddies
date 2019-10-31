@@ -239,7 +239,7 @@ class ProfileEditActivity : AppCompatActivity() {
      */
     private fun addOrUpdate() {
         Log.i(TAG, "Doing add/update of profile")
-        val name = etName.text.toString()
+        val name = etName.text.toString().trim()
         val prefLocation = location.selectedItem.toString()
         val gender = findViewById<RadioButton>(radio_gender.checkedRadioButtonId).text.toString()
         val timeRange = findViewById<RadioButton>(radio_time.checkedRadioButtonId).text.toString()
