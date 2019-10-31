@@ -223,6 +223,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                     autoExpandFlag = false;
                     gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                 }
+                if (gymBottomSheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN && favBottomSheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+                    favBottomSheetBehavior.setHideable(true);
+                    favBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                }
             }
 
             @Override

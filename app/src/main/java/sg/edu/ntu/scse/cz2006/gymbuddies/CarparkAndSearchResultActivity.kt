@@ -124,6 +124,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun doSearch() {
         supportActionBar?.title = "Search Results"
         val gymBottomSheetBehavior = BottomSheetBehavior.from(gym_details_sheet)
+        val resBottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
         val callback = object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 Log.d("GymDetailsSheet", "State Changed: $newState")
@@ -135,6 +136,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
                     autoExpandFlag = false
                     gymBottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+                if (gymBottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN && resBottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
+                    resBottomSheetBehavior.isHideable = true
+                    resBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
 
@@ -372,6 +377,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun setupCpControls() {
         val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
+        val resBottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
         val callback = object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 Log.d("CpDetailsSheet", "State Changed: $newState")
@@ -381,6 +387,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (autoExpandFlag && newState != BottomSheetBehavior.STATE_SETTLING) {
                     autoExpandFlag = false
                     cpBottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+                if (cpBottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN && resBottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
+                    resBottomSheetBehavior.isHideable = true
+                    resBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
 
