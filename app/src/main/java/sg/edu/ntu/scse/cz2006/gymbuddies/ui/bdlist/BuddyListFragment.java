@@ -26,7 +26,6 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Transaction;
 
@@ -39,11 +38,18 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
-import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
-public class BuddyListFragment extends Fragment implements AppConstants, OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> {
+/**
+ * The fragment display list of buddies (favoured user) of current user
+ * it allow user to view profile information, start chat and un-favour of user
+ *
+ * @author Chia Yu
+ * @since 2019-09-06
+ */
+public class BuddyListFragment extends Fragment implements AppConstants, OnRecyclerViewInteractedListener<BuddyResultAdapter.ViewHolder> {
     private final String TAG = "GB.frag.BdList";
     private BuddyListViewModel buddyListViewModel;
     private RecyclerView rvResult;
@@ -56,9 +62,16 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
     private FirebaseFirestore firestore;
     private DocumentReference favBuddiesRef;
     private FavBuddyRecord favRecord;
-    private ListenerRegistration favRecordChangeListener;
+//    private ListenerRegistration favRecordChangeListener;
 
 
+    /**
+     * Internal lifecycle fragment for creating the fragment view
+     * @param inflater Layout Inflater object
+     * @param container View Group Container object
+     * @param savedInstanceState Android Saved Instance State
+     * @return The created fragment view
+     */
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         buddyListViewModel = ViewModelProviders.of(this).get(BuddyListViewModel.class);
         View root = inflater.inflate(R.layout.fragment_buddy_list, container, false);
@@ -212,7 +225,7 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
     }
 
     @Override
-    public void onViewClicked(View view, BuddyResultAdapter.ViewHolder holder, int action) {
+    public void onViewInteracted(View view, BuddyResultAdapter.ViewHolder holder, int action) {
         User user = listFavUsers.get(holder.getAdapterPosition());
         switch (action) {
             case BuddyResultAdapter.ACTION_CLICK_ON_FAV_ITEM:

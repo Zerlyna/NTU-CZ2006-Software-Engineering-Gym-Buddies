@@ -22,6 +22,11 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.BuddySearchResultActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 
+
+/**
+ * @author Chia Yu
+ * @since 2019-09-06
+ */
 public class BuddySearchFragment extends Fragment {
     private BuddySearchViewModel buddySearchViewModel;
     private Button btnTest;

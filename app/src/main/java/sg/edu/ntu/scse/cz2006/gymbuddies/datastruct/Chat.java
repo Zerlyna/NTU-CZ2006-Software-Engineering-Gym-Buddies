@@ -4,6 +4,11 @@ import com.google.firebase.firestore.Exclude;
 
 import java.util.HashMap;
 
+
+/**
+ * @author Chia Yu
+ * @since 2019-10-22
+ */
 public class Chat {
     private String lastMessage="";
     private long lastUpdate=0;

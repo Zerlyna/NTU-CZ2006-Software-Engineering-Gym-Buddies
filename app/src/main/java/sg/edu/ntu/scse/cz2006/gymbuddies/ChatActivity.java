@@ -38,10 +38,17 @@ import java.util.ArrayList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.MessageAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.ChatMessage;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper;
 
-public class ChatActivity extends AppCompatActivity implements AppConstants, View.OnClickListener {
+/**
+ * The Activity displaying chat history between another user, and allows user to sent and receive message.
+ *
+ * @author Chia Yu
+ * @since 2019-10-22
+ */
+public class ChatActivity extends AppCompatActivity implements AppConstants, View.OnClickListener, OnRecyclerViewInteractedListener {
     private static final String TAG = "gb.act.chat";
     private EditText etMessage;
     private ImageButton imgBtnSend;
@@ -57,6 +64,11 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     Chat curChat;
     String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+    /**
+     * Android framework life cycle
+     * create reference to frequently update view, and set up adapter to display messages
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +83,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         imgBtnSend.setOnClickListener(this);
         messages = new ArrayList<>();
         adapter = new MessageAdapter(messages, uid);
+        adapter.setOnRecyclerViewInteractListener(this);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.setOrientation(RecyclerView.VERTICAL);
         rvMessages.setLayoutManager(mLayoutManager);
@@ -90,6 +103,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         init();
     }
 
+    /**
+     * the method handle on data received from other activity, and based on the data to initialise activity.
+     */
     private void init(){
         boolean needUserPic = true;
         if (getIntent().hasExtra("chat_id")){
@@ -119,13 +135,18 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     }
 
 
-
+    /**
+     * Android framework lifecycle, register an observer to listen to chat message changes
+     */
     @Override
     protected void onResume() {
         super.onResume();
         listenToMessages();
     }
 
+    /**
+     * Android framework lifecycle, unregister an observer to listen to chat message changes
+     */
     @Override
     protected void onPause() {
         stopListenToMessages();
@@ -133,7 +154,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     }
 
 
-
+    /**
+     * The method handle query about chat details from FirebaseFirestore if chat id is provided
+     */
     private void queryChatByChatId(){
         Log.d(TAG, "query Chat by chat Id");
         String chatId = getIntent().getStringExtra("chat_id");
@@ -149,6 +172,10 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         });
     }
 
+    /**
+     * The method handle query about chat details from FirebaseFirestore if chat id is not provided,
+     * attempt to find chat detail based on member participation
+     */
     public void queryChatByParticipants(){
         Log.d(TAG, "find existing chat by uid(self and other)");
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -160,7 +187,13 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
                 .whereEqualTo(FieldPath.of(  "participant", otherUid), true);
 
 
+
         queryChats.get().addOnSuccessListener((snapshots)->{
+            if (snapshots == null){
+                Log.d(TAG, "queryChatByParticipants.OnSuccess: snapshots is null");
+                Snackbar.make(rvMessages, "Error(get chat by uids): something is wrong", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
             Log.d(TAG, "chat.size"+snapshots.size());
             for (DocumentSnapshot snapshot:snapshots) {
                 Log.d(TAG, "doc id->"+snapshot.getId()+", "+snapshot.toObject(Chat.class));
@@ -183,6 +216,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         });
     }
 
+    /**
+     * The method create new chat record, once there is no chat found in FirebaseFirestore
+     */
     private void queryCreateChat(){
         Log.d(TAG, "Create new chat");
 
@@ -206,6 +242,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
 
     }
 
+    /**
+     * Register an observer on chat messages changes
+     */
     private void listenToMessages(){
         Log.d(TAG, "listen to message");
         if (chatRef == null || (curChat !=null && curChat.getChatId()==null)){
@@ -233,6 +272,10 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             rvMessages.scrollToPosition(messages.size()-1);
         });
     }
+
+    /**
+     * Unregister observer on chat message changes
+     */
     private void stopListenToMessages(){
         if (msgListener != null){
             msgListener.remove();
@@ -241,7 +284,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     }
 
     /**
-     * Handle option menu action
+     * Handle option menu action like back button pressed on title bar
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -254,6 +297,10 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
         }
     }
 
+    /**
+     * The method provides implementation for View.OnClickListener
+     * @param v
+     */
     @Override
     public void onClick(View v) {
         if (v == imgBtnSend){
@@ -274,6 +321,10 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
 
     }
 
+    /**
+     * The method query another user's profile picture as chat icon
+     * @param imgUrl
+     */
     private void getProfilePic(String imgUrl){
         if (imgUrl.equals(imgBuddyPic.getTag())){
             return;
@@ -294,6 +345,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
 
     }
 
+    /**
+     * The method display invalid messages when data received from another activity is insufficient to initialised activity.
+     */
     private void showDialogInvalidArgs(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Invalid argument")
@@ -306,7 +360,10 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
     }
 
 
-
+    /**
+     * The method performs create/update of chat message on FirebaseFirestore
+     * @param msg
+     */
     private void commitMessage(ChatMessage msg){
         if (chatRef == null){
             Log.d(TAG, "chatRef is null");
@@ -325,11 +382,78 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
                 return null;
             }
         }).addOnSuccessListener((v)->{
-            Log.d(TAG, "favRecord updated success");
+            Log.d(TAG, "Message updated success");
         }).addOnFailureListener((e)->{
-            Log.d(TAG, "favRecord updated failed");
+            Log.d(TAG, "Message updated failed");
             e.printStackTrace();
         });
     }
 
+    /**
+     * The method performs recall of chat message on FirebaseFirestore
+     * @param msg
+     */
+    private void recallMessage(ChatMessage msg){
+        if (chatRef == null){
+            Log.d(TAG, "chatRef is null");
+            return;
+        }
+
+        final DocumentReference messageRef = chatRef.collection(COLLECTION_MESSAGES).document();
+        firestore.runTransaction(new Transaction.Function<Void>() {
+            @Override
+            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
+
+
+                if (msg.getTimestamp() == curChat.getLastUpdate()){
+                    curChat.setLastMessage("The message is deleted");
+                    transaction.set(chatRef, curChat);
+                }
+
+                transaction.set(messageRef, msg);
+                return null;
+            }
+        }).addOnSuccessListener((v)->{
+            Log.d(TAG, "Message recalled success");
+        }).addOnFailureListener((e)->{
+            Log.d(TAG, "Message recalled failed");
+            e.printStackTrace();
+        });
+    }
+
+
+    /**
+     * The method provides the implementation on user interacting with RecyclerView's items
+     * @param view
+     * @param holder
+     * @param action
+     * @see MessageAdapter
+     * @see OnRecyclerViewInteractedListener
+     *
+     */
+    @Override
+    public void onViewInteracted(View view, RecyclerView.ViewHolder holder, int action) {
+        Log.d(TAG, "onViewInteracted:: action -> "+action);
+        switch (action){
+            case MessageAdapter.ACTION_LONG_CLICK_ON_VIEW:
+                int pos = holder.getAdapterPosition();
+                if (pos>=0){
+                    final ChatMessage msg = messages.get(pos);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Recall message")
+                            .setMessage("The action cannot be undone")
+                            .setPositiveButton("Delete", (dialogInterface, i)->{
+                                msg.setMessage(null);
+                                recallMessage(msg);
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+
+                }
+                break;
+            default:
+                Log.d(TAG, "onViewInteracted:: Unknown action -> "+action);
+                break;
+        }
+    }
 }
