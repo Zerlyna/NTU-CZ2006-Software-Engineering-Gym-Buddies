@@ -43,7 +43,6 @@ android {
         //outputFormat = 'javadoc'
         outputFormat = 'html'
         outputDirectory = "javadoc"
-        //outputDirectory = "kdoc"
         configuration {
             includeNonPublic = true
             reportUndocumented = true
