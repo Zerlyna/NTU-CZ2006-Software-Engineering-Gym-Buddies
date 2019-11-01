@@ -8,40 +8,36 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import java.util.List;
-
-import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark;
-import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarParkDao;
-import sg.edu.ntu.scse.cz2006.gymbuddies.data.GBDatabase;
-
+/**
+ * View Model object for the Home Fragment
+ * Note: This is not really being used for the Home Fragment, but its here due the MVVM model that Jetpack is being based off on
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-03
+ */
 public class HomeViewModel extends AndroidViewModel {
 
+    /**
+     * Sample Live Data
+     */
     private MutableLiveData<String> mText;
-    private LiveData<List<CarPark>> carParks;
 
+    /**
+     * Constructor for this view model
+     * @param application Application object
+     */
     public HomeViewModel(@NonNull Application application) {
         super(application);
         Log.d("Cy.GymBuddies.HomeVM", "Init start");
         mText = new MutableLiveData<>();
         mText.setValue("This is home fragment");
-
-
-
-        // TODO: move to gym details view model
-        try{
-            GBDatabase db = GBDatabase.getInstance(application);
-            CarParkDao dao = db.carParkDao();
-            carParks = dao.getAllCarParks();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
-
-
+    /**
+     * Gets the sample text live data
+     * @return Live Data of the sample
+     */
     public LiveData<String> getText() {
         return mText;
     }
-
-    public LiveData<List<CarPark>> getCarParks(){return carParks; }
 }

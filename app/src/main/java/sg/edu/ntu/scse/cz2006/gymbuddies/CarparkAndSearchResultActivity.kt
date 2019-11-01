@@ -42,6 +42,9 @@ import kotlinx.android.synthetic.main.fragment_cp_details.*
 import kotlinx.android.synthetic.main.fragment_gym_details.*
 import me.zhanghai.android.materialratingbar.MaterialRatingBar
 import org.apache.commons.text.WordUtils
+import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity.Companion.STATE_CARPARK
+import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity.Companion.STATE_SEARCH
+import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity.Companion.STATE_UNKNOWN
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.CarparkAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter
@@ -61,11 +64,31 @@ import java.io.File
 import java.util.*
 import kotlin.collections.HashMap
 
+/**
+ * Activity for showing both carpark and search results
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-14
+ * @property state Int Current state of the activity. Can be either [STATE_SEARCH], [STATE_CARPARK] or [STATE_UNKNOWN]
+ * @property mMap GoogleMap The Google Map Object
+ * @property backStack Boolean Flag for enabling custom backstack handling for gym details
+ * @property backStackCp Boolean Flag for enabling custom backstack handling for carpark details
+ * @property autoExpandFlag Boolean Flag for determining if the bottom sheet should auto expand when shown
+ * @property gpsPerm Boolean Flag to signify if we have GPS/Location Permission
+ * @property gymDetailFavListener ListenerRegistration? Firebase Firestore Listener for Gym Favourites data. This is used to handle real time updates to the favourites count of the gym
+ * @property selectedGymUid String? UID of the selected gym
+ * @property flagReviewing Boolean Flag to signify if the user is currently reviewing the gym and the gym review dialog is active
+ * @property coordinates LatLng? Coordinates of the selected gym for gym directions
+ */
 class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var state = STATE_SEARCH
     private lateinit var mMap: GoogleMap
 
+    /**
+     * Internal lifecycle function that is called when the activity is created
+     * @param savedInstanceState Bundle? Saved Instance State for configuration changes
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_carpark_and_search_result)
@@ -96,19 +119,23 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         map_view.getMapAsync(this)
     }
 
+    /**
+     * Internal function to display and error message and exit this activity if there is an error
+     * @param errorMessage String The error message to display
+     */
     private fun errorAndExit(errorMessage: String) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
         finish()
     }
 
-    /**
-     * Enable custom backstack handling
-     */
     private var backStack = false
     private var backStackCp = false
     private var autoExpandFlag = false
 
-
+    /**
+     * Internal lifecycle function called when the back button is pressed on the device
+     * We override it to properly handle the backstack changes if needed
+     */
     override fun onBackPressed() {
         if (backStack) {
             val gymBottomSheetBehavior = BottomSheetBehavior.from(gym_details_sheet)
@@ -121,6 +148,9 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         } else super.onBackPressed()
     }
 
+    /**
+     * This function is used to initialize the relevant view elements when [state] is [STATE_SEARCH]
+     */
     private fun doSearch() {
         supportActionBar?.title = "Search Results"
         val gymBottomSheetBehavior = BottomSheetBehavior.from(gym_details_sheet)
@@ -178,6 +208,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var gpsPerm = false
 
+    /**
+     * Internal function to perform gym searching and filtering
+     * @param param GymSearchBy Search paramters for gym
+     */
     private fun callSearchTask(param: GymSearchBy) {
         val locationClient = LocationServices.getFusedLocationProviderClient(this)
         locationClient.lastLocation.addOnSuccessListener(this) { location ->
@@ -188,6 +222,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Function that executes and updates the map and relevant data when search completes
+     * @param result ArrayList<FavGymObject> The completed search results. Can be empty for no results matching parameters
+     */
     private fun onSearchResult(result: ArrayList<FavGymObject>) {
         val noReviews = arrayOf("No results found from your search")
 
@@ -228,6 +266,9 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         BottomSheetBehavior.from(bottom_sheet).state = BottomSheetBehavior.STATE_EXPANDED
     }
 
+    /**
+     * This function is used to initialize the various view elements if [state] is [STATE_CARPARK]
+     */
     private fun doCarpark() {
         supportActionBar?.title = "View Nearby Carparks"
         val gymId = intent.getStringExtra("gym")
@@ -252,6 +293,11 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         UpdateCarparkAvailabilityService.updateCarpark(this) // Refresh availability data
     }
 
+    /**
+     * Function used to process and retrieve the nearest 10 carparks from the selected gym
+     * @param results ArrayList<Pair<CarPark, Float>> List of all carparks and their distance to the selected gym
+     * @param gym GymShell Selected gym object
+     */
     private fun processCarpark(results: ArrayList<Pair<CarPark, Float>>, gym: GymList.GymShell) {
         // Get first 10 only
         val cp = results.subList(0, 10)
@@ -304,6 +350,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         //bottom_sheet.requestLayout()
     }
 
+    /**
+     * Internal function to update the layout height of the results sheet
+     * This will either be to the height of the items or to half of the device screen if there are too many items
+     */
     private fun updateResultsLayoutHeight() {
         val scale = resources.displayMetrics.density
         val maxHeight = (450 * scale + 0.5f).toInt()
@@ -319,6 +369,14 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         bottom_sheet.requestLayout()
     }
 
+    /**
+     * Internal lifecycle function that executes when we receive permission grant/deny details
+     * We use this for the location permission
+     *
+     * @param requestCode Int Permission Request Code for reference
+     * @param permissions Array<out String> List of permissions requested
+     * @param grantResults IntArray Results of the permission request
+     */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             RC_LOC_SEARCH -> {
@@ -332,6 +390,11 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    /**
+     * Internal lifecycle function for when a menu item is selected
+     * @param item MenuItem The item selected
+     * @return Boolean true if complete, false otherwise
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) { finish(); return true }
         return super.onOptionsItemSelected(item)
@@ -339,16 +402,26 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
 
     // GMaps related issues
 
+    /**
+     * Internal lifecycle function for resuming an activity
+     */
     override fun onResume() {
         super.onResume()
         map_view.onResume()
     }
 
+    /**
+     * Internal lifecycle function for pausing an activity
+     */
     override fun onPause() {
         super.onPause()
         map_view.onPause()
     }
 
+    /**
+     * Internal lifecycle function that is called when the map is prepared and initalized and ready for use
+     * @param p0 GoogleMap The ready Google Maps Object
+     */
     override fun onMapReady(p0: GoogleMap) {
         mMap = p0
         mMap.isTrafficEnabled = true
@@ -374,7 +447,9 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     // Carpark Related
-
+    /**
+     * Internal function to setup carpark details bottom sheet
+     */
     private fun setupCpControls() {
         val cpBottomSheetBehavior = BottomSheetBehavior.from(cp_details_sheet)
         val resBottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
@@ -442,6 +517,10 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         resultsBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
     }
 
+    /**
+     * Displays the carpark information on the carpark bottom sheet
+     * @param cp Pair<CarPark, Float> Carpark object with its distance to the selected gym
+     */
     private fun displayCarpark(cp: Pair<CarPark, Float>) {
         cp_details_title.text = cp.first.address
         cp_details_distance.text = "${cp.second}m away"
@@ -609,10 +688,6 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    /**
-     * The Firebase Firestore listener for favourites in the gym details bottom sheet
-     * This is used to handle real time updates to the favourites count of the gym
-     */
     private var gymDetailFavListener: ListenerRegistration? = null
     private var selectedGymUid: String? = null
     private var flagReviewing: Boolean = false
@@ -853,10 +928,25 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     companion object {
+        /**
+         * Internal tag for logging purposes
+         */
         private const val TAG = "CarparkAndSearch"
+        /**
+         * Location permission request code for search
+         */
         private const val RC_LOC_SEARCH = 1
+        /**
+         * Activity is currently in gym searching state
+         */
         const val STATE_SEARCH = 0
+        /**
+         * Activity is currently in gym nearby carpark state
+         */
         const val STATE_CARPARK = 1
+        /**
+         * Activity is currently in an unknown state and will throw an error
+         */
         const val STATE_UNKNOWN = -1
     }
 }

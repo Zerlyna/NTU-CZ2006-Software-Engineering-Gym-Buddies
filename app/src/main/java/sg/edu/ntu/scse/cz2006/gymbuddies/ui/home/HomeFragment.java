@@ -167,11 +167,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
 
         sp = PreferenceManager.getDefaultSharedPreferences(root.getContext());
 
-
-        // TODO: Move to after show gym detail activity, need to include some filtering for nearby only
-        homeViewModel.getCarParks().observe(this, carparks -> Log.d("Cy.GymBuddies.HomeFrag", "size: " + carparks.size()));
-
-
         mapView = root.findViewById(R.id.map_view);
         setHasOptionsMenu(true);
 
