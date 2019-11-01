@@ -26,17 +26,12 @@ import java.net.URL
  */
 class UpdateCarparkAvailabilityService : IntentService(TAG) {
 
-    override fun onHandleIntent(intent: Intent?) {
-        if (intent == null) return
-        onHandleWork(intent)
-    }
-
     /**
      * Checks if there is internet connection
      *
      * @return Boolean true if present, false otherwise
      */
-    fun isInternetAvailable(): Boolean {
+    private fun isInternetAvailable(): Boolean {
         var result = false
         val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -57,8 +52,14 @@ class UpdateCarparkAvailabilityService : IntentService(TAG) {
         return result
     }
 
-    private fun onHandleWork(intent: Intent) {
-        // Check for API key
+    /**
+     * Internal function that invokes when the service starts with an intent being passed in
+     *
+     * This function will also handle running the update check in the background
+     * @param intent Intent? The intent passed in
+     */
+    override fun onHandleIntent(intent: Intent?) {
+        if (intent == null) return
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
         val apikey = sp.getString("ltakey", "invalid")
         if (apikey == "invalid") {
@@ -120,21 +121,40 @@ class UpdateCarparkAvailabilityService : IntentService(TAG) {
         jsonFile.writeText(jsonString)
     }
 
+    /**
+     * Internal lifecycle function called when the service is started
+     */
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "Started Service Work")
     }
 
+    /**
+     * Internal lifecycle function called when the service is destroyed
+     */
     override fun onDestroy() {
         super.onDestroy()
         Log.i(TAG, "Finished all work")
     }
 
     companion object {
+        /**
+         * Internal TAG object
+         */
         private const val TAG = "UpdateCarparkAvail"
+        /**
+         * LTA API URL
+         */
         private const val LTA_URL = "http://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2?\$skip="
+        /**
+         * HTTP Timeout value
+         */
         private const val TIMEOUT = 15000 // Timeout 15 seconds
 
+        /**
+         * Function used to start the service to update carpark availability data
+         * @param context Context The application Context
+         */
         @JvmStatic
         fun updateCarpark(context: Context) {
             // Update carpark availability

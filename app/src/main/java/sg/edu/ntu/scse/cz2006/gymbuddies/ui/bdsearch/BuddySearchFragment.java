@@ -12,14 +12,11 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.BuddySearchResultActivity;
-import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 
 
@@ -38,11 +35,8 @@ public class BuddySearchFragment extends Fragment {
         buddySearchViewModel = ViewModelProviders.of(this).get(BuddySearchViewModel.class);
         View root = inflater.inflate(R.layout.fragment_buddy_search, container, false);
 //        final TextView textView = root.findViewById(R.id.text_share);
-        buddySearchViewModel.getText().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
+        buddySearchViewModel.getText().observe(this, s -> {
 //                textView.setText(s);
-            }
         });
 
 
@@ -51,22 +45,16 @@ public class BuddySearchFragment extends Fragment {
         rgBuddyGender = root.findViewById(R.id.rg_bd_gender);
         llPrefDays = root.findViewById(R.id.ll_pref_days);
         btnTest = root.findViewById(R.id.btn_search);
-        btnTest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), BuddySearchResultActivity.class);
-                Bundle data = new Bundle();
-                data.putString("pref_location", spPrefLocation.getSelectedItem().toString());
-                data.putIntArray("pref_days", getPrefDays());
-                data.putString("pref_time", getRadioText(rgPrefTime));
-                data.putString("gender",  getRadioText(rgBuddyGender) );
-                intent.putExtras(data);
-                startActivity(intent);
-            }
+        btnTest.setOnClickListener(view -> {
+            Intent intent = new Intent(getActivity(), BuddySearchResultActivity.class);
+            Bundle data = new Bundle();
+            data.putString("pref_location", spPrefLocation.getSelectedItem().toString());
+            data.putIntArray("pref_days", getPrefDays());
+            data.putString("pref_time", getRadioText(rgPrefTime));
+            data.putString("gender",  getRadioText(rgBuddyGender) );
+            intent.putExtras(data);
+            startActivity(intent);
         });
-
-        MainActivity activity = (MainActivity)getActivity();
-        activity.fab.hide();
         return root;
     }
 

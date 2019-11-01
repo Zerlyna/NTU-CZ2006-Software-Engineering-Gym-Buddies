@@ -57,7 +57,6 @@ import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity;
-import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter;
@@ -159,13 +158,6 @@ public class GymListFragment extends Fragment implements SwipeDeleteCallback.ISw
         gymListViewModel = ViewModelProviders.of(this).get(GymListViewModel.class);
         View root = inflater.inflate(R.layout.fragment_gym_list, container, false);
         coordinatorLayout = root.findViewById(R.id.coordinator);
-
-        // FAB Not needed here
-        if (getActivity() != null) {
-            MainActivity activity = (MainActivity) getActivity();
-            activity.fab.hide();
-            activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
-        }
 
         // Setup main view
         favouritesList = root.findViewById(R.id.recycler_view);

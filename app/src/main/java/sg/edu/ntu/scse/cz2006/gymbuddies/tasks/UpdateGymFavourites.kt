@@ -9,10 +9,6 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper.GYM_COLLECTION
 import java.lang.ref.WeakReference
 
 /**
- * Created by Kenneth on 2/10/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
- */
-/**
  * Task to handle updating gym favourites when the favourites button is clicked
  * For sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
  *

@@ -5,10 +5,6 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User.Flags
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User.PrefDays
 
 /**
- * Created by Kenneth on 16/9/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
- */
-/**
  * Data Structure containing the user object from the Firebase Firestore document object
  * For sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
  *

@@ -9,15 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,7 +22,6 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Transaction;
 
@@ -33,7 +29,6 @@ import java.util.ArrayList;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
-import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
@@ -79,18 +74,9 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         srlUpdateFav = root.findViewById(R.id.srl_update_fav);
         rvResult = root.findViewById(R.id.rv_buddies);
 
-        if (getActivity() != null) {
-            MainActivity activity = (MainActivity) getActivity();
-            activity.fab.hide();
-        }
-
-
 //        final TextView textView = root.findViewById(R.id.text_gallery);
-        buddyListViewModel.getText().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
+        buddyListViewModel.getText().observe(this, s -> {
 //                textView.setText(s);
-            }
         });
 
 
@@ -106,12 +92,7 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
 
 
         srlUpdateFav.setColorSchemeResources(R.color.google_1, R.color.google_2, R.color.google_3, R.color.google_4);
-        srlUpdateFav.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                readData();
-            }
-        });
+        srlUpdateFav.setOnRefreshListener(() -> readData());
         return root;
     }
 
@@ -251,28 +232,22 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         commitFavRecord();
         adapter.notifyDataSetChanged();
         Snackbar snackbar = Snackbar.make(rvResult, R.string.txt_msg_removed_favourite, Snackbar.LENGTH_SHORT);
-        snackbar.setAction(R.string.txt_undo, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listFavUsers.add(other);
-                listFavUserIds.add(other.getUid());
-                favRecord.getBuddiesId().add(other.getUid());
-                commitFavRecord();
-                adapter.notifyDataSetChanged();
-                Snackbar.make(rvResult, R.string.txt_msg_removed_favtorite_undone, Snackbar.LENGTH_SHORT).show();
+        snackbar.setAction(R.string.txt_undo, v -> {
+            listFavUsers.add(other);
+            listFavUserIds.add(other.getUid());
+            favRecord.getBuddiesId().add(other.getUid());
+            commitFavRecord();
+            adapter.notifyDataSetChanged();
+            Snackbar.make(rvResult, R.string.txt_msg_removed_favtorite_undone, Snackbar.LENGTH_SHORT).show();
 
-            }
         });
         snackbar.show();
     }
 
     private void commitFavRecord() {
-        firestore.runTransaction(new Transaction.Function<Void>() {
-            @Override
-            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
-                transaction.set(favBuddiesRef, favRecord);
-                return null;
-            }
+        firestore.runTransaction((Transaction.Function<Void>) transaction -> {
+            transaction.set(favBuddiesRef, favRecord);
+            return null;
         }).addOnSuccessListener((v) -> {
             Log.d(TAG, "favRecord updated success");
         }).addOnFailureListener((e) -> {

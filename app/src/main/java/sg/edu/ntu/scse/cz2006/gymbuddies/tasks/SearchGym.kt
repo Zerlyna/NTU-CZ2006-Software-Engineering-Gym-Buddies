@@ -10,13 +10,26 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper
 import java.lang.ref.WeakReference
 
 /**
- * Created by Kenneth on 14/10/2019.
+ * Asynchronous Task to do a search for gyms based on parameters defined by the user in the background of the app
  * for sg.edu.ntu.scse.cz2006.gymbuddies.tasks in Gym Buddies!
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-14
+ * @property callback OnComplete Callback that is called when the task completes
+ * @property searchParams GymSearchBy The search parameters to filter gyms by
+ * @property userLocaltion LatLng The current location of the user
+ * @property actRef WeakReference<(android.app.Activity..android.app.Activity?)> A weak reference to the activity calling this function
+ * @constructor Returns an asynctask that handles search and filtering of gyms based on search parameters
  */
 class SearchGym(activity: Activity, private val callback: OnComplete, private val searchParams: GymSearchBy, private val userLocaltion: LatLng) : AsyncTask<Void, Void, Void>() {
 
     private val actRef = WeakReference(activity)
 
+    /**
+     * Internal background function to run the search in the background
+     * @param params Array<out Void?> None
+     * @return Void? None
+     */
     override fun doInBackground(vararg params: Void?): Void? {
         val activity = actRef.get() ?: return null
 
@@ -45,6 +58,13 @@ class SearchGym(activity: Activity, private val callback: OnComplete, private va
         return null
     }
 
+    /**
+     * Further filtering done when we retrieved data from Firebase Firestore DB such as reviews and favourite counts
+     * @param fav HashMap<String, FavGymFirestore> HashMap containing favourites per gym, stored in [FavGymFirestore]
+     * @param ratings HashMap<String, GymRatingStats> HashMap containing gym ratings per gym, stored in [GymRatingStats]
+     * @param gymList GymList Object containing all the gyms that are available and found in the dataset
+     * @param activity Activity The current activity reference for context usage
+     */
     private fun furtherProcessing(fav: HashMap<String, FavGymFirestore>, ratings: HashMap<String, GymRatingStats>, gymList: GymList, activity: Activity) {
         val originalGyms = gymList.gyms
         var filteredGyms: ArrayList<FavGymObject> = ArrayList()
@@ -96,7 +116,14 @@ class SearchGym(activity: Activity, private val callback: OnComplete, private va
         activity.runOnUiThread { callback.onComplete(finalFilteredGym) }
     }
 
+    /**
+     * Interface for when the task completes
+     */
     interface OnComplete {
+        /**
+         * Callback function called when the task completes with the corresponding [result]
+         * @param result ArrayList<FavGymObject> List of filtered and searched gyms
+         */
         fun onComplete(result: ArrayList<FavGymObject>)
     }
 }

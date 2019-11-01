@@ -9,8 +9,18 @@ import kotlinx.android.synthetic.main.activity_gym_search.*
 import kotlinx.android.synthetic.main.row_pref_rating.*
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.GymSearchBy
 
+/**
+ * Activity used to search for a gym with parameters
+ *
+ * @author Kenneth Soh
+ * @since 2019-10-14
+ */
 class GymSearchActivity : AppCompatActivity() {
 
+    /**
+     * Internal lifecycle function when the activity is created
+     * @param savedInstanceState Bundle? The saved instance state for configuration changes
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_gym_search)
@@ -32,6 +42,10 @@ class GymSearchActivity : AppCompatActivity() {
         cb_rateall.isChecked = true
     }
 
+    /**
+     * Retrieves all parameters for view elements and store it in the gym search paramter object
+     * @return GymSearchBy? The gym search parameter object
+     */
     private fun getParam(): GymSearchBy? {
         til_etDist.isErrorEnabled = false
         val dist = try { etDistance.text.toString().toDouble() } catch (e: NumberFormatException) { 0.0 }
@@ -64,6 +78,11 @@ class GymSearchActivity : AppCompatActivity() {
         return GymSearchBy(order, dist, rating)
     }
 
+    /**
+     * Internal lifecycle function for when menu item is selected
+     * @param item MenuItem The selected menu item
+     * @return Boolean true if success, false otherwise
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == android.R.id.home) { finish(); true }
         else super.onOptionsItemSelected(item)

@@ -19,9 +19,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
@@ -30,19 +28,30 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper;
 
+/**
+ * The application's main activity
+ * This activity will contain data regarding the various fragments and is mainly used for Jetpack
+ *
+ * @author Chiayu, Kenneth
+ * @since 2019-09-06
+ */
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * The app bar configuration object
+     */
     private AppBarConfiguration mAppBarConfiguration;
-    public FloatingActionButton fab;
 
+    /**
+     * Internal lifecycle function when this activity is created
+     * @param savedInstanceState Saved instance state for configuration changes
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show());
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
@@ -93,9 +102,11 @@ public class MainActivity extends AppCompatActivity {
         Menu navMenu = navigationView.getMenu();
         navMenu.findItem(R.id.nav_logout).setOnMenuItemClickListener(menuItem -> { logout(); return false; });
         navMenu.findItem(R.id.nav_settings).setOnMenuItemClickListener(menuItem -> { startActivity(new Intent(this, SettingsActivity.class)); return false; });
-        navController.addOnDestinationChangedListener((controller, destination, arguments) -> fab.show());
     }
 
+    /**
+     * Logs a user out of the application
+     */
     private void logout() {
         Intent logout = new Intent(this, LoginChooserActivity.class);
         logout.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -104,12 +115,24 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * Internal function to override if the activity supports going back
+     * @return true if supported, false otherwise
+     */
     @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration) || super.onSupportNavigateUp();
     }
 
+    /**
+     * Internal lifecycle function for if we are granted a permission
+     * We use this for the location permission
+     *
+     * @param requestCode The request code for the permission for reference
+     * @param permissions The permissions being requested
+     * @param grantResults The results of the permission request
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
