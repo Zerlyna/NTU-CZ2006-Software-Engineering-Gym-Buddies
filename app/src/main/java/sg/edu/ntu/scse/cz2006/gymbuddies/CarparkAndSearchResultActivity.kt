@@ -200,7 +200,7 @@ class CarparkAndSearchResultActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.i(TAG, "No permissions, requesting...")
             val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                AlertDialog.Builder(this).setTitle("Location Permission Required").setMessage("We require access to your location to view nearby gyms")
+                AlertDialog.Builder(this).setTitle("Location Permission Required").setMessage("We require access to your location to search for nearby gyms")
                     .setPositiveButton(android.R.string.ok) { _, _ -> ActivityCompat.requestPermissions(this, permissions, RC_LOC_SEARCH) }.show()
             } else ActivityCompat.requestPermissions(this, permissions, RC_LOC_SEARCH)
         }
