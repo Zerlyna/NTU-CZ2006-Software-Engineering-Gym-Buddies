@@ -70,6 +70,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
@@ -457,26 +458,26 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
         Log.d(TAG, "Google Map Ready");
         mMap = googleMap;
         mMap.setTrafficEnabled(true);
-            hasGps(true);
-            //checkGpsForCurrentLocation();
-            UiSettings settings = mMap.getUiSettings();
-            //settings.setZoomControlsEnabled(true);
-            settings.setMapToolbarEnabled(false);
+        hasGps(true);
+        //checkGpsForCurrentLocation();
+        UiSettings settings = mMap.getUiSettings();
+        //settings.setZoomControlsEnabled(true);
+        settings.setMapToolbarEnabled(false);
 
-            //zoomToMyLocation();
-            // Zoom to Singapore: 1.3413054,103.8074233, 12z
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
-            mMap.setOnInfoWindowClickListener(marker -> gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
-            mMap.setOnMapClickListener(latLng -> {
-                Log.d("mMap", "mapClicked()");
-                unselectGymDetails();
-            });
-            mMap.setOnMarkerClickListener(marker -> {
-                // Hide and reshow gym
-                Log.d("mMap", "markerClicked()");
-                showGymDetails();
-                if (marker.getTag() instanceof GymList.GymShell) updateGymDetails((GymList.GymShell) marker.getTag());
-                return false; // We still want to show the info window right now
+        //zoomToMyLocation();
+        // Zoom to Singapore: 1.3413054,103.8074233, 12z
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(1.3413054, 103.8074233), 10f));
+        mMap.setOnInfoWindowClickListener(marker -> gymBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+        mMap.setOnMapClickListener(latLng -> {
+            Log.d("mMap", "mapClicked()");
+            unselectGymDetails();
+        });
+        mMap.setOnMarkerClickListener(marker -> {
+            // Hide and reshow gym
+            Log.d("mMap", "markerClicked()");
+            showGymDetails();
+            if (marker.getTag() instanceof GymList.GymShell) updateGymDetails((GymList.GymShell) marker.getTag());
+            return false; // We still want to show the info window right now
         });
         // Process and parse markers
         if (getActivity() != null) {
@@ -485,7 +486,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
                 markerList = markers;
                 if (!favListRegistered) registerFavList();
 
-                if (!hasLocationPermission || lastLocation == null) for (MarkerOptions m : markers.keySet()) { mMap.addMarker(m); } // Show all gyms if you do not have location granted
+                if (!hasLocationPermission || lastLocation == null)
+                    for (Map.Entry<MarkerOptions, GymList.GymShell> entry : markers.entrySet()) {
+                        Marker mark = mMap.addMarker(entry.getKey());
+                        mark.setTag(entry.getValue());
+                    } // Show all gyms if you do not have location granted
                 else {
                     new TrimNearbyGyms(sp.getInt("nearby-gyms", 10), lastLocation, markerList.keySet(), this::updateNearbyMarkers).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
@@ -953,6 +958,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
      */
     private void updateGymDetails(@Nullable GymList.GymShell gym) {
         if (gym == null) return;
+        Log.i(TAG, "Updating Gym Details for " + gym.getProperties().getINC_CRC());
         gymTitle.setText(gym.getProperties().getName());
         gymDesc.setText(gym.getProperties().getDescription());
         if (gymDesc.getText().toString().trim().isEmpty()) gymDesc.setText("No description available");
