@@ -31,6 +31,9 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.ProfilePicHelper;
 /**
  * The application's main activity
  * This activity will contain data regarding the various fragments and is mainly used for Jetpack
+ *
+ * @author Chiayu, Kenneth
+ * @since 2019-09-06
  */
 public class MainActivity extends AppCompatActivity {
 
