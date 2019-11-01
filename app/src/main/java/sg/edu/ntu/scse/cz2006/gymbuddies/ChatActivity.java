@@ -1,13 +1,5 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +10,14 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -115,7 +115,9 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             String buddyId = getIntent().getStringExtra("buddy_id");
             //imgBuddyPic
             if (DiskIOHelper.hasImageCache(this, buddyId)){
-                imgBuddyPic.setImageBitmap( DiskIOHelper.readImageCache(this, buddyId));
+                RoundedBitmapDrawable roundBitmap = RoundedBitmapDrawableFactory.create(getResources(), DiskIOHelper.readImageCache(this, buddyId));
+                roundBitmap.setCircular(true);
+                imgBuddyPic.setImageDrawable(roundBitmap);
                 imgBuddyPic.setTag(buddyId);
                 needUserPic = false;
             }
