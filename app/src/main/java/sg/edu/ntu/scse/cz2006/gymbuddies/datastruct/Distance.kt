@@ -4,10 +4,6 @@ import com.google.android.gms.maps.model.MarkerOptions
 import sg.edu.ntu.scse.cz2006.gymbuddies.data.CarPark
 
 /**
- * Created by Kenneth on 21/10/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
- */
-/**
  * Internal data class for storing [distance] of a [marker] from another point
  * for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
  *

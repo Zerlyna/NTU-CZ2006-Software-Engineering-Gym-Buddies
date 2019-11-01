@@ -1,10 +1,6 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.datastruct
 
 /**
- * Created by Kenneth on 14/10/2019.
- * for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
- */
-/**
  * Data Structure to store Gym Search Parameters
  *
  * Note that in rating, -1 = All, 1-5 is the respective counts
@@ -15,9 +11,21 @@ package sg.edu.ntu.scse.cz2006.gymbuddies.datastruct
  */
 data class GymSearchBy(val sort: Int = SORT_ABC_ASC, val distance: Double = 10.0, val rating: Int = -1) {
     companion object {
+        /**
+         * Sort gyms by alphabetical ascending order
+         */
         const val SORT_ABC_ASC = 0
+        /**
+         * Sort gyms by alphabetical descending order
+         */
         const val SORT_ABC_DSC = 1
+        /**
+         * Sort gyms by popularity ascending order
+         */
         const val SORT_FAV_ASC = 2
+        /**
+         * Sort gyms by popularity descending order
+         */
         const val SORT_FAV_DSC = 3
     }
 }
