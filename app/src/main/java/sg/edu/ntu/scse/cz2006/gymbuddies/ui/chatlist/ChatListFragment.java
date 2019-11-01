@@ -42,11 +42,16 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.ChatAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
-import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
-public class ChatListFragment extends Fragment implements AppConstants, OnRecyclerViewClickedListener<ChatAdapter.ChatViewHolder> {
+
+/**
+ * @author Chia Yu
+ * @since 2019-09-06
+ */
+public class ChatListFragment extends Fragment implements AppConstants, OnRecyclerViewInteractedListener<ChatAdapter.ChatViewHolder> {
     private static final String TAG = "gb.frag.chatlist";
     private ChatListViewModel chatListViewModel;
 
@@ -93,7 +98,8 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
             @Override
             public void onRefresh() {
                 // do something
-                srlUpdateChats.setRefreshing(false);
+                stopListenChatListChanges();
+                listenChatListChanges();
             }
         });
 
@@ -224,7 +230,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
                 queryUser();
             }
         }
-
+        if (srlUpdateChats.isRefreshing()){
+            srlUpdateChats.setRefreshing(false);
+        }
     }
 
     private void queryUser(){
@@ -279,7 +287,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
     }
 
     @Override
-    public void onViewClicked(View view, ChatAdapter.ChatViewHolder holder, int action) {
+    public void onViewInteracted(View view, ChatAdapter.ChatViewHolder holder, int action) {
         int pos = holder.getAdapterPosition();
         if (pos<0 || pos>=chats.size()){
             Log.d(TAG, "invalid pos: "+pos);

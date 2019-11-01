@@ -1,5 +1,15 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.datastruct;
 
+
+/**
+ *  Created by Chia Yu on 22/10/2019.
+ *  for sg.edu.ntu.scse.cz2006.gymbuddies.datastruct in Gym Buddies!
+ *
+ *  Entity class to hold chat message between user.
+ *
+ * @author Chia Yu
+ * @since 2019-10-22
+ */
 public class ChatMessage {
     private String message;
     private String sender;

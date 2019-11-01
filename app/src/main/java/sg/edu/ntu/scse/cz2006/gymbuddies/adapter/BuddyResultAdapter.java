@@ -17,7 +17,7 @@ import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
-import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.ViewHelper;
 
 
@@ -37,7 +37,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     public static final int ACTION_CLICK_ON_FAV_ITEM    = 2;
     public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
     private List<User> listBuddies;
-    private OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> listener;
+    private OnRecyclerViewInteractedListener<ViewHolder> listener;
     private List<String> favUsers;
 
 
@@ -54,7 +54,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
     /**
      * Allow other classes to listen to user interaction via OnBuddyClickedListener
      */
-    public void setOnRecyclerViewClickedListener( OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> listener){
+    public void setOnRecyclerViewClickedListener( OnRecyclerViewInteractedListener<ViewHolder> listener){
         this.listener=listener;
     }
 
@@ -179,7 +179,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
             }
             if (action != ACTION_INVALID ) {
                 if (listener != null){
-                    listener.onViewClicked(view, this, action);
+                    listener.onViewInteracted(view, this, action);
                 }
             }
         }

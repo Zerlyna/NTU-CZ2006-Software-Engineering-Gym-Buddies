@@ -6,19 +6,14 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -40,7 +35,7 @@ import java.util.ArrayList;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.BuddyResultAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
-import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
@@ -53,7 +48,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
  * @author Chia Yu
  * @since 2019-09-28
  */
-public class BuddySearchResultActivity extends AppCompatActivity implements AppConstants, OnRecyclerViewClickedListener<BuddyResultAdapter.ViewHolder> {
+public class BuddySearchResultActivity extends AppCompatActivity implements AppConstants, OnRecyclerViewInteractedListener<BuddyResultAdapter.ViewHolder> {
     private String TAG = "GB.act.bdSearchResult";
     private RecyclerView rvResult;
     private ArrayList<User> listUsers;
@@ -259,7 +254,7 @@ public class BuddySearchResultActivity extends AppCompatActivity implements AppC
      * Listen to user interaction events from BuddyResultAdapter, and perform necessary actions
      */
     @Override
-    public void onViewClicked(View view, BuddyResultAdapter.ViewHolder holder, int action) {
+    public void onViewInteracted(View view, BuddyResultAdapter.ViewHolder holder, int action) {
         Log.d(TAG, "onBuddyItemClicked::action: "+action+", pos: "+holder.getAdapterPosition()+", view: "+view.getClass().getSimpleName());
 
         // TODO: handle event

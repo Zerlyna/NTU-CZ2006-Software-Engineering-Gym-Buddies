@@ -16,10 +16,15 @@ import java.util.List;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
-import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewClickedListener;
+import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.ViewHelper;
 
 /**
+ *  Recycler Adapter for Chat Object
+ *  For sg.edu.ntu.scse.cz2006.gymbuddies.adapter in Gym Buddies!
+ *
+ *  The adapter is used to display list of chat history of a user
+ *
  * @author Chia Yu
  * @since 2019-10-19
  */
@@ -32,15 +37,27 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     private SimpleDateFormat sdf;
     private List<Chat> chats;
     private List<String> favUserIds;
-    private OnRecyclerViewClickedListener<ChatViewHolder> listener;
+    private OnRecyclerViewInteractedListener<ChatViewHolder> listener;
 
+    /**
+     * Constructor method to initialise ChatAdapter
+     *
+     * @param chats
+     * @param favUserIds
+     */
     public ChatAdapter(List<Chat> chats, List<String> favUserIds) {
         this.chats = chats;
         this.favUserIds = favUserIds;
         this.sdf = new SimpleDateFormat("dd/MM/yy");
     }
 
-    public void setOnRecyclerViewClickedListener(OnRecyclerViewClickedListener<ChatViewHolder> listener) {
+    /**
+     * The method provides an interface to allow other class to register itself as observer of user interacting event
+     *
+     * @param listener
+     * @see OnRecyclerViewInteractedListener
+     */
+    public void setOnRecyclerViewClickedListener(OnRecyclerViewInteractedListener<ChatViewHolder> listener) {
         this.listener = listener;
     }
 
@@ -122,7 +139,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
             if (action != ACTION_INVALID) {
                 if (listener != null) {
-                    listener.onViewClicked(v, this, action);
+                    listener.onViewInteracted(v, this, action);
                 }
             }
         }
