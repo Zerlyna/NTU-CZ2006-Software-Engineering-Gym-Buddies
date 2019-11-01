@@ -75,7 +75,6 @@ import java.util.Objects;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sg.edu.ntu.scse.cz2006.gymbuddies.CarparkAndSearchResultActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.GymSearchActivity;
-import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.FavGymAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.GymReviewAdapter;
@@ -180,12 +179,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, SwipeD
             } else {
                 requestPermissions(permissions, RC_LOC);
             }
-        }
-
-        if (getActivity() != null) {
-            MainActivity activity = (MainActivity) getActivity();
-            activity.fab.hide();
-            activity.fab.setOnClickListener(view -> Snackbar.make(view, "Hello from the other side", Snackbar.LENGTH_LONG).show());
         }
 
         favBottomSheet = root.findViewById(R.id.bottom_sheet);

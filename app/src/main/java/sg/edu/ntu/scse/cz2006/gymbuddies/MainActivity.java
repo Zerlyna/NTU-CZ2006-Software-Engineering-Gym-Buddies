@@ -19,9 +19,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
@@ -40,10 +38,6 @@ public class MainActivity extends AppCompatActivity {
      * The app bar configuration object
      */
     private AppBarConfiguration mAppBarConfiguration;
-    /**
-     * The floating action button
-     */
-    public FloatingActionButton fab;
 
     /**
      * Internal lifecycle function when this activity is created
@@ -55,8 +49,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show());
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
@@ -107,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         Menu navMenu = navigationView.getMenu();
         navMenu.findItem(R.id.nav_logout).setOnMenuItemClickListener(menuItem -> { logout(); return false; });
         navMenu.findItem(R.id.nav_settings).setOnMenuItemClickListener(menuItem -> { startActivity(new Intent(this, SettingsActivity.class)); return false; });
-        navController.addOnDestinationChangedListener((controller, destination, arguments) -> fab.show());
     }
 
     /**

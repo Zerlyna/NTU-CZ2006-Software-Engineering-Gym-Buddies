@@ -12,6 +12,7 @@ import com.crashlytics.android.Crashlytics
 import com.h6ah4i.android.preference.NumberPickerPreferenceCompat
 import com.h6ah4i.android.preference.NumberPickerPreferenceDialogFragmentCompat
 import me.jfenn.attribouter.Attribouter
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper
 
 /**
  * This activity is used to display the application settings page
@@ -71,6 +72,7 @@ class SettingsActivity : AppCompatActivity() {
                     devToast = Toast.makeText(context, "You are now a developer!", Toast.LENGTH_LONG)
                     addPreferencesFromResource(R.xml.root_devinfo)
                     findPreference<Preference>("crash")?.setOnPreferenceClickListener { Crashlytics.getInstance().crash(); true }
+                    findPreference<Preference>("buildinfo")?.setOnPreferenceClickListener { DialogHelper.displayBuildInfo(context); true }
                 }
                 devToast?.show()
                 true

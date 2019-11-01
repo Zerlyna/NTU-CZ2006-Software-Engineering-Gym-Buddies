@@ -9,10 +9,8 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,7 +23,6 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -36,7 +33,6 @@ import java.util.Collections;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 import sg.edu.ntu.scse.cz2006.gymbuddies.ChatActivity;
-import sg.edu.ntu.scse.cz2006.gymbuddies.MainActivity;
 import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.ChatAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
@@ -76,16 +72,8 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         chatListViewModel = ViewModelProviders.of(this).get(ChatListViewModel.class);
         View root = inflater.inflate(R.layout.fragment_chat_list, container, false);
 //        final TextView textView = root.findViewById(R.id.text_send);
-        chatListViewModel.getText().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) { /*textView.setText(s);*/
-            }
+        chatListViewModel.getText().observe(this, s -> { /*textView.setText(s);*/
         });
-
-        if (getActivity() != null) {
-            MainActivity activity = (MainActivity) getActivity();
-            activity.fab.hide();
-        }
 
 
 
@@ -94,13 +82,10 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
 
 
         srlUpdateChats.setColorSchemeResources(R.color.google_1, R.color.google_2, R.color.google_3, R.color.google_4);
-        srlUpdateChats.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // do something
-                stopListenChatListChanges();
-                listenChatListChanges();
-            }
+        srlUpdateChats.setOnRefreshListener(() -> {
+            // do something
+            stopListenChatListChanges();
+            listenChatListChanges();
         });
 
 
@@ -205,7 +190,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         }
 
         // sort chats by last update time
-        Collections.sort(chats, (c1,c2)->{ return (int)(c2.getLastUpdate()-c1.getLastUpdate());});
+        Collections.sort(chats, (c1,c2)-> (int)(c2.getLastUpdate()-c1.getLastUpdate()));
         Log.d(TAG, "chat size -> "+chats.size());
 
         // mapping with old chat and decide whether need to query user data
@@ -241,9 +226,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         userRef.get().addOnSuccessListener((snapshots)->{
             Log.d(TAG, "userRef.get() success");
             readUserAndUpdateChats(snapshots);
-        }).addOnFailureListener((e)->{
-            Log.d(TAG, "query all users failed");
-        });
+        }).addOnFailureListener((e)-> Log.d(TAG, "query all users failed"));
     }
 
     private void readUserAndUpdateChats(QuerySnapshot snapshots){
@@ -321,17 +304,13 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
     }
 
     private void commitFavRecord() {
-        firestore.runTransaction(new Transaction.Function<Void>() {
-            @Override
-            public Void apply(Transaction transaction) throws FirebaseFirestoreException {
+        firestore.runTransaction((Transaction.Function<Void>) transaction -> {
+            FavBuddyRecord favRecord = transaction.get(favBuddiesRef).toObject(FavBuddyRecord.class);
+            favRecord.getBuddiesId().clear();
+            favRecord.getBuddiesId().addAll(favUserIds);
 
-                FavBuddyRecord favRecord = transaction.get(favBuddiesRef).toObject(FavBuddyRecord.class);
-                favRecord.getBuddiesId().clear();
-                favRecord.getBuddiesId().addAll(favUserIds);
-
-                transaction.set(favBuddiesRef, favRecord);
-                return null;
-            }
+            transaction.set(favBuddiesRef, favRecord);
+            return null;
         }).addOnSuccessListener((v) -> {
             Log.d(TAG, "favRecord updated success");
         }).addOnFailureListener((e) -> {
