@@ -16,6 +16,9 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.AppConstants;
 
 
 /**
+ * DiskIOHelper provides the ability to cache bitmap into application's internal storage.
+ * it improves loading speed and reduce number of downloads to save user's data usage
+ *
  * @author Chia Yu
  * @since 2019-10-23
  */
@@ -24,6 +27,13 @@ public class DiskIOHelper implements AppConstants {
     private static final String DIR_PIC = "pic";
 
 
+    /**
+     * the method checks whether cached bitmap file is exist in application's internal folder.
+     * note that the bitmap only valid for a day, after that the cache will be deleted.
+     * @param context
+     * @param fileName user id will be more preferable
+     * @return
+     */
     public static boolean hasImageCache(Context context, String fileName){
         // check if file exist
         File cacheDir = new File(context.getCacheDir(), DIR_PIC);
@@ -50,6 +60,12 @@ public class DiskIOHelper implements AppConstants {
         return true;
     }
 
+    /**
+     * the method perform saving of bitmap into application's internal storage
+     * @param context
+     * @param bmp
+     * @param name
+     */
     public static void saveImageCache(Context context, Bitmap bmp, String name){
         Log.d(TAG, "saving");
         File cacheDir = new File(context.getCacheDir(), DIR_PIC);
@@ -80,6 +96,12 @@ public class DiskIOHelper implements AppConstants {
         }
     }
 
+    /**
+     * the method retrieve bitmap from application's internal storage
+     * @param context
+     * @param name
+     * @return
+     */
     public static Bitmap readImageCache(Context context, String name){
         File cacheDir = new File(context.getCacheDir(), DIR_PIC);
         File file = new File(cacheDir, name+".png");

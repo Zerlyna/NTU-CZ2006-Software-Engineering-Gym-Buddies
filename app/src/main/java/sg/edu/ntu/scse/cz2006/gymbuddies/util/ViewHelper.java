@@ -16,6 +16,8 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
 
 /**
+ * Utility class to assist repeated view update procedures
+ *
  * @author Chia Yu
  * @since 2019-10-23
  */

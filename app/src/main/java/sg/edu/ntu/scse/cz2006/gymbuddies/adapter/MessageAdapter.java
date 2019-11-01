@@ -26,13 +26,46 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListen
  * @since 2019-10-19
  */
 public class MessageAdapter extends RecyclerView.Adapter {
+    /**
+     * TAG is unique identifier to for logging purpose
+     */
     private static final String TAG = "gb.adapter.msg";
+    /**
+     * unique identifier to specify user long clicked on a view
+     * @see #listener
+     */
     public static final int ACTION_LONG_CLICK_ON_VIEW = 1;
+    /**
+     * unique identifier to type of view to be render for {@link ChatMessage} object
+     * @see #getItemViewType(int)
+     */
     private static final int VIEW_TYPE_MSG_SENT = 1;
+    /**
+     * unique identifier to type of view to be render for {@link ChatMessage} object
+     * @see #getItemViewType(int)
+     */
     private static final int VIEW_TYPE_MSG_RECEIVED = 2;
-    private SimpleDateFormat sdfTime, sdfDate;
+    /**
+     * It is used to format timestamp from long to String for {@link ChatMessage} time
+     */
+    private SimpleDateFormat sdfTime;
+    /**
+     * It is used to format timestamp from long to String for {@link ChatMessage} date
+     */
+    private SimpleDateFormat sdfDate;
+    /**
+     * UID of current user, used to identify message is sent out or received
+     * @see sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User
+     * @see #getItemViewType(int)
+     */
     private String sender;
+    /**
+     * list that holds the chat history with another user in the same chat room
+     */
     private ArrayList<ChatMessage> messages;
+    /**
+     * interface that allow activity to observe user interaction with RecyclerView
+     */
     private OnRecyclerViewInteractedListener listener;
 
     /**
@@ -47,6 +80,12 @@ public class MessageAdapter extends RecyclerView.Adapter {
         this.sdfDate = new SimpleDateFormat("yyyy-MM-dd");
     }
 
+    /**
+     * The method provides an interface to allow other class to register itself as observer of user interacting event
+     *
+     * @param listener
+     * @see OnRecyclerViewInteractedListener
+     */
     public void setOnRecyclerViewInteractListener(OnRecyclerViewInteractedListener listener){
         this.listener = listener;
     }
@@ -64,7 +103,7 @@ public class MessageAdapter extends RecyclerView.Adapter {
      * the method return type of view based on current user id
      * view type will determine either message sent or received item layout to be rendered on screen
      * @param position position of displaying view
-     * @return {@code int} type of view
+     * @return type of view
      */
     @Override
     public int getItemViewType(int position) {
@@ -76,12 +115,13 @@ public class MessageAdapter extends RecyclerView.Adapter {
         }
     }
 
+
+
     /**
-     * the method return type of view based on current user id
-     * view type will determine either message sent or received item layout to be rendered on screen
-     * @param parent layout
-     * @param viewType type of layout to be rendered
-     * @return RecyclerView.ViewHolder
+     * the method based on view type to render a view and associate the view with respective view holder
+     * @param parent view group to hold current item view
+     * @param viewType type of layout to be rendered for current view
+     * @return ViewHolder that associated with created view
      * @see #getItemViewType(int)
      */
     @NonNull
@@ -122,7 +162,6 @@ public class MessageAdapter extends RecyclerView.Adapter {
             case VIEW_TYPE_MSG_RECEIVED:
                 ((MessageReceivedViewHolder) holder).bind(message, showDate);
         }
-
     }
 
 
@@ -157,6 +196,11 @@ public class MessageAdapter extends RecyclerView.Adapter {
             tvDate.setVisibility(showDate?View.VISIBLE:View.GONE);
         }
 
+        /**
+         * catch user long click event, and update observer via {@link #listener}
+         * @param view
+         * @return whether long click action is valid or not
+         */
         @Override
         public boolean onLongClick(View view) {
             Log.d(TAG, "on long clicked, listener -> "+listener);
