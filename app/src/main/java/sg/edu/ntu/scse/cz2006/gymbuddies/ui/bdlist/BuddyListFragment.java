@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
@@ -43,25 +44,56 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
  *
  * @author Chia Yu
  * @since 2019-09-06
+ * @see AppConstants
+ * @see OnRecyclerViewInteractedListener
  */
 public class BuddyListFragment extends Fragment implements AppConstants, OnRecyclerViewInteractedListener<BuddyResultAdapter.ViewHolder> {
+    /**
+     * TAG is unique identifier to for logging purpose
+     */
     private final String TAG = "GB.frag.BdList";
+    /**
+     * view model to separate data from activity life cycle
+     */
     private BuddyListViewModel buddyListViewModel;
+    /**
+     * reference to RecyclerView, which display list of user as search result
+     */
     private RecyclerView rvResult;
+    /**
+     * adapter to bind data onto RecyclerView
+     */
     private BuddyResultAdapter adapter;
+    /**
+     * reference to SwipeRefreshLayout, allow user to drag down for refresh data
+     */
     SwipeRefreshLayout srlUpdateFav;
 
+    /**
+     * list to hold queried user data
+     */
     private ArrayList<User> listFavUsers;
+    /**
+     * list to hold buddies's user id
+     */
     private ArrayList<String> listFavUserIds;
 
+    /**
+     * Firestore instance to query data
+     */
     private FirebaseFirestore firestore;
+    /**
+     * document reference used to query user's favoured buddies record
+     */
     private DocumentReference favBuddiesRef;
+    /**
+     * actual data holder user's favoured buddies record
+     */
     private FavBuddyRecord favRecord;
-//    private ListenerRegistration favRecordChangeListener;
 
 
     /**
-     * Internal lifecycle fragment for creating the fragment view
+     * Android lifecycle fragment for creating the fragment view
      * @param inflater Layout Inflater object
      * @param container View Group Container object
      * @param savedInstanceState Android Saved Instance State
@@ -74,7 +106,7 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         srlUpdateFav = root.findViewById(R.id.srl_update_fav);
         rvResult = root.findViewById(R.id.rv_buddies);
 
-//        final TextView textView = root.findViewById(R.id.text_gallery);
+
         buddyListViewModel.getText().observe(this, s -> {
 //                textView.setText(s);
         });
@@ -96,13 +128,31 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         return root;
     }
 
+    /**
+     * Android framework lifecycle, perform update on data
+     */
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Log.d(TAG, "onStart()");
+        readData();
+    }
+
+    /**
+     * start query to get data from Firestore
+     * Step 1: query user's favoured buddies record
+     * Step 2: query buddies user profile
+     */
     private void readData() {
         Log.d(TAG, "do read data");
-//        favBuddyHelper.getFavBuddyRecord();
         queryFavUserRecord();
         srlUpdateFav.setRefreshing(true);
     }
 
+    /**
+     * query to Firestore to retrieve user's favoured buddies record
+     */
     private void queryFavUserRecord() {
         Log.d(TAG, "queryFavRecord");
         if (favBuddiesRef == null) {
@@ -118,6 +168,11 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         });
     }
 
+    /**
+     * upon retrieving user's favoured buddies record, read documentation snapshot and save all record to {@link #listFavUserIds}
+     * @param documentSnapshot
+     * @see #queryFavUserRecord()
+     */
     private void readFavRecordDoc(DocumentSnapshot documentSnapshot) {
         favRecord = documentSnapshot.toObject(FavBuddyRecord.class);
         if (favRecord == null) {
@@ -129,45 +184,11 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         queryBuddies();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        Log.d(TAG, "onStart()");
-        readData();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-//        listenFavRecordChanges();
-    }
-
-    @Override
-    public void onPause() {
-
-//        stopListenFavRecordChanges();
-        super.onPause();
-    }
-//    private void listenFavRecordChanges(){
-//        favRecordChangeListener = favBuddiesRef.addSnapshotListener((doc, e)->{
-//            Log.d(TAG, "favBuddiesRef.addSnapshotListener -> onEvent ");
-//            if (e != null){
-//                Log.w(TAG, "Listen failed", e);
-//                return;
-//            }
-//            readFavRecordDoc(doc);
-//        });
-//    }
-//    private void stopListenFavRecordChanges(){
-//        if (favRecordChangeListener!=null){
-//            favRecordChangeListener.remove();
-//            favRecordChangeListener = null;
-//        }
-//    }
-
-
+    /**
+     * called after {@link #queryFavUserRecord()} retrieved user's favoured record,
+     * perform another query to retrieve buddies' profile information
+     * @see #queryFavUserRecord()
+     */
     private void queryBuddies() {
         Log.d(TAG, "do read buddies");
         CollectionReference userRef = firestore.collection(GymHelper.GYM_USERS_COLLECTION);
@@ -179,6 +200,11 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         });
     }
 
+    /**
+     * upon retrieving buddies' profile information, read documentation snapshot and save all record to {@link #listFavUsers}
+     * @param snapshots
+     * @see #queryBuddies
+     */
     private void readUserQuerySnapshot(QuerySnapshot snapshots) {
         Log.d(TAG, "readUserQuerySnapshot -> " + snapshots);
         ArrayList<User> users = new ArrayList<>();
@@ -205,6 +231,12 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         }
     }
 
+    /**
+     * interface for observer to handle event when subject notify the view interaction of RecyclerView
+     * @param view
+     * @param holder
+     * @param action
+     */
     @Override
     public void onViewInteracted(View view, BuddyResultAdapter.ViewHolder holder, int action) {
         User user = listFavUsers.get(holder.getAdapterPosition());
@@ -225,6 +257,10 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
     }
 
 
+    /**
+     * remove user as buddy, it calls {@link #commitFavRecord()} to update favoured record to firestore
+     * @param other
+     */
     private void unfavUser(User other) {
         listFavUsers.remove(other);
         listFavUserIds.remove(other.getUid());
@@ -244,6 +280,9 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         snackbar.show();
     }
 
+    /**
+     * commit changes of removing user from buddies record in firestore
+     */
     private void commitFavRecord() {
         firestore.runTransaction((Transaction.Function<Void>) transaction -> {
             transaction.set(favBuddiesRef, favRecord);
@@ -256,6 +295,10 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         });
     }
 
+    /**
+     * redirect user to chat activity
+     * @param other
+     */
     private void goChatActivity(User other) {
         Intent intent = new Intent(getActivity(), ChatActivity.class);
         Bundle data = new Bundle();

@@ -20,6 +20,11 @@ android {
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm")
         buildConfigField "String", "TIMESTAMP", "\""+sdf.format(System.currentTimeMillis())+"\""
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

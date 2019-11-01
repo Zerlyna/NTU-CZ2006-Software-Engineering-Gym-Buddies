@@ -10,15 +10,27 @@ import androidx.room.RoomDatabase;
  * Room database for Gym Buddy app
  * it uses singleton design pattern, it will only create one instance at all time
  *
+ * schema information will be exported to '../app/schemas/' whenever database version update
+ *
  * @author Chia Yu
  * @since 2019-09-14
  */
-@Database(entities = {CarPark.class}, version=1)
+@Database(entities = {CarPark.class}, version=1, exportSchema = true)
 public abstract class GBDatabase extends RoomDatabase {
+    /**
+     * singleton instance for database
+     */
     private static GBDatabase instance;
+
+    /**
+     * abstract getter for Data accessing object
+     */
     public abstract CarParkDao carParkDao();
 
 
+    /**
+     * path to asset of pre-populated data
+     */
     static String FILE_DB_NAME = "database/hdb-carpark-information.db";
 
     /**

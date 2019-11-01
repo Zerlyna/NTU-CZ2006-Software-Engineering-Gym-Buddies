@@ -44,30 +44,73 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.GymHelper;
 
 
 /**
+ *  The fragment display list of buddies (favoured user) of current user
+ *  it allow user to view profile information, start chat and un-favour of user
+ *
  * @author Chia Yu
  * @since 2019-09-06
  */
 public class ChatListFragment extends Fragment implements AppConstants, OnRecyclerViewInteractedListener<ChatAdapter.ChatViewHolder> {
+    /**
+     * TAG is unique identifier to for logging purpose
+     */
     private static final String TAG = "gb.frag.chatlist";
+    /**
+     * view model to separate data from activity life cycle
+     */
     private ChatListViewModel chatListViewModel;
 
-
+    /**
+     * reference to SwipeRefreshLayout, allow user to drag down for refresh data
+     */
     private SwipeRefreshLayout srlUpdateChats;
+    /**
+     * list to hold queried chat room data
+     */
     private ArrayList<Chat> chats;
+    /**
+     * list to hold buddies' user id
+     */
     private ArrayList<String> favUserIds;
+    /**
+     * reference to RecyclerView, used to display chat room data on screen
+     */
     private RecyclerView rvChats;
+    /**
+     * handle binding of data to be display on RecyclerView
+     */
     private ChatAdapter adapter;
 
+    /**
+     * Firestore instance to query data
+     */
     private FirebaseFirestore firestore;
 
+    /**
+     * document reference used to query user's favoured buddies record
+     */
     private DocumentReference favBuddiesRef;
+    /**
+     * Observer to listen to changes on user's favour buddies record
+     */
     private ListenerRegistration queryFavListener;
+    /**
+     * Observer to listen to changes on chat room records
+     */
     private ListenerRegistration queryChatListener;
+    /**
+     * query on chat room has current user involved in
+     */
     private Query queryChats;
-    private FavBuddyRecord favRecord;
 
-    // TODO listen to fav user changes
 
+    /**
+     * Android framework lifecycle
+     * @param inflater
+     * @param container
+     * @param savedInstanceState
+     * @return
+     */
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         chatListViewModel = ViewModelProviders.of(this).get(ChatListViewModel.class);
         View root = inflater.inflate(R.layout.fragment_chat_list, container, false);
@@ -76,11 +119,8 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         });
 
 
-
         rvChats = root.findViewById(R.id.rv_chats);
         srlUpdateChats = root.findViewById(R.id.srl_update_chats);
-
-
         srlUpdateChats.setColorSchemeResources(R.color.google_1, R.color.google_2, R.color.google_3, R.color.google_4);
         srlUpdateChats.setOnRefreshListener(() -> {
             // do something
@@ -107,6 +147,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         return root;
     }
 
+    /**
+     * android framework lifecycle
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -114,6 +157,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         listenFavChanges();
     }
 
+    /**
+     * android framework lifecycle
+     */
     @Override
     public void onPause() {
         stopListenChatListChanges();
@@ -121,6 +167,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         super.onPause();
     }
 
+    /**
+     * register an observer to listen to changes on user's favoured buddies records
+     */
     private void listenFavChanges(){
         if (favBuddiesRef == null) {
             String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -142,6 +191,10 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
             adapter.notifyDataSetChanged();
         });
     }
+
+    /**
+     * unregister observer to listen to changes on  user's favoured buddies records
+     */
     private void stopListenFavChanges(){
         if (queryFavListener!=null){
             queryFavListener.remove();
@@ -151,6 +204,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
     }
 
 
+    /**
+     *  register an observer to chat room records changes
+     */
     private void listenChatListChanges(){
         queryChatListener = queryChats.addSnapshotListener((queryDocumentSnapshots, e)->{
             Log.d(TAG, "chat query -> onEvent ("+queryDocumentSnapshots+", "+e+")");
@@ -169,6 +225,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         });
     }
 
+    /**
+     *  unregister an observer to chat room records changes
+     */
     private void stopListenChatListChanges(){
         if (queryChatListener!=null){
             queryChatListener.remove();
@@ -176,6 +235,11 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         }
     }
 
+    /**
+     * After {@link #listenChatListChanges()} retrieve changes of chat room,
+     * reads changes from snapshots and update data respectively
+     * @param snapshots
+     */
     private void readQuerySnapshot(QuerySnapshot snapshots){
         Log.d(TAG, "reading chat data "+snapshots);
         ArrayList<Chat> oldChats = (ArrayList<Chat>) chats.clone();
@@ -220,6 +284,10 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         }
     }
 
+    /**
+     * After chat room data is retrieved from firestore,
+     * make another query to retrieve involved member profile for chat rooms
+     */
     private void queryUser(){
         Log.d(TAG, "query for user");
         CollectionReference userRef = firestore.collection(GymHelper.GYM_USERS_COLLECTION);
@@ -229,6 +297,11 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         }).addOnFailureListener((e)-> Log.d(TAG, "query all users failed"));
     }
 
+    /**
+     * After {@link #queryUser()} retrieve list of user profile,
+     * reads changes from snapshots and update chat rooms with user involved
+     * @param snapshots
+     */
     private void readUserAndUpdateChats(QuerySnapshot snapshots){
         Log.d(TAG, "readUserAndUpdateChats -> "+snapshots);
         ArrayList<User> users = new ArrayList<>();
@@ -255,7 +328,10 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
     }
 
 
-
+    /**
+     * redirect user to chat activity
+     * @param chat
+     */
     private void goChatActivity(Chat chat){
         Intent intent = new Intent(getActivity(), ChatActivity.class);
         Bundle data = new Bundle();
@@ -269,6 +345,12 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         startActivity(intent);
     }
 
+    /**
+     * interface for observer to handle event when subject notify the view interaction of RecyclerView
+     * @param view
+     * @param holder
+     * @param action
+     */
     @Override
     public void onViewInteracted(View view, ChatAdapter.ChatViewHolder holder, int action) {
         int pos = holder.getAdapterPosition();
@@ -303,6 +385,9 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         }
     }
 
+    /**
+     * commit changes of removing user from buddies record in firestore
+     */
     private void commitFavRecord() {
         firestore.runTransaction((Transaction.Function<Void>) transaction -> {
             FavBuddyRecord favRecord = transaction.get(favBuddiesRef).toObject(FavBuddyRecord.class);

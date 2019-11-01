@@ -17,11 +17,17 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.User;
 
 /**
+ * DialogHelper assist creation of frequent used dialog
  * @author Chia Yu
  * @since 2019-10-22
  */
 public class DialogHelper {
 
+    /**
+     * the method display application build information (for testing)
+     * @param context
+     * @return
+     */
     public static Dialog displayBuildInfo(Context context){
         String msg = "";
         msg += String.format("VERSION_CODE: %d\n", BuildConfig.VERSION_CODE);
@@ -36,6 +42,13 @@ public class DialogHelper {
                 .show();
     }
 
+    /**
+     * the method create dialog that display other user's profile as dialog
+     * @param context
+     * @param user
+     * @param drawable
+     * @return
+     */
     public static Dialog displayBuddyProfile(Context context, User user, Drawable drawable){
         // inflate dialog layout
         LayoutInflater layoutInflater = LayoutInflater.from(context);

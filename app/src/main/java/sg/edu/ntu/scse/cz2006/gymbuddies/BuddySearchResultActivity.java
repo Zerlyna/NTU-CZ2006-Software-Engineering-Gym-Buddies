@@ -62,6 +62,11 @@ public class BuddySearchResultActivity extends AppCompatActivity implements AppC
     private FavBuddyRecord favRecord;
     private ListenerRegistration favRecordChangeListener;
 
+    /**
+     * Android framework lifecycle
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,17 +107,27 @@ public class BuddySearchResultActivity extends AppCompatActivity implements AppC
         queryBuddy();
     }
 
+    /**
+     * Android framework lifecycle
+     */
     @Override
     protected void onResume() {
         super.onResume();
         listenFavRecordChanges();
     }
 
+    /**
+     * Android framework lifecycle
+     */
     @Override
     protected void onPause() {
         stopListenFavRecordChanges();
         super.onPause();
     }
+
+    /**
+     * Register as an observer to listen changes of searched user result
+     */
     private void listenFavRecordChanges(){
         favRecordChangeListener = favBuddiesRef.addSnapshotListener((doc, e)->{
             Log.d(TAG, "favBuddiesRef.addSnapshotListener -> onEvent ");
@@ -123,6 +138,10 @@ public class BuddySearchResultActivity extends AppCompatActivity implements AppC
             readFavRecordDoc(doc);
         });
     }
+
+    /**
+     * Unregister itself to stop listening changes of searched user result
+     */
     private void stopListenFavRecordChanges(){
         if (favRecordChangeListener!=null){
             favRecordChangeListener.remove();
@@ -130,6 +149,9 @@ public class BuddySearchResultActivity extends AppCompatActivity implements AppC
         }
     }
 
+    /**
+     * perform query to retrieve current user's fav
+     */
     private void queryFavUserRecord(){
         Log.d(TAG, "queryFavRecord");
         if (favBuddiesRef == null){
@@ -146,7 +168,10 @@ public class BuddySearchResultActivity extends AppCompatActivity implements AppC
     }
 
 
-
+    /**
+     * {@link #queryFavUserRecord()}
+     * @param documentSnapshot
+     */
     private void readFavRecordDoc(DocumentSnapshot documentSnapshot){
         favRecord = documentSnapshot.toObject(FavBuddyRecord.class);
         if (favRecord==null){

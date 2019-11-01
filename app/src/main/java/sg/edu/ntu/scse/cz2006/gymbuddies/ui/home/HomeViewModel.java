@@ -28,7 +28,6 @@ public class HomeViewModel extends AndroidViewModel {
      */
     public HomeViewModel(@NonNull Application application) {
         super(application);
-        Log.d("Cy.GymBuddies.HomeVM", "Init start");
         mText = new MutableLiveData<>();
         mText.setValue("This is home fragment");
     }

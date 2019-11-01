@@ -21,16 +21,44 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.R;
 
 
 /**
+ * The fragment display search options for gym buddies
  * @author Chia Yu
  * @since 2019-09-06
  */
 public class BuddySearchFragment extends Fragment {
+    /**
+     * view model to separate data from activity life cycle
+     */
     private BuddySearchViewModel buddySearchViewModel;
-    private Button btnTest;
+    /**
+     * View reference to search button
+     */
+    private Button btnSearch;
+    /**
+     * view reference to drop down list of location
+     */
     private Spinner spPrefLocation;
-    private RadioGroup rgBuddyGender, rgPrefTime;
+    /**
+     * view reference to radio group of gender
+     */
+    private RadioGroup rgBuddyGender;
+    /**
+     * view reference to radio group of preferred workout time
+     */
+    private RadioGroup rgPrefTime;
+    /**
+     * view reference to view group of preferred workout days
+     */
     private LinearLayout llPrefDays;
 
+
+    /**
+     * Android framework lifecycle
+     * @param inflater
+     * @param container
+     * @param savedInstanceState
+     * @return
+     */
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         buddySearchViewModel = ViewModelProviders.of(this).get(BuddySearchViewModel.class);
         View root = inflater.inflate(R.layout.fragment_buddy_search, container, false);
@@ -44,8 +72,8 @@ public class BuddySearchFragment extends Fragment {
         rgPrefTime    = root.findViewById(R.id.rg_bd_time);
         rgBuddyGender = root.findViewById(R.id.rg_bd_gender);
         llPrefDays = root.findViewById(R.id.ll_pref_days);
-        btnTest = root.findViewById(R.id.btn_search);
-        btnTest.setOnClickListener(view -> {
+        btnSearch = root.findViewById(R.id.btn_search);
+        btnSearch.setOnClickListener(view -> {
             Intent intent = new Intent(getActivity(), BuddySearchResultActivity.class);
             Bundle data = new Bundle();
             data.putString("pref_location", spPrefLocation.getSelectedItem().toString());
@@ -55,14 +83,25 @@ public class BuddySearchFragment extends Fragment {
             intent.putExtras(data);
             startActivity(intent);
         });
+
         return root;
     }
 
+    /**
+     * helper method to retrieve selecte radio button text base on radio group provided
+     * @param rg
+     * @return
+     */
     private String getRadioText(RadioGroup rg){
         RadioButton selected = getView().findViewById(rg.getCheckedRadioButtonId());
         return (String) selected.getText();
     }
 
+    /**
+     * convert preferred workout days to int[],
+     * where index denote the days, and value(0/1) denote the selection of the day
+     * @return
+     */
     private int[] getPrefDays(){
         int[] arPrefDays = new int[7];
         for (int i = 0; i<7; i++){

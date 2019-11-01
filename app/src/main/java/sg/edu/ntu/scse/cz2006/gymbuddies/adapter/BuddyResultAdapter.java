@@ -31,19 +31,49 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.ViewHelper;
  * @constructor Creates a adapter for the Buddy Search Result List RecyclerView
  */
 public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.ViewHolder> {
+    /**
+     * TAG is unique identifier to for logging purpose
+     */
     private String TAG = "GB.Adapter.BuddyResult";
+    /**
+     * unique identifier to specify undefined action
+     * @see #listener
+     */
     public static final int ACTION_INVALID = -1;
+    /**
+     * unique identifier to specify user click on item body of display view
+     * @see #listener
+     */
     public static final int ACTION_CLICK_ON_ITEM_BODY   = 1;
+    /**
+     * unique identifier to specify user click on favoured (heart shape) button of display view
+     * @see #listener
+     */
     public static final int ACTION_CLICK_ON_FAV_ITEM    = 2;
+    /**
+     * unique identifier to specify user click on profile picture of display view
+     * @see #listener
+     */
     public static final int ACTION_CLICK_ON_ITEM_PIC = 3;
+    /**
+     * list that holds user data for displaying
+     */
     private List<User> listBuddies;
+    /**
+     * interface that allow activity to observe user interaction with RecyclerView
+     */
     private OnRecyclerViewInteractedListener<ViewHolder> listener;
+    /**
+     * it store list of other user's id, used to denote that other user is current user's buddy
+     * @see sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.FavBuddyRecord
+     */
     private List<String> favUsers;
-
 
 
     /**
      * Constructor to create Recycler Adapter for Buddy search result
+     * @param listBuddies
+     * @param favUsers
      */
     public BuddyResultAdapter(List<User> listBuddies, List<String> favUsers) {
         this.listBuddies = listBuddies;
@@ -89,19 +119,37 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
 
 
     /**
-     * View Holder to hold data displaying data
+     * View Holder to hold references to frequent modified views
      *
      * @author Chia Yu
      * @since 2019-09-28
-     * @property itemView the view represents the whole item
-     * @constructor Creates a adapter for the Buddy Search Result List RecyclerView
      */
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        /**
+         * view that display user name
+         */
         TextView tvName;
-        ImageView imgViewPic, imgViewGender;
+        /**
+         * view that display user's profile picture
+         */
+        ImageView imgViewPic;
+        /**
+         * view that display user's gender by icon
+         */
+        ImageView imgViewGender;
+        /**
+         * view group that display user's preferred workout days
+         */
         LinearLayout llPrefDays;
+        /**
+         * view that denote whether a user is buddy of current user
+         */
         CheckBox cbFav;
 
+        /**
+         * constructor method
+         * @param itemView view that represents the whole item
+         */
         ViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tv_bd_name);
@@ -154,7 +202,7 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
 
 
         /**
-         * update preference workout days based on user
+         * update preferred workout days based on user
          */
         private  void updatePrefDays(User user){
             ((CheckBox) llPrefDays.getChildAt(0)).setChecked(user.getPrefDay().getMonday());
@@ -167,6 +215,11 @@ public class BuddyResultAdapter extends RecyclerView.Adapter<BuddyResultAdapter.
         }
 
 
+        /**
+         * when user click on certain view, it update observer by interface
+         * @param view
+         * @see #listener
+         */
         @Override
         public void onClick(View view) {
             int action = ACTION_INVALID;
