@@ -147,6 +147,12 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
      * the method handle on data received from other activity, and based on the data to initialise activity.
      */
     private void init(){
+        // testing pass over data
+        for(String key : getIntent().getExtras().keySet()){
+            Log.d(TAG, String.format("%s -> %s", key, getIntent().getStringExtra(key)));
+        }
+
+
         boolean needUserPic = true;
         if (getIntent().hasExtra("chat_id")){
             // load chat > load message
@@ -274,6 +280,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
                 .addOnSuccessListener((DocumentReference documentReference)->{
                     Log.d(TAG, "queryCreateChat -> success("+documentReference.getId()+"");
                     curChat.setChatId(documentReference.getId());
+                    chatRef = firestore.collection(AppConstants.COLLECTION_CHAT).document(documentReference.getId());
                     listenToMessages();
 
                 }).addOnFailureListener((e)->{
