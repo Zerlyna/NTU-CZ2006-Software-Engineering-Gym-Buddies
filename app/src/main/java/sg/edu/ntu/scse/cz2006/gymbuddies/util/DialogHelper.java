@@ -1,6 +1,7 @@
 package sg.edu.ntu.scse.cz2006.gymbuddies.util;
 
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -26,7 +27,7 @@ public class DialogHelper {
     /**
      * the method display application build information (for testing)
      * @param context
-     * @return
+     * @return displaying dialog
      */
     public static Dialog displayBuildInfo(Context context){
         String msg = "";
@@ -43,11 +44,31 @@ public class DialogHelper {
     }
 
     /**
+     * The method display invalid messages when data received from another activity is insufficient to initialised activity.
+     * @param context
+     * return displaying dialog
+     */
+    public static Dialog showDialogInvalidArgs(Context context){
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
+        return builder.setTitle("Invalid argument")
+                .setMessage("Argument missing")
+                .setCancelable(false)
+                .setPositiveButton("Dismiss", (dialog, which)->{
+                    if (context instanceof Activity){
+                        ((Activity)context).finish();
+                    }
+
+                } )
+                .show();
+    }
+
+
+    /**
      * the method create dialog that display other user's profile as dialog
      * @param context
      * @param user
      * @param drawable
-     * @return
+     * @return displaying dialog
      */
     public static Dialog displayBuddyProfile(Context context, User user, Drawable drawable){
         // inflate dialog layout

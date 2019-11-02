@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -57,6 +58,10 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
      */
     private BuddyListViewModel buddyListViewModel;
     /**
+     * view reference to empty view, when there is no user matched the condition, this view will be displayed
+     */
+    private TextView tvEmptyMessage;
+    /**
      * reference to RecyclerView, which display list of user as search result
      */
     private RecyclerView rvResult;
@@ -104,6 +109,7 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         View root = inflater.inflate(R.layout.fragment_buddy_list, container, false);
 
         srlUpdateFav = root.findViewById(R.id.srl_update_fav);
+        tvEmptyMessage = root.findViewById(R.id.tv_empty_msg);
         rvResult = root.findViewById(R.id.rv_buddies);
 
 
@@ -148,6 +154,21 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         Log.d(TAG, "do read data");
         queryFavUserRecord();
         srlUpdateFav.setRefreshing(true);
+    }
+
+    /**
+     * notify recycler view about data is being modified.
+     * if nothing to display, it display empty view
+     */
+    private void notifyAndUpdateView(){
+        adapter.notifyDataSetChanged();
+        if (adapter.getItemCount() == 0) {
+            rvResult.setVisibility(View.GONE);
+            tvEmptyMessage.setVisibility(View.VISIBLE);
+        } else {
+            rvResult.setVisibility(View.VISIBLE);
+            tvEmptyMessage.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -224,7 +245,7 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
             }
         }
 
-        adapter.notifyDataSetChanged();
+        notifyAndUpdateView();
         Log.d(TAG, "fav user.size->" + listFavUsers.size());
         if (srlUpdateFav.isRefreshing()) {
             srlUpdateFav.setRefreshing(false);
@@ -266,14 +287,14 @@ public class BuddyListFragment extends Fragment implements AppConstants, OnRecyc
         listFavUserIds.remove(other.getUid());
         favRecord.getBuddiesId().remove(other.getUid());
         commitFavRecord();
-        adapter.notifyDataSetChanged();
+        notifyAndUpdateView();
         Snackbar snackbar = Snackbar.make(rvResult, R.string.txt_msg_removed_favourite, Snackbar.LENGTH_SHORT);
         snackbar.setAction(R.string.txt_undo, v -> {
             listFavUsers.add(other);
             listFavUserIds.add(other.getUid());
             favRecord.getBuddiesId().add(other.getUid());
             commitFavRecord();
-            adapter.notifyDataSetChanged();
+            notifyAndUpdateView();
             Snackbar.make(rvResult, R.string.txt_msg_removed_favtorite_undone, Snackbar.LENGTH_SHORT).show();
 
         });

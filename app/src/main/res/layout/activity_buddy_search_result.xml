@@ -27,11 +27,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-<!--    <TextView-->
-<!--        android:id="@+id/tv_empty"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:gravity="center"-->
-<!--        android:text="No Data"/>-->
+    <TextView
+        android:id="@+id/tv_empty_msg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/txt_nothing_to_display"
+        android:visibility="gone"/>
 
 </LinearLayout>

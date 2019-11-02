@@ -43,6 +43,7 @@
     <string name="action_search">Search</string>
     <string name="title_activity_settings">App Settings</string>
     <string name="title_activity_buddy_search_result">Buddy Search Result</string>
+    <string name="txt_nothing_to_display">Nothing to display</string>
 
     <!-- Preference Titles -->
     <string name="general_header">General Settings</string>
