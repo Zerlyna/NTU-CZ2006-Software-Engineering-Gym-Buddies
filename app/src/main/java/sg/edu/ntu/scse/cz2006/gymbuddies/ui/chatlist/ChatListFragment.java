@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -73,6 +74,10 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
      */
     private ArrayList<String> favUserIds;
     /**
+     * view reference to empty view, when there is no user matched the condition, this view will be displayed
+     */
+    private TextView tvEmptyMessage;
+    /**
      * reference to RecyclerView, used to display chat room data on screen
      */
     private RecyclerView rvChats;
@@ -119,6 +124,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
         });
 
 
+        tvEmptyMessage = root.findViewById(R.id.tv_empty_msg);
         rvChats = root.findViewById(R.id.rv_chats);
         srlUpdateChats = root.findViewById(R.id.srl_update_chats);
         srlUpdateChats.setColorSchemeResources(R.color.google_1, R.color.google_2, R.color.google_3, R.color.google_4);
@@ -168,6 +174,21 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
     }
 
     /**
+     * notify recycler view about data is being modified.
+     * if nothing to display, it display empty view
+     */
+    private void notifyAndUpdateView(){
+        adapter.notifyDataSetChanged();
+        if (adapter.getItemCount() == 0) {
+            rvChats.setVisibility(View.GONE);
+            tvEmptyMessage.setVisibility(View.VISIBLE);
+        } else {
+            rvChats.setVisibility(View.VISIBLE);
+            tvEmptyMessage.setVisibility(View.GONE);
+        }
+    }
+
+    /**
      * register an observer to listen to changes on user's favoured buddies records
      */
     private void listenFavChanges(){
@@ -188,7 +209,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
                     favUserIds.addAll(fav.getBuddiesId());
                 }
             }
-            adapter.notifyDataSetChanged();
+            notifyAndUpdateView();
         });
     }
 
@@ -274,7 +295,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
                     needQueryUser = true;
                 }
             }
-            adapter.notifyDataSetChanged();
+            notifyAndUpdateView();
             if (needQueryUser){
                 queryUser();
             }
@@ -324,7 +345,7 @@ public class ChatListFragment extends Fragment implements AppConstants, OnRecycl
                 }
             }
         }
-        adapter.notifyDataSetChanged();
+        notifyAndUpdateView();
     }
 
 
