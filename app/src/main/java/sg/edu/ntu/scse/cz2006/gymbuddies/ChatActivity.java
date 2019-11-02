@@ -40,6 +40,7 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.ChatMessage;
 import sg.edu.ntu.scse.cz2006.gymbuddies.listener.OnRecyclerViewInteractedListener;
 import sg.edu.ntu.scse.cz2006.gymbuddies.tasks.GetProfilePicFromFirebaseAuth;
+import sg.edu.ntu.scse.cz2006.gymbuddies.util.DialogHelper;
 import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper;
 
 /**
@@ -49,19 +50,58 @@ import sg.edu.ntu.scse.cz2006.gymbuddies.util.DiskIOHelper;
  * @since 2019-10-22
  */
 public class ChatActivity extends AppCompatActivity implements AppConstants, View.OnClickListener, OnRecyclerViewInteractedListener {
+    /**
+     * TAG is unique identifier to for logging purpose
+     */
     private static final String TAG = "gb.act.chat";
+    /**
+     * View reference to EditText, which allow user to input message
+     */
     private EditText etMessage;
+    /**
+     * View reference to ImageButton, allow user to send out message
+     */
     private ImageButton imgBtnSend;
+    /**
+     * view reference to TextView, that shows title of chat room
+     */
     private TextView tvTitle;
+    /**
+     * view reference to ImageView, that shows icon of chat room
+     */
     private ImageView imgBuddyPic;
+    /**
+     * list of chat messages within chat room
+     */
     private ArrayList<ChatMessage> messages;
+    /**
+     * view reference to RecyclerView, which display {@link #messages} to user with help of {@link #adapter}
+     */
     RecyclerView rvMessages;
+    /**
+     * adapter to bind {@link #messages} onto {@link #rvMessages}
+     */
     MessageAdapter adapter;
-
+    /**
+     * Firestore instance to query data
+     */
     FirebaseFirestore firestore;
+    /**
+     * document reference used to get current chat room's info,
+     * response of query will be converted to {@link #curChat}
+     */
     DocumentReference chatRef;
+    /**
+     * observer to listen to changes on messages changes in current chat room
+     */
     ListenerRegistration msgListener;
+    /**
+     * actual chat object holds information of current chat room
+     */
     Chat curChat;
+    /**
+     * current user's id
+     */
     String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     /**
@@ -124,7 +164,7 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             queryChatByParticipants();
             // find or create chat > load message;
         } else {
-            showDialogInvalidArgs();
+            DialogHelper.showDialogInvalidArgs(this);
         }
 
         if (getIntent().hasExtra("buddy_name")){
@@ -347,19 +387,6 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
 
     }
 
-    /**
-     * The method display invalid messages when data received from another activity is insufficient to initialised activity.
-     */
-    private void showDialogInvalidArgs(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Invalid argument")
-                .setMessage("Argument missing")
-                .setCancelable(false)
-                .setPositiveButton("Dismiss", (dialog, which)->{
-                    finish();
-                } )
-                .show();
-    }
 
 
     /**
