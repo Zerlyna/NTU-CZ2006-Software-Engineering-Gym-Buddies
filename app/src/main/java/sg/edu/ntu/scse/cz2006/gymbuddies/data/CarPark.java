@@ -94,7 +94,7 @@ public class CarPark {
      */
     @NonNull
     @ColumnInfo(name = "gantry_height")
-    public int gantryHeight;
+    public double gantryHeight;
 
     /**
      * attribute of schema, relate to 'address' in actual table
