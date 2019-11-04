@@ -59,7 +59,7 @@ public class CarPark {
 
     @NonNull
     @ColumnInfo(name = "gantry_height")
-    public int gantryHeight;
+    public double gantryHeight;
 
     @NonNull
     @ColumnInfo(name = "car_park_basement")
