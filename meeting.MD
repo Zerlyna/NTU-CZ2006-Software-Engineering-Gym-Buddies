@@ -10,7 +10,9 @@ __Useful Links__
 __Issue Tracking:__ https://jira.itachi1706.com:8123/browse/NTUSE  
 __Code Repository:__ https://gitlab.com/kennethsohyq/school/university/ntu-cz2006-underconstruction  
 __SVN Link (Requires NTU Intranet):__ https://155.69.100.25/svn/CX2006/SSP4/UnderConstruction  
-__Android JavaDocs:__ https://ntugit.itachi1706.com/projects/se/html/app
+__Android JavaDocs:__ https://ntugit.itachi1706.com/projects/se/html/app  
+__Confluence Team Wiki:__ https://ntuscse-se-ssp4-g4-ay1920s1.atlassian.net/wiki/spaces/GBDOC/overview 
+__Jira Cloud Instance:__ https://ntuscse-se-ssp4-g4-ay1920s1.atlassian.net/secure/Dashboard.jspa
 
 *Meeting agenda:*
 - FINAL STRETCH PRESENTATION AND DEMONSTRATION
