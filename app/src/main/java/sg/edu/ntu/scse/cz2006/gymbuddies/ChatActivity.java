@@ -34,6 +34,7 @@ import com.google.firebase.firestore.Transaction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import sg.edu.ntu.scse.cz2006.gymbuddies.adapter.MessageAdapter;
 import sg.edu.ntu.scse.cz2006.gymbuddies.datastruct.Chat;
@@ -317,6 +318,10 @@ public class ChatActivity extends AppCompatActivity implements AppConstants, Vie
             }else {
                 Log.d(TAG, "snapshots are null");
             }
+
+            // sort messages by last update time
+            Collections.sort(messages, (m1, m2)-> (int)(m1.getTimestamp()-m2.getTimestamp()));
+
             adapter.notifyDataSetChanged();
             rvMessages.scrollToPosition(messages.size()-1);
         });
