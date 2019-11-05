@@ -152,7 +152,7 @@ class LoginChooserActivity : AppCompatActivity() {
         signInFlow = true
         FirebaseAuth.getInstance().removeAuthStateListener(mAuthStateListener)
         val providers = listOf(AuthUI.IdpConfig.EmailBuilder().build(), AuthUI.IdpConfig.GoogleBuilder().build())
-        startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setLogo(R.mipmap.ic_launcher)
+        startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setLogo(R.drawable.ic_launcher_web)
             .setIsSmartLockEnabled(false).setAvailableProviders(providers).build(), RC_SIGN_IN)
     }
 
