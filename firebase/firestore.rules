@@ -34,5 +34,15 @@ service cloud.firestore {
       allow create, update: if request.auth.uid == userId && request.resource.data.message.size() <= 512; // Allow the reviewer to create or update their own review IF message length is up to 512 characters
     }
     
+    // Allow access to the chat hisotry, need to changeh later
+    match /chat/{chatId} {
+    	allow read, create, update, delete: if request.auth.uid != null; // Allow user to modify chat list
+    }
+    
+    // Allow access to the chat message, need to changeh later
+    match /chat/{chatId}/message/{messageId} {
+    	allow read, create, update, delete: if request.auth.uid != null; // Allow user to modify chat message
+    }
+    
   }
 }
